@@ -1,0 +1,186 @@
+{%- comment -%}
+Drop-in variant persistence + cart wiring.
+Works with button "chips" (not native selects).
+
+Markup requirements for each option button:
+  - data-option="Size"  (must EXACTLY match your Shopify option name)
+  - data-value="Medium" (must EXACTLY match that variant's option value)
+
+Form requirements:
+  - Have ONE form wrapping the options and submit
+  - Include <input type="hidden" name="id"> (this script fills it)
+  - Include <input name="quantity"> or we default to 1
+  - Add data-wtf-ajax to the form if you want AJAX add-to-cart
+
+If you're on a *product* page, {{ product | json }} is used.
+If you're on a *page*, set one of:
+  window.WTF_PRODUCT_HANDLE = 'your-product-handle'
+  OR
+  window.WTF_PRODUCT_JSON = { ...product json... }
+{%- endcomment -%}
+
+<script>
+(function(){
+  const USE_SESSION_STORAGE = false;
+  const STORAGE_KEY = 'wtf_variant_state_' + location.pathname;
+
+  function $(s,c){return (c||document).querySelector(s)}
+  function $all(s,c){return Array.prototype.slice.call((c||document).querySelectorAll(s))}
+
+  function findCartForm(){
+    const forms = $all('form');
+    for(const f of forms){
+      if (f.querySelector('input[name="id"]') || f.querySelector('button[type="submit"],[data-add-to-cart]')) return f;
+    }
+    return null;
+  }
+
+  async function loadProductJson(){
+    try{
+      {% if product %}
+        return {{ product | json }};
+      {% endif %}
+      if (window.WTF_PRODUCT_JSON) return window.WTF_PRODUCT_JSON;
+      if (window.WTF_PRODUCT_HANDLE){
+        const r = await fetch('/products/' + window.WTF_PRODUCT_HANDLE + '.js');
+        if(!r.ok) throw new Error('Product JSON fetch failed');
+        return await r.json();
+      }
+      throw new Error('No product context. Set window.WTF_PRODUCT_HANDLE or WTF_PRODUCT_JSON.');
+    }catch(e){ console.error('[WTF] loadProductJson', e); return null; }
+  }
+
+  function readState(){
+    if(USE_SESSION_STORAGE){
+      try{ return JSON.parse(sessionStorage.getItem(STORAGE_KEY)||'{}') }catch(e){}
+    }
+    return window.__wtfVariantState || {};
+  }
+  function writeState(state){
+    window.__wtfVariantState = state;
+    if(USE_SESSION_STORAGE){
+      try{ sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state)) }catch(e){}
+    }
+  }
+
+  function setActive(btns, active){
+    btns.forEach(b=>{
+      const on = b===active;
+      b.classList.toggle('is-active', on);
+      b.setAttribute('aria-pressed', on?'true':'false');
+    });
+  }
+
+  function resolveVariant(product, state){
+    if(!product || !product.variants) return null;
+    const wanted = [];
+    product.options.forEach((opt, i)=>{ if(state[opt]) wanted[i]=state[opt]; });
+    if (wanted.length < product.options.length || wanted.some(v=>!v)) return null;
+    return product.variants.find(v =>
+      (v.option1||null)===(wanted[0]||null) &&
+      (v.option2||null)===(wanted[1]||null) &&
+      (v.option3||null)===(wanted[2]||null)
+    ) || null;
+  }
+
+  function ensureIdInput(form){
+    let id = form.querySelector('input[name="id"]');
+    if(!id){ id = document.createElement('input'); id.type='hidden'; id.name='id'; form.appendChild(id); }
+    return id;
+  }
+
+  function setSubmitEnabled(form, on){
+    const submit = form.querySelector('button[type="submit"],[data-add-to-cart]');
+    if(submit){ submit.disabled=!on; submit.classList.toggle('is-disabled', !on); }
+  }
+
+  function injectStyles(){
+    const s = document.createElement('style');
+    s.textContent = `
+      [data-option][data-value]{cursor:pointer}
+      .is-active{border-color:#ff6600 !important; box-shadow:0 0 0 2px #ffe6d6 !important}
+      .is-disabled{opacity:.6; pointer-events:none}
+    `;
+    document.head.appendChild(s);
+  }
+
+  async function boot(){
+    const form = findCartForm(); if(!form){ console.warn('[WTF] No form found'); return; }
+    injectStyles();
+    const product = await loadProductJson(); if(!product){ console.warn('[WTF] No product JSON'); return; }
+
+    const buttons = $all('[data-option][data-value]');
+    const state = readState();
+
+    // Rehydrate UI from prior state (if any)
+    product.options.forEach(opt=>{
+      const group = buttons.filter(b => (b.getAttribute('data-option')||'').trim() === opt);
+      if(!group.length) return;
+      const val = state[opt];
+      if(val){
+        const match = group.find(b => (b.getAttribute('data-value')||'') === val);
+        if(match) setActive(group, match);
+      }
+    });
+
+    function recompute(){
+      const current = {};
+      product.options.forEach(opt=>{
+        const active = buttons.find(b => (b.getAttribute('data-option')||'')===opt && b.classList.contains('is-active'));
+        if(active) current[opt] = active.getAttribute('data-value');
+      });
+      writeState(current);
+      const variant = resolveVariant(product, current);
+      ensureIdInput(form).value = variant ? String(variant.id) : '';
+      setSubmitEnabled(form, !!variant);
+      return variant;
+    }
+
+    // Wire clicks
+    product.options.forEach(opt=>{
+      const group = buttons.filter(b => (b.getAttribute('data-option')||'') === opt);
+      group.forEach(btn=>{
+        btn.addEventListener('click', ()=>{ setActive(group, btn); recompute(); });
+      });
+    });
+
+    // Initial compute / auto-select default if needed
+    let v = recompute();
+    if(!v){
+      const def = product.variants.find(x=>x.available) || product.variants[0];
+      if(def){
+        product.options.forEach((opt, i)=>{
+          const group = buttons.filter(b => (b.getAttribute('data-option')||'')===opt);
+          const match = group.find(b => (b.getAttribute('data-value')||'') === def['option'+(i+1)]);
+          if(match) setActive(group, match);
+        });
+        v = recompute();
+      }
+    }
+
+    // Optional AJAX submit (only if you add data-wtf-ajax to the form)
+    form.addEventListener('submit', async (e)=>{
+      if(!form.hasAttribute('data-wtf-ajax')) return;
+      e.preventDefault();
+      const id = form.querySelector('input[name="id"]')?.value;
+      const qty = parseInt((form.querySelector('[name="quantity"]')?.value||'1'),10) || 1;
+      if(!id){ alert('Please complete selections.'); return; }
+      try{
+        const r = await fetch('{{ routes.cart_add_url }}.js', {
+          method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body: JSON.stringify({id, quantity: qty}), credentials:'same-origin'
+        });
+        if(!r.ok) throw new Error('Add failed');
+        document.dispatchEvent(new CustomEvent('wtf:cart:updated'));
+        {% if settings.cart_type == 'drawer' %}
+          document.dispatchEvent(new CustomEvent('drawer:open', { detail: { target: 'cart' } }));
+        {% else %}
+          window.location.href='{{ routes.cart_url }}';
+        {% endif %}
+      }catch(err){ console.error(err); alert('Couldn’t add to cart.'); }
+    });
+  }
+
+  document.readyState==='loading' ? document.addEventListener('DOMContentLoaded', boot) : boot();
+})();
+</script>

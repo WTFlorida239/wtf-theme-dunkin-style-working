@@ -1,0 +1,18 @@
+{%- comment -%}
+  Usage:
+    {% render 'wtf-product-context', handle: 'custom-kratom-tea' %}
+
+  If you’re already on a product template, you don’t need this.
+{%- endcomment -%}
+{% if product %}
+  {# product pages already have product #}
+{% else %}
+  {% if handle %}
+    {% assign p = all_products[handle] %}
+    {% if p %}
+      <script>
+        window.WTF_PRODUCT_JSON = {{ p | json }};
+      </script>
+    {% endif %}
+  {% endif %}
+{% endif %}

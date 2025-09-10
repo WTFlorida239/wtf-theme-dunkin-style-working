@@ -1,0 +1,1076 @@
+<!-- WTF Ordering Section with Enhanced Dunkin' Style Customization -->
+<!-- File: sections/wtf-ordering.liquid -->
+
+<style>
+/* Hero Section Styles */
+.wtf-hero {
+  text-align: center;
+  padding: 40px 20px;
+  background: white;
+}
+
+.wtf-storefront {
+  width: 100%;
+  max-width: 100vw;
+  height: 60vh;
+  object-fit: cover;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  display: block;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.wtf-logo {
+  width: 150px;
+  height: 150px;
+  margin: 30px auto;
+  display: block;
+  border-radius: 50%;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.wtf-hero h1 {
+  font-size: 48px;
+  color: #ff6600;
+  margin: 30px 0 10px 0;
+  font-weight: bold;
+}
+
+.wtf-hero p {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 40px;
+}
+
+/* Ordering Cards Section */
+.wtf-ordering-section {
+  background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%);
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.wtf-ordering-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.wtf-section-title {
+  color: white;
+  font-size: 36px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.wtf-section-subtitle {
+  color: rgba(255,255,255,0.9);
+  font-size: 18px;
+  margin-bottom: 50px;
+}
+
+.wtf-ordering-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.wtf-order-card {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.wtf-order-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+}
+
+.wtf-card-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  margin: 0 auto 20px auto;
+  display: block;
+  object-fit: cover;
+  border: 4px solid #f8f9fa;
+}
+
+.wtf-card-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.wtf-card-description {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.4;
+}
+
+.wtf-card-button {
+  background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.wtf-card-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255,102,0,0.4);
+}
+
+/* Customization Modal */
+.wtf-customization-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.wtf-modal-content {
+  background: white;
+  max-width: 900px;
+  margin: 30px auto;
+  border-radius: 20px;
+  position: relative;
+  max-height: 95vh;
+  overflow-y: auto;
+}
+
+.wtf-modal-header {
+  background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 20px 20px 0 0;
+  text-align: center;
+}
+
+.wtf-modal-title {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.wtf-modal-subtitle {
+  font-size: 18px;
+  opacity: 0.9;
+}
+
+.wtf-close-modal {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 30px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wtf-close-modal:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.wtf-modal-body {
+  padding: 40px;
+}
+
+.wtf-option-group {
+  margin-bottom: 30px;
+}
+
+.wtf-option-label {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15px;
+  display: block;
+  text-transform: uppercase;
+}
+
+.wtf-size-options {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.wtf-size-btn {
+  width: 60px;
+  height: 60px;
+  border: 3px solid #ddd;
+  background: white;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wtf-size-btn:hover,
+.wtf-size-btn.active {
+  border-color: #ff6600;
+  background: #ff6600;
+  color: white;
+  transform: scale(1.1);
+}
+
+.wtf-dropdown {
+  width: 100%;
+  padding: 15px 20px;
+  border: 3px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.wtf-dropdown:focus {
+  outline: none;
+  border-color: #ff6600;
+}
+
+/* Multiple Flavor Selection */
+.wtf-flavor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 2px solid #f0f0f0;
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.wtf-flavor-checkbox {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.wtf-flavor-checkbox:hover {
+  background: #f8f9fa;
+}
+
+.wtf-flavor-checkbox input[type="checkbox"] {
+  margin-right: 8px;
+  transform: scale(1.2);
+  accent-color: #ff6600;
+}
+
+.wtf-flavor-checkbox label {
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+}
+
+.wtf-pump-counter {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 15px;
+  text-align: center;
+}
+
+.wtf-pump-info {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.wtf-pump-display {
+  font-size: 18px;
+  font-weight: bold;
+  color: #ff6600;
+}
+
+.wtf-ice-options {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.wtf-ice-btn {
+  padding: 12px 25px;
+  border: 3px solid #ddd;
+  background: white;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.wtf-ice-btn:hover,
+.wtf-ice-btn.active {
+  border-color: #ff6600;
+  background: #ff6600;
+  color: white;
+}
+
+/* Comments Section */
+.wtf-comments {
+  width: 100%;
+  padding: 15px 20px;
+  border: 3px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.3s ease;
+}
+
+.wtf-comments:focus {
+  outline: none;
+  border-color: #ff6600;
+}
+
+.wtf-price-display {
+  text-align: center;
+  margin: 30px 0;
+}
+
+.wtf-price {
+  font-size: 36px;
+  font-weight: bold;
+  color: #ff6600;
+}
+
+.wtf-price-breakdown {
+  font-size: 14px;
+  color: #666;
+  margin-top: 5px;
+}
+
+.wtf-cart-feedback {
+  text-align: center;
+  margin-top: 10px;
+  font-weight: bold;
+  color: #ff6600;
+  min-height: 24px;
+}
+
+.wtf-add-to-cart-modal {
+  background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%);
+  color: white;
+  border: none;
+  padding: 20px 50px;
+  border-radius: 30px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 20px;
+  box-shadow: 0 5px 20px rgba(255,102,0,0.3);
+}
+
+.wtf-add-to-cart-modal:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255,102,0,0.4);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .wtf-storefront {
+    height: 40vh;
+  }
+  
+  .wtf-logo {
+    width: 120px;
+    height: 120px;
+  }
+
+  .wtf-hero h1 {
+    font-size: 36px;
+  }
+
+  .wtf-ordering-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .wtf-modal-content {
+    margin: 10px;
+    max-height: 98vh;
+  }
+
+  .wtf-modal-body {
+    padding: 20px;
+  }
+
+  .wtf-size-options {
+    flex-wrap: wrap;
+  }
+
+  .wtf-ice-options {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .wtf-flavor-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<!-- Hero Section -->
+<div class="wtf-hero">
+  <img src="https://cdn.shopify.com/s/files/1/0676/5848/1842/files/wtf_storefront_hero_800x400_799d8b3a-dbf1-41d1-b40b-b00d235b25d8.png?v=1756895319" alt="WTF Storefront" class="wtf-storefront">
+  
+  <img src="https://cdn.shopify.com/s/files/1/0676/5848/1842/files/Official_WTF_LOGO_Background_Removed.png?v=1756895318" alt="WTF Logo" class="wtf-logo">
+  
+  <h1>Welcome to WTF - Cape Coral's Premier Kava Bar</h1>
+  <p>Premium Edibles, Beverages, Cannabis & Other Treats</p>
+</div>
+
+<!-- Ordering Section -->
+<div class="wtf-ordering-section">
+  <div class="wtf-ordering-container">
+    <h2 class="wtf-section-title">WTF CLASSICS & NEW FAVORITES</h2>
+    <p class="wtf-section-subtitle">Premium botanicals crafted for your wellness journey</p>
+    
+    <div class="wtf-ordering-grid">
+      <!-- Kratom Teas Card -->
+      <div class="wtf-order-card" onclick="openCustomization('kratom_teas')">
+        <img src="https://cdn.shopify.com/s/files/1/0676/5848/1842/files/kratom_teas_150x150_77aa378f-c564-4ab5-bc61-917ee5a9497c.png?v=1756895318" alt="Kratom Teas" class="wtf-card-image">
+        <h3 class="wtf-card-title">Kratom Teas</h3>
+        <p class="wtf-card-description">4 premium strains available<br>Green • Red • White • Yellow</p>
+        <button class="wtf-card-button">Customize Order</button>
+      </div>
+
+      <!-- Kava Drinks Card -->
+      <div class="wtf-order-card" onclick="openCustomization('kava_drinks')">
+        <img src="https://cdn.shopify.com/s/files/1/0676/5848/1842/files/kava_drinks_150x150_ed3c8ea3-4375-4e23-961e-232981840fdf.png?v=1756895318" alt="Kava Drinks" class="wtf-card-image">
+        <h3 class="wtf-card-title">Kava Drinks</h3>
+        <p class="wtf-card-description">Traditional Pacific wellness<br>26 flavors + optional creamers</p>
+        <button class="wtf-card-button">Customize Order</button>
+      </div>
+
+      <!-- Delta 9 Drinks Card -->
+      <div class="wtf-order-card" onclick="openCustomization('delta_9')">
+        <img src="https://cdn.shopify.com/s/files/1/0676/5848/1842/files/delta9_drinks_150x150_254066c1-676c-4661-b2e3-9cfac53e2e29.png?v=1756895318" alt="Delta 9 Drinks" class="wtf-card-image">
+        <h3 class="wtf-card-title">Delta 9 Drinks</h3>
+        <p class="wtf-card-description">House-made cannabis beverages<br>4 rotating weekly flavors</p>
+        <button class="wtf-card-button">Customize Order</button>
+      </div>
+
+      <!-- Cans Card -->
+      <div class="wtf-order-card" onclick="openCustomization('cans')">
+        <img src="{{ 'delta9-drinks-placeholder.png' | asset_url }}" alt="Canned Drinks" class="wtf-card-image">
+        <h3 class="wtf-card-title">Canned Drinks</h3>
+        <p class="wtf-card-description">Chilled ready-to-go cans<br>Pick your favorite flavor</p>
+        <button class="wtf-card-button">Order Now</button>
+      </div>
+
+      <!-- WTF Drafts Card -->
+      <div class="wtf-order-card" onclick="openCustomization('draft_pours')">
+        <img src="https://cdn.shopify.com/s/files/1/0676/5848/1842/files/wtf_drafts_150x150_d9b5baf2-57b4-4a52-afd8-022d83caf284.png?v=1756895319" alt="WTF Drafts" class="wtf-card-image">
+        <h3 class="wtf-card-title">WTF Drafts</h3>
+        <p class="wtf-card-description">Fresh from the tap<br>16oz pours • 8 rotating options</p>
+        <button class="wtf-card-button">Browse Selection</button>
+      </div>
+
+      <!-- Other Edibles Card -->
+      <div class="wtf-order-card" onclick="openCustomization('edibles_else')">
+        <img src="https://cdn.shopify.com/s/files/1/0676/5848/1842/files/only-fire-gummies.jpg?v=1756570644" alt="Other Edibles" class="wtf-card-image">
+        <h3 class="wtf-card-title">Other Edibles</h3>
+        <p class="wtf-card-description">Assorted treats<br>Add details in comments</p>
+        <button class="wtf-card-button">Order Now</button>
+      </div>
+
+      <!-- Other Merch Card -->
+      <div class="wtf-order-card" onclick="window.location.href='/collections/syrups-enhancers'">
+        <img src="https://cdn.shopify.com/s/files/1/0676/5848/1842/files/wtf-tshirt.jpg?v=1756570489" alt="Other Merch" class="wtf-card-image">
+        <h3 class="wtf-card-title">Other Merch</h3>
+        <p class="wtf-card-description">Syrups, accessories & more<br>Complete your experience</p>
+        <button class="wtf-card-button">Browse Catalog</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Customization Modal -->
+<div id="customizationModal" class="wtf-customization-modal">
+  <div class="wtf-modal-content">
+    <div class="wtf-modal-header">
+      <button class="wtf-close-modal" onclick="closeCustomization()">&times;</button>
+      <h2 class="wtf-modal-title" id="modalTitle">Customize Your Drink</h2>
+      <p class="wtf-modal-subtitle" id="modalSubtitle">Select your preferences</p>
+    </div>
+    
+    <div class="wtf-modal-body">
+      <!-- Size Selection -->
+      <div class="wtf-option-group">
+        <label class="wtf-option-label">Size</label>
+        <div class="wtf-size-options">
+          <button class="wtf-size-btn active" data-size="medium">M</button>
+          <button class="wtf-size-btn" data-size="large">L</button>
+          <button class="wtf-size-btn" data-size="gallon">G</button>
+        </div>
+      </div>
+
+      <!-- Strain Selection (Kratom only) -->
+      <div class="wtf-option-group" id="strainGroup" style="display: none;">
+        <label class="wtf-option-label">Kratom Strain</label>
+        <select class="wtf-dropdown" id="strainSelect">
+          <option value="">Select Strain</option>
+        </select>
+      </div>
+
+      <!-- Flavor Selection (Multiple) -->
+      <div class="wtf-option-group" id="flavorGroup">
+        <label class="wtf-option-label">Flavors</label>
+        <div class="wtf-flavor-grid" id="flavorGrid">
+          <!-- Flavors will be populated here -->
+        </div>
+        <div class="wtf-pump-counter" id="pumpCounter">
+          <div class="wtf-pump-info" id="pumpInfo">Medium: 4 pumps included • Large: 6 pumps included • Gallon: 24 pumps included</div>
+          <div class="wtf-pump-display" id="pumpDisplay">0 pumps selected</div>
+        </div>
+      </div>
+
+      <!-- Draft Selection (Single) -->
+      <div class="wtf-option-group" id="draftGroup" style="display: none;">
+        <label class="wtf-option-label">Draft Selection</label>
+        <select class="wtf-dropdown" id="draftSelect">
+          <option value="">Select Draft Beverage</option>
+        </select>
+      </div>
+
+      <!-- Creamer Selection (Kava only) -->
+      <div class="wtf-option-group" id="creamerGroup" style="display: none;">
+        <label class="wtf-option-label">Creamer (Optional)</label>
+        <select class="wtf-dropdown" id="creamerSelect">
+          <option value="">No Creamer</option>
+          <option value="oat-milk">Oat Milk</option>
+          <option value="coconut-milk">Coconut Milk</option>
+          <option value="almond-milk">Almond Milk</option>
+        </select>
+      </div>
+
+      <!-- Ice Selection -->
+      <div class="wtf-option-group" id="iceGroup">
+        <label class="wtf-option-label">Ice</label>
+        <div class="wtf-ice-options">
+          <button class="wtf-ice-btn" data-ice="light">Light Ice</button>
+          <button class="wtf-ice-btn active" data-ice="regular">Regular</button>
+          <button class="wtf-ice-btn" data-ice="none">No Ice</button>
+        </div>
+      </div>
+
+      <!-- Comments Section -->
+      <div class="wtf-option-group" id="commentsGroup">
+        <label class="wtf-option-label">Special Instructions (Optional)</label>
+        <textarea class="wtf-comments" id="commentsText" placeholder="Any special requests or modifications..."></textarea>
+      </div>
+
+      <!-- Price Display -->
+      <div class="wtf-price-display">
+        <div class="wtf-price" id="priceDisplay">$8.00</div>
+        <div class="wtf-price-breakdown" id="priceBreakdown">Base price</div>
+      </div>
+
+      <div class="wtf-cart-feedback" id="cartFeedback"></div>
+
+      <!-- Add to Cart Button -->
+      <button id="addToCartBtn" class="wtf-add-to-cart-modal" onclick="addToCart()">Add to Cart</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Global variables
+let currentCategory = '';
+let selectedSize = 'medium';
+let selectedStrain = '';
+let selectedFlavors = [];
+let selectedCreamer = '';
+let selectedIce = 'regular';
+let selectedDraft = '';
+let selectedComments = '';
+
+const productCategories = {
+  kratom_teas: {
+    displayName: 'Kratom Teas',
+    ui_type: 'customizable_drink',
+    options: {
+      strains: ['Green', 'Red', 'White', 'Yellow'],
+      flavors: [
+        'lemon', 'lime', 'orange', 'blood orange', 'strawberry', 'rasberry',
+        'blueberry', 'coconut', 'mango', 'watermelon', 'simple syrup', 'sour apple',
+        'dragon fruit', 'blackberry', 'smores', 'pumpkin spice', 'cranberry',
+        'grenadine', 'lavender', 'chocolate', 'caramel', 'maple', 'agave',
+        'hazelnut', 'rose', 'passion fruit', 'hibiscus'
+      ],
+      iceOptions: ['Regular Ice', 'Light Ice', 'No Ice'],
+      allowComments: true
+    }
+  },
+  kava_drinks: {
+    displayName: 'Kava Drinks',
+    ui_type: 'customizable_drink',
+    options: {
+      flavors: [
+        'lemon', 'lime', 'orange', 'blood orange', 'strawberry', 'rasberry',
+        'blueberry', 'coconut', 'mango', 'watermelon', 'simple syrup', 'sour apple',
+        'dragon fruit', 'blackberry', 'smores', 'pumpkin spice', 'cranberry',
+        'grenadine', 'lavender', 'chocolate', 'caramel', 'maple', 'agave',
+        'hazelnut', 'rose', 'passion fruit', 'hibiscus'
+      ],
+      iceOptions: ['Regular Ice', 'Light Ice', 'No Ice'],
+      allowComments: true
+    }
+  },
+  delta_9: {
+    displayName: '\u22069 Drinks',
+    ui_type: 'simple_drink',
+    options: {
+      flavors: ['Banana Runtz', 'Pink Starburst', 'Vanilla Lavendar', 'Watermelon Cherry']
+    }
+  },
+  cans: {
+    displayName: 'Canned Drinks',
+    ui_type: 'simple_drink',
+    options: {
+      flavors: ['Cola', 'Root Beer', 'Ginger Ale', 'Grape', 'Lemon Lime'],
+      iceOptions: ['Regular Ice', 'Light Ice', 'No Ice'],
+      allowComments: true
+    }
+  },
+  edibles_else: {
+    displayName: 'Other Edibles',
+    ui_type: 'simple_drink',
+    options: {
+      allowComments: true
+    }
+  },
+  draft_pours: {
+    displayName: 'Draft Pours',
+    ui_type: 'rotating_list',
+    items: [
+      'Five Flowers Lemonade Cooler',
+      'Tea Time Orange',
+      'Tea Time Watermelon',
+      'Mitra9 Dragonfruit',
+      'Mitra9 Rasberry Lime',
+      'White Rabbit Rootbeer',
+      'Botanical Brewing Co Perfect Pear',
+      'Botanical Brewing Co Lemon Poundcake'
+    ]
+  }
+};
+
+const variantMap = {
+  kratom_teas: { medium: 1111111111, large: 1111111112, gallon: 1111111113 },
+  kava_drinks:   { medium: 2222222221, large: 2222222222, gallon: 2222222223 },
+  delta_9: { medium: 3333333331, large: 3333333332, gallon: 3333333333 },
+  cans: { medium: 5555555551, large: 5555555552, gallon: 5555555553 },
+  edibles_else: { medium: 6666666661, large: 6666666662, gallon: 6666666663 },
+  draft_pours: {
+    'five-flowers-lemonade-cooler': 4444444441,
+    'tea-time-orange': 4444444442,
+    'tea-time-watermelon': 4444444443,
+    'mitra9-dragonfruit': 4444444444,
+    'mitra9-rasberry-lime': 4444444445,
+    'white-rabbit-rootbeer': 4444444446,
+    'botanical-brewing-co-perfect-pear': 4444444447,
+    'botanical-brewing-co-lemon-poundcake': 4444444448
+  }
+};
+
+function slugify(text) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+function populateSelectOptions(selectEl, options, placeholder) {
+  selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+  options.forEach(opt => {
+    const value = slugify(opt);
+    const optEl = document.createElement('option');
+    optEl.value = value;
+    optEl.textContent = opt;
+    selectEl.appendChild(optEl);
+  });
+}
+
+// Open customization modal
+function openCustomization(categoryId) {
+  currentCategory = categoryId;
+  const cat = productCategories[categoryId];
+  if (!cat) return;
+  const modal = document.getElementById('customizationModal');
+  const title = document.getElementById('modalTitle');
+  const subtitle = document.getElementById('modalSubtitle');
+  const strainGroup = document.getElementById('strainGroup');
+  const creamerGroup = document.getElementById('creamerGroup');
+  const flavorGroup = document.getElementById('flavorGroup');
+  const draftGroup = document.getElementById('draftGroup');
+  const commentsGroup = document.getElementById('commentsGroup');
+  const iceGroup = document.getElementById('iceGroup');
+
+  // Reset selections
+  selectedSize = 'medium';
+  selectedStrain = '';
+  selectedFlavors = [];
+  selectedCreamer = '';
+  selectedIce = 'regular';
+  selectedDraft = '';
+  selectedComments = '';
+  document.getElementById('cartFeedback').textContent = '';
+  document.getElementById('commentsText').value = '';
+  document.querySelectorAll('.wtf-size-btn').forEach(b => {
+    b.classList.remove('active');
+    if (b.dataset.size === 'medium') b.classList.add('active');
+  });
+  document.querySelectorAll('.wtf-ice-btn').forEach(b => {
+    b.classList.remove('active');
+    if (b.dataset.ice === 'regular') b.classList.add('active');
+  });
+
+  // Hide all groups initially
+  strainGroup.style.display = 'none';
+  creamerGroup.style.display = 'none';
+  flavorGroup.style.display = 'none';
+  draftGroup.style.display = 'none';
+  commentsGroup.style.display = 'none';
+  iceGroup.style.display = 'none';
+  document.getElementById('pumpCounter').style.display = 'block';
+  document.querySelector('.wtf-size-options').style.display = 'flex';
+
+  title.textContent = cat.displayName;
+  subtitle.textContent = 'Select your preferences';
+
+  if (cat.ui_type === 'rotating_list') {
+    document.querySelector('.wtf-size-options').style.display = 'none';
+    draftGroup.style.display = 'block';
+    populateSelectOptions(document.getElementById('draftSelect'), cat.items, 'Select Draft Beverage');
+  } else {
+    if (cat.options?.strains) {
+      strainGroup.style.display = 'block';
+      populateSelectOptions(document.getElementById('strainSelect'), cat.options.strains, 'Select Strain');
+    }
+    if (cat.options?.flavors) {
+      flavorGroup.style.display = 'block';
+      populateFlavorCheckboxes(cat.options.flavors);
+      document.getElementById('pumpCounter').style.display =
+        cat.ui_type === 'customizable_drink' ? 'block' : 'none';
+    }
+    if (categoryId === 'kava_drinks') {
+      creamerGroup.style.display = 'block';
+    }
+    if (cat.options?.iceOptions) {
+      iceGroup.style.display = 'block';
+    }
+    if (cat.options?.allowComments) {
+      commentsGroup.style.display = 'block';
+    }
+  }
+
+  updatePumpDisplay();
+  updatePrice();
+  modal.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+// Close customization modal
+function closeCustomization() {
+  const modal = document.getElementById('customizationModal');
+  modal.style.display = 'none';
+  document.body.style.overflow = 'auto';
+}
+
+// Populate flavor checkboxes
+function populateFlavorCheckboxes(options) {
+  const flavorGrid = document.getElementById('flavorGrid');
+  flavorGrid.innerHTML = '';
+
+  options.forEach(option => {
+    const slug = slugify(option);
+    const checkboxDiv = document.createElement('div');
+    checkboxDiv.className = 'wtf-flavor-checkbox';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `flavor-${slug}`;
+    checkbox.value = slug;
+    checkbox.addEventListener('change', updateFlavorSelection);
+
+    const label = document.createElement('label');
+    label.htmlFor = `flavor-${slug}`;
+    label.textContent = option;
+
+    checkboxDiv.appendChild(checkbox);
+    checkboxDiv.appendChild(label);
+    flavorGrid.appendChild(checkboxDiv);
+  });
+}
+
+// Update flavor selection and pump count
+function updateFlavorSelection() {
+  selectedFlavors = Array.from(document.querySelectorAll('#flavorGrid input[type="checkbox"]:checked'))
+    .map(cb => cb.value);
+  
+  updatePumpDisplay();
+  updatePrice();
+}
+
+// Update pump display
+function updatePumpDisplay() {
+  const pumpDisplay = document.getElementById('pumpDisplay');
+  if (productCategories[currentCategory]?.ui_type !== 'customizable_drink') {
+    pumpDisplay.textContent = '';
+    return;
+  }
+  const pumpCount = selectedFlavors.length;
+  const includedPumps = (selectedSize === 'large') ? 6 : (selectedSize === 'gallon') ? 24 : 4;
+  const extraPumps = Math.max(0, pumpCount - includedPumps);
+
+  let displayText = `${pumpCount} pump${pumpCount !== 1 ? 's' : ''} selected`;
+  if (extraPumps > 0) {
+    displayText += ` (+${extraPumps} extra)`;
+  }
+
+  pumpDisplay.textContent = displayText;
+}
+
+// Format option names for display
+function formatOptionName(option) {
+  return option.split('-').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join(' ');
+}
+
+// Update price based on selections
+function updatePrice() {
+  let basePrice = 8.00;
+  let extraCost = 0;
+
+  const priceMap = {
+    kratom_teas: { medium: 8.00, large: 10.00, gallon: 32.00 },
+    kava_drinks: { medium: 9.00, large: 11.00, gallon: 36.00 },
+    delta_9: { medium: 12.00, large: 15.00, gallon: 45.00 },
+    cans: { medium: 5.00, large: 7.00, gallon: 21.00 },
+    edibles_else: { medium: 6.00, large: 8.00, gallon: 24.00 },
+    draft_pours: { medium: 12.00, large: 12.00, gallon: 48.00 }
+  };
+
+  if (priceMap[currentCategory]) {
+    basePrice = priceMap[currentCategory][selectedSize];
+  }
+
+  // Calculate extra pump cost for customizable drinks
+  if (productCategories[currentCategory]?.ui_type === 'customizable_drink') {
+    const includedPumps = (selectedSize === 'large') ? 6 : (selectedSize === 'gallon') ? 24 : 4;
+    const extraPumps = Math.max(0, selectedFlavors.length - includedPumps);
+    extraCost = extraPumps * 0.50;
+  }
+  
+  const totalPrice = basePrice + extraCost;
+  
+  document.getElementById('priceDisplay').textContent = `$${totalPrice.toFixed(2)}`;
+  
+  let breakdown = 'Base price';
+  if (extraCost > 0) {
+    breakdown += ` + $${extraCost.toFixed(2)} extra pumps`;
+  }
+  document.getElementById('priceBreakdown').textContent = breakdown;
+}
+
+async function updateCartCount() {
+  try {
+    const res = await fetch('/cart.js');
+    const data = await res.json();
+    const countEl = document.getElementById('wtf-cart-count');
+    if (countEl) countEl.textContent = data.item_count;
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// Add to cart function
+function addToCart() {
+  // Validate selections
+  if (currentCategory === 'kratom_teas' && !selectedStrain) {
+    alert('Please select a kratom strain.');
+    return;
+  }
+
+  if (currentCategory === 'draft_pours' && !selectedDraft) {
+    alert('Please select a draft beverage.');
+    return;
+  }
+
+  if (currentCategory !== 'draft_pours' && selectedFlavors.length === 0 && productCategories[currentCategory]?.options?.flavors) {
+    alert('Please select at least one flavor.');
+    return;
+  }
+
+  if (currentCategory === 'edibles_else' && !document.getElementById('commentsText').value.trim()) {
+    alert('Please provide details for your edible.');
+    return;
+  }
+
+  const addBtn = document.getElementById('addToCartBtn');
+  const feedback = document.getElementById('cartFeedback');
+  const originalText = addBtn.textContent;
+  addBtn.disabled = true;
+  addBtn.textContent = 'Adding...';
+  feedback.textContent = '';
+
+  selectedComments = document.getElementById('commentsText').value;
+
+  const properties = {
+    Size: currentCategory === 'draft_pours' ? '16oz' : formatOptionName(selectedSize)
+  };
+  if (productCategories[currentCategory]?.options?.iceOptions) {
+    properties['Ice'] = formatOptionName(selectedIce);
+  }
+  if (currentCategory === 'kratom_teas') {
+    properties['Strain'] = formatOptionName(selectedStrain);
+  }
+  if (currentCategory === 'kava_drinks' && selectedCreamer) {
+    properties['Creamer'] = formatOptionName(selectedCreamer);
+  }
+  if (currentCategory === 'draft_pours') {
+    properties['Draft'] = formatOptionName(selectedDraft);
+  } else if (selectedFlavors.length) {
+    properties['Flavors'] = selectedFlavors.map(formatOptionName).join(', ');
+    if (productCategories[currentCategory]?.ui_type === 'customizable_drink') {
+      properties['Pump Count'] = `${selectedFlavors.length}`;
+    }
+  }
+  if (selectedComments) {
+    properties['Special Instructions'] = selectedComments;
+  }
+
+  let variantId;
+  if (currentCategory === 'draft_pours') {
+    variantId = variantMap.draft_pours[selectedDraft];
+  } else {
+    variantId = variantMap[currentCategory][selectedSize];
+  }
+  if (!variantId) {
+    feedback.textContent = 'Unavailable';
+    addBtn.disabled = false;
+    addBtn.textContent = originalText;
+    return;
+  }
+
+  fetch('/cart/add.js', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: variantId, quantity: 1, properties })
+  })
+    .then(res => {
+      if (!res.ok) throw new Error('Add failed');
+      return res.json();
+    })
+    .then(() => {
+      feedback.textContent = 'Item Added!';
+      addBtn.textContent = 'Added!';
+      updateCartCount();
+      setTimeout(() => {
+        feedback.textContent = '';
+        addBtn.textContent = originalText;
+        addBtn.disabled = false;
+        closeCustomization();
+      }, 1000);
+    })
+    .catch(() => {
+      feedback.textContent = 'Error adding item';
+      addBtn.textContent = 'Try Again';
+      setTimeout(() => {
+        feedback.textContent = '';
+        addBtn.textContent = originalText;
+        addBtn.disabled = false;
+      }, 1500);
+    });
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  // Size selection
+  document.querySelectorAll('.wtf-size-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.wtf-size-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      selectedSize = this.dataset.size;
+      updatePumpDisplay();
+      updatePrice();
+    });
+  });
+
+  // Ice selection
+  document.querySelectorAll('.wtf-ice-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.wtf-ice-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      selectedIce = this.dataset.ice;
+    });
+  });
+
+  // Strain selection
+  document.getElementById('strainSelect').addEventListener('change', function() {
+    selectedStrain = this.value;
+  });
+
+  // Draft selection
+  document.getElementById('draftSelect').addEventListener('change', function() {
+    selectedDraft = this.value;
+  });
+
+  // Creamer selection
+  document.getElementById('creamerSelect').addEventListener('change', function() {
+    selectedCreamer = this.value;
+  });
+
+  // Comments
+  document.getElementById('commentsText').addEventListener('input', function() {
+    selectedComments = this.value;
+  });
+
+  // Close modal when clicking outside
+  document.getElementById('customizationModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeCustomization();
+    }
+  });
+});
+</script>
+

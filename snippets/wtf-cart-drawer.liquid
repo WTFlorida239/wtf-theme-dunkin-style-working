@@ -1,0 +1,34 @@
+<div id="wtf-cart-drawer" hidden style="position:fixed;inset:0;background:rgba(0,0,0,.4);display:grid;place-items:end;">
+  <div style="width:min(420px,100%);height:100%;background:#fff;padding:16px 16px 80px;overflow:auto;">
+    <button
+      type="button"
+      id="wtf-cart-close"
+      style="border:none;background:transparent;font-weight:800;font-size:20px;"
+    >
+      ×
+    </button>
+    <div id="wtf-cart-contents">Updating…</div>
+  </div>
+</div>
+<script>
+  (function () {
+    const root = document.getElementById('wtf-cart-drawer');
+    const closeBtn = document.getElementById('wtf-cart-close');
+    function open() {
+      root.hidden = false;
+      refresh();
+    }
+    function close() {
+      root.hidden = true;
+    }
+    async function refresh() {
+      const r = await fetch('{{ routes.cart_url }}?view=drawer');
+      document.getElementById('wtf-cart-contents').innerHTML = await r.text();
+    }
+    closeBtn.addEventListener('click', close);
+    document.addEventListener('drawer:open', (e) => {
+      if (e.detail?.target === 'cart') open();
+    });
+    document.addEventListener('wtf:cart:updated', open);
+  })();
+</script>

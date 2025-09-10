@@ -1,0 +1,34 @@
+{% comment %}Central option lists & base prices{% endcomment %}
+{% assign KRATOM_STRAINS = "Green,Red,White,Yellow" | split: "," %}
+{% assign SHARED_FLAVORS = "
+Blue Raspberry,
+Cherry,
+Grape,
+Mango,
+Peach,
+Strawberry,
+Watermelon,
+Pineapple,
+Dragon Fruit,
+Lemon,
+Lime,
+Raspberry,
+Orange,
+Green Apple,
+Blackberry,
+Passion Fruit,
+Coconut,
+Vanilla,
+Lavender,
+Peach Ring,
+Cherry Punch,
+Vanilla Lavender,
+Berry Lime,
+Cotton Candy,
+S'mores,
+Tropical Punch
+" | strip | split: "," %}
+{% assign KAVA_CREAMERS = "Oat Milk,Coconut Milk,Almond Milk" | split: "," %}
+{% assign KRATOM_BASE_PRICE = 12.00 %}
+{% assign KAVA_BASE_PRICE   = 10.00 %}
+{% assign DELTA9_BASE_PRICE = 8.00 %}

@@ -1,0 +1,317 @@
+{% comment %}
+  File: sections/wtf-product-builder.liquid
+  Purpose: Reusable page builder with placeholder image, consistent pricing, and AJAX cart.
+{% endcomment %}
+
+<section class="wtf-builder container" style="max-width:1100px;margin:0 auto;padding:24px 16px;">
+  <div class="wtf-builder__grid" style="display:grid;grid-template-columns:1fr;gap:24px;">
+    <div class="wtf-builder__media" style="justify-self:center;">
+      {% assign img = section.settings.placeholder_image %}
+      {% if img != blank %}
+        {%- assign alt_text = section.settings.title | escape -%}
+        {{ img | image_url: width: 800 | image_tag: alt: alt_text, loading: 'eager', class: 'rounded-xl shadow' }}
+      {% else %}
+        {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+      {% endif %}
+    </div>
+
+    <div class="wtf-builder__form">
+      <h1 style="margin:0 0 6px;font-weight:800;font-size:28px;line-height:1.2;">{{ section.settings.title }}</h1>
+      {% if section.settings.price_cents > 0 %}
+        <div style="color:#ff6600;font-weight:800;margin-bottom:8px;">
+          {{ section.settings.price_cents | money_with_currency }}
+          {% if section.settings.price_suffix != blank %}
+            <span style="color:#666;font-weight:600;">{{ section.settings.price_suffix }}</span>
+          {% endif %}
+        </div>
+      {% endif %}
+      {% if section.settings.subtitle != blank %}
+        <p style="color:#555;margin:0 0 16px;">{{ section.settings.subtitle }}</p>
+      {% endif %}
+
+      <form
+        id="wtf-builder-form-{{ section.id }}"
+        class="wtf-builder__form-inner"
+        data-product-id="{{ section.settings.base_product_id }}"
+        style="display:grid;gap:16px;"
+      >
+        {%- comment -%}
+          Option groups. These become line item properties. Configure in Customizer.
+        {%- endcomment -%}
+        {% for block in section.blocks %}
+          {% case block.type %}
+            {% when 'option_group' %}
+              <fieldset style="border:1px solid #eee;border-radius:12px;padding:12px;">
+                <legend style="font-weight:800;">{{ block.settings.heading }}</legend>
+                {% if block.settings.helptext != blank %}
+                  <div style="background:#f6f9ff;border:1px solid #e6efff;border-radius:8px;padding:8px;margin:8px 0;color:#333;">
+                    {{ block.settings.helptext }}
+                  </div>
+                {% endif %}
+
+                <div
+                  class="wtf-option-grid"
+                  style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;"
+                >
+                  {% assign name = block.settings.property_key | default: block.id %}
+                  {%- assign options_array = block.settings.options | split: ',' -%}
+                  {% for opt in options_array %}
+                    {% assign trimmed = opt | strip %}
+                    <label class="wtf-chip">
+                      <input type="radio" name="{{ name | escape }}" value="{{ trimmed | escape }}" hidden>
+                      <span class="chip">{{ trimmed }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+              </fieldset>
+
+            {% when 'multi_select' %}
+              <fieldset style="border:1px solid #eee;border-radius:12px;padding:12px;">
+                <legend style="font-weight:800;">{{ block.settings.heading }}</legend>
+                {% if block.settings.helptext != blank %}
+                  <div style="background:#f6f9ff;border:1px solid #e6efff;border-radius:8px;padding:8px;margin:8px 0;color:#333;">
+                    {{ block.settings.helptext }}
+                  </div>
+                {% endif %}
+
+                <div
+                  class="wtf-option-grid"
+                  style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;"
+                >
+                  {% assign name = block.settings.property_key | default: block.id %}
+                  {%- assign options_array = block.settings.options | split: ',' -%}
+                  {% for opt in options_array %}
+                    {% assign trimmed = opt | strip %}
+                    <label class="wtf-chip">
+                      <input type="checkbox" name="{{ name | escape }}[]" value="{{ trimmed | escape }}" hidden>
+                      <span class="chip">{{ trimmed }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+              </fieldset>
+
+            {% when 'notes' %}
+              <div>
+                <label for="notes-{{ section.id }}" style="font-weight:800;display:block;margin-bottom:6px;">
+                  {{- block.settings.heading -}}
+                </label>
+                <textarea
+                  id="notes-{{ section.id }}"
+                  name="{{ block.settings.property_key | default: 'Notes' }}"
+                  rows="3"
+                  style="width:100%;border:1px solid #ddd;border-radius:12px;padding:10px;"
+                  placeholder="{{ block.settings.placeholder }}"
+                ></textarea>
+              </div>
+
+            {% when 'quantity' %}
+              <div>
+                <label style="font-weight:800;display:block;margin-bottom:6px;">Quantity</label>
+                <div class="qty" style="display:flex;align-items:center;gap:10px;">
+                  <button
+                    type="button"
+                    class="qty__btn"
+                    data-action="dec"
+                    aria-label="Decrease quantity"
+                    style="border:1px solid #ddd;border-radius:999px;padding:6px 10px;font-weight:800;"
+                  >
+                    –
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value="1"
+                    name="quantity"
+                    class="qty__input"
+                    style="width:64px;text-align:center;border:1px solid #ddd;border-radius:10px;padding:6px;"
+                  >
+                  <button
+                    type="button"
+                    class="qty__btn"
+                    data-action="inc"
+                    aria-label="Increase quantity"
+                    style="border:1px solid #ddd;border-radius:999px;padding:6px 10px;font-weight:800;"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+          {% endcase %}
+        {% endfor %}
+
+        <button
+          type="submit"
+          class="wtf-addtocart"
+          style="background:#ff6600;color:#fff;border:none;border-radius:12px;padding:14px 16px;font-weight:800;font-size:16px;"
+        >
+          {{ section.settings.cta | default: 'Add to Cart' }}
+        </button>
+
+        {%- comment -%}
+          Hidden product/variant id for the add-to-cart call.
+          Use the product's **default variant ID** (required).
+        {%- endcomment -%}
+        <input type="hidden" name="id" value="{{ section.settings.base_variant_id }}">
+      </form>
+    </div>
+  </div>
+
+  <style>
+    .wtf-builder__grid{grid-template-columns:1fr;}.wtf-chip{display:block}
+    .wtf-chip .chip{display:block;text-align:center;border:1px solid #ddd;border-radius:12px;padding:10px;font-weight:700}
+    .wtf-chip input:checked + .chip{border-color:#ff6600;box-shadow:0 0 0 2px #ffe6d6}
+    @media(min-width:980px){.wtf-builder__grid{grid-template-columns:480px 1fr}}
+  </style>
+
+  <script>
+    (function(){
+      const form = document.getElementById('wtf-builder-form-{{ section.id }}');
+      if(!form) return;
+
+      // Quantity controls
+      form.querySelectorAll('.qty__btn').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const input = form.querySelector('.qty__input');
+          const dir = btn.dataset.action === 'inc' ? 1 : -1;
+          const next = Math.max(1, (parseInt(input.value||1,10) + dir));
+          input.value = next;
+        });
+      });
+
+      // AJAX add to cart
+      form.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const submitBtn = form.querySelector('.wtf-addtocart');
+        submitBtn.disabled = true;
+
+        // Build properties from all inputs except 'id' and 'quantity'
+        const fd = new FormData(form);
+        const payload = {
+          id: fd.get('id'),
+          quantity: parseInt(fd.get('quantity') || '1', 10),
+          properties: {}
+        };
+
+        fd.forEach((val,key)=>{
+          if(key === 'id' || key === 'quantity') return;
+          // Support multi-select arrays (key ends with [] in our markup)
+          if(key.endsWith('[]')){
+            const cleanKey = key.replace('[]','');
+            if(!payload.properties[cleanKey]) payload.properties[cleanKey] = [];
+            payload.properties[cleanKey].push(val);
+          } else {
+            payload.properties[key] = val;
+          }
+        });
+
+        try{
+          const res = await fetch('{{ routes.cart_add_url }}.js', {
+            method:'POST',
+            headers:{'Content-Type':'application/json','Accept':'application/json'},
+            body: JSON.stringify(payload),
+            credentials:'same-origin'
+          });
+          if(!res.ok){ throw new Error('Add to cart failed'); }
+
+          // Optional: open drawer if you have one; fallback = redirect to cart
+          document.dispatchEvent(new CustomEvent('wtf:cart:updated'));
+          {% if settings.cart_type == 'drawer' %}
+            document.dispatchEvent(new CustomEvent('drawer:open', { detail: { target: 'cart' }}));
+          {% else %}
+            window.location.href = '{{ routes.cart_url }}';
+          {% endif %}
+        } catch(err){
+          alert('Oops—please try again.');
+          console.error(err);
+        } finally {
+          submitBtn.disabled = false;
+        }
+      });
+    })();
+  </script>
+</section>
+
+{% schema %}
+{
+  "name": "WTF Product Builder",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Title", "default": "Custom Item" },
+    { "type": "textarea", "id": "subtitle", "label": "Description / Subtitle" },
+    { "type": "image_picker", "id": "placeholder_image", "label": "Placeholder Image" },
+
+    {
+      "type": "number",
+      "id": "price_cents",
+      "label": "Base price (in cents)",
+      "default": 900,
+      "info": "Shown at top (e.g., 900 = $9.00)"
+    },
+    {
+      "type": "text",
+      "id": "price_suffix",
+      "label": "Price suffix",
+      "info": "e.g., 'each', 'per 16 oz pour', etc."
+    },
+
+    { "type": "text", "id": "cta", "label": "Button label", "default": "Add to Cart" },
+
+    {
+      "type": "text",
+      "id": "base_product_id",
+      "label": "Base product (for reference only)",
+      "info": "Optional. Not used for add to cart."
+    },
+    {
+      "type": "text",
+      "id": "base_variant_id",
+      "label": "Default variant ID (REQUIRED)",
+      "info": "Use the product's default variant ID. This is what gets added to cart."
+    }
+  ],
+  "blocks": [
+    {
+      "type": "option_group",
+      "name": "Single-select group",
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Choose Your Size" },
+        { "type": "text", "id": "property_key", "label": "Line item property name", "default": "Size" },
+        { "type": "textarea", "id": "helptext", "label": "Helper text" },
+        { "type": "textarea", "id": "options", "label": "Options (comma separated)", "default": "Small, Medium, Large" }
+      ]
+    },
+    {
+      "type": "multi_select",
+      "name": "Multi-select group",
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Choose Flavors" },
+        { "type": "text", "id": "property_key", "label": "Line item property name", "default": "Flavors" },
+        { "type": "textarea", "id": "helptext", "label": "Helper text" },
+        {
+          "type": "textarea",
+          "id": "options",
+          "label": "Options (comma separated)",
+          "default": "Vanilla, Caramel, Hazelnut"
+        }
+      ]
+    },
+    {
+      "type": "notes",
+      "name": "Notes",
+      "settings": [
+        { "type": "text", "id": "heading", "label": "Heading", "default": "Special Requests & Comments" },
+        { "type": "text", "id": "property_key", "label": "Line item property name", "default": "Notes" },
+        { "type": "text", "id": "placeholder", "label": "Placeholder", "default": "Any special requests?" }
+      ]
+    },
+    {
+      "type": "quantity",
+      "name": "Quantity",
+      "limit": 1,
+      "settings": []
+    }
+  ],
+  "max_blocks": 25,
+  "presets": [{ "name": "WTF Product Builder" }]
+}
+{% endschema %}

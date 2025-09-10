@@ -1,0 +1,550 @@
+{% comment %}
+  templates/page.take-home-items.liquid
+  - AJAX add-to-cart via /cart/add.js
+  - Reads variant id from:
+      1) page metafield (optional): namespace "wtf", key "take_home_variant_id"
+      2) theme setting: settings.take_home_variant_id
+  - Captures line item properties: Category, Comments
+  - Cart count synced from Shopify (fallback to localStorage)
+  - Validation + consolidated price math + live button text
+
+  Metafield suggestion (Resource: Page):
+    Namespace: wtf
+    Key: take_home_variant_id
+    Type: number_integer
+
+  Theme setting suggestion (config/settings_schema.json):
+    {
+      "type": "text",
+      "id": "take_home_variant_id",
+      "label": "Take-Home Items: Variant ID (fallback)",
+      "info": "Variant to add for Take-Home Items page if no page metafield override is set."
+    }
+{% endcomment %}
+
+{% assign take_home_variant_id = page.metafields.wtf.take_home_variant_id | default: settings.take_home_variant_id %}
+{% assign take_home_variant_id = take_home_variant_id | strip %}
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Take Home Items - WTF | Welcome To Florida</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f8f9fa;
+        line-height: 1.6;
+      }
+
+      .header {
+        background: #ff6600;
+        color: white;
+        padding: 15px 0;
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .back-link {
+        display: inline-block;
+        color: #ff6600;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 16px;
+        margin-bottom: 20px;
+        padding: 10px 15px;
+        border: 2px solid #ff6600;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+      }
+      .back-link:hover {
+        background: #ff6600;
+        color: white;
+      }
+
+      .product-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        align-items: start;
+      }
+
+      .product-image {
+        width: 100%;
+        max-width: 400px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      }
+
+      .product-details {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      }
+
+      .product-title {
+        font-size: 32px;
+        color: #333;
+        margin-bottom: 10px;
+        font-weight: bold;
+      }
+
+      .product-price {
+        font-size: 24px;
+        color: #ff6600;
+        font-weight: bold;
+        margin-bottom: 15px;
+      }
+
+      .product-description {
+        color: #666;
+        margin-bottom: 30px;
+        line-height: 1.6;
+        font-size: 16px;
+      }
+
+      .selection-section {
+        margin: 30px 0;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 20px;
+      }
+      .selection-section:last-child { border-bottom: none; }
+
+      .section-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 15px;
+      }
+
+      .option-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+      }
+
+      .option-button {
+        padding: 15px;
+        border: 3px solid #ddd;
+        border-radius: 8px;
+        text-align: center;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: #333;
+        font-size: 14px;
+        font-family: inherit;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+      }
+      .option-button:hover {
+        border-color: #ff6600;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(255,102,0,0.2);
+      }
+      .option-button.selected {
+        background: #ff6600;
+        color: white;
+        border-color: #ff6600;
+        font-weight: bold;
+      }
+
+      .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .qty-btn {
+        width: 40px;
+        height: 40px;
+        border: 2px solid #ff6600;
+        background: white;
+        color: #ff6600;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: bold;
+        font-family: inherit;
+        transition: all 0.3s ease;
+      }
+      .qty-btn:hover {
+        background: #ff6600;
+        color: white;
+        transform: scale(1.1);
+      }
+
+      .qty-input {
+        width: 80px;
+        text-align: center;
+        padding: 10px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        font-family: inherit;
+      }
+
+      .comments-textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        resize: vertical;
+        font-family: inherit;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      .comments-textarea:focus {
+        border-color: #ff6600;
+        outline: none;
+      }
+
+      .add-to-cart-btn {
+        width: 100%;
+        padding: 18px;
+        background: #ff6600;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 20px;
+        font-family: inherit;
+        transition: all 0.3s ease;
+      }
+      .add-to-cart-btn:hover {
+        background: #e55a00;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255,102,0,0.3);
+      }
+      .add-to-cart-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .success-message {
+        background: #d4edda;
+        color: #155724;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+        border: 1px solid #c3e6cb;
+        display: none;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+      .success-message.show { display: block; }
+
+      .cart-status {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #ff6600;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 25px;
+        font-weight: bold;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(255,102,0,0.3);
+      }
+
+      .info-box {
+        background: #e7f3ff;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        color: #333;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      @media (max-width: 768px) {
+        .product-grid { grid-template-columns: 1fr; }
+        .option-grid { grid-template-columns: repeat(2, 1fr); }
+        .product-details { padding: 20px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">WTF | Welcome To Florida</div>
+    <div class="cart-status" id="cart-status">Cart: <span id="cart-count">0</span> items</div>
+
+    <div class="container">
+      <a href="/" class="back-link">← Back to Menu</a>
+
+      <div class="product-grid">
+        <div class="product-image-section">
+          <img src="{{ 'take-home-items_150x150.png' | asset_url }}" alt="Take Home Items" class="product-image">
+        </div>
+
+        <div class="product-details">
+          <h1 class="product-title">Take Home Items</h1>
+          <div class="product-price" id="product-price">Prices vary</div>
+          <p class="product-description">
+            Products designed for home consumption and use. Perfect for stocking up on your favorites.
+          </p>
+
+          <div class="selection-section" aria-labelledby="category-title">
+            <h3 class="section-title" id="category-title">🏠 Choose Your Take Home Category</h3>
+            <div class="info-box"><strong>Take Home Products:</strong> Items for home consumption and use only.</div>
+            <div class="option-grid" role="listbox" aria-label="Take home categories">
+              <button type="button" class="option-button" data-price="25.00" aria-pressed="false">
+                Dry Goods &amp; Powders
+              </button>
+              <button type="button" class="option-button" data-price="15.00" aria-pressed="false">
+                WTF Merchandise
+              </button>
+              <button type="button" class="option-button" data-price="45.00" aria-pressed="false">
+                Cases &amp; Bulk Items
+              </button>
+              <button type="button" class="option-button" data-price="20.00" aria-pressed="false">
+                Edibles &amp; Treats
+              </button>
+              <button type="button" class="option-button" data-price="35.00" aria-pressed="false">Starter Kits</button>
+              <button type="button" class="option-button" data-price="50.00" aria-pressed="false">
+                Premium Packages
+              </button>
+            </div>
+          </div>
+
+          <div class="selection-section">
+            <h3 class="section-title">💬 Special Requests &amp; Comments</h3>
+            <textarea
+              id="order-comments"
+              class="comments-textarea"
+              placeholder="Any special requests or modifications? We'll try to accommodate!"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="selection-section">
+            <h3 class="section-title">🔢 Quantity</h3>
+            <div class="quantity-controls">
+              <button type="button" class="qty-btn" data-delta="-1" aria-label="Decrease quantity">−</button>
+              <input
+                type="number"
+                id="quantity"
+                value="1"
+                min="1"
+                max="50"
+                class="qty-input"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                aria-live="polite"
+                aria-label="Quantity"
+              >
+              <button type="button" class="qty-btn" data-delta="1" aria-label="Increase quantity">+</button>
+            </div>
+          </div>
+
+          <div id="success-message" class="success-message" role="status" aria-live="polite"></div>
+
+          <button type="button" id="add-to-cart-btn" class="add-to-cart-btn" disabled>Select a Category</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ---------- Liquid -> JS bridge ----------
+      const TAKE_HOME_VARIANT_ID = {{ take_home_variant_id | json }};
+      // ----------------------------------------
+
+      // State
+      let selectedCategory = null;        // { label: string, price: number }
+      let quantity = 1;
+
+      // Utility: currency format
+      const fmtMoney = (n) => '$' + (Math.round(n * 100) / 100).toFixed(2);
+
+      // Price calculation (single source of truth)
+      function computeTotal() {
+        if (!selectedCategory) return 0;
+        return selectedCategory.price * quantity;
+      }
+
+      function renderPriceAndButton() {
+        const priceEl = document.getElementById('product-price');
+        const btn = document.getElementById('add-to-cart-btn');
+        const total = computeTotal();
+
+        if (selectedCategory) {
+          priceEl.textContent = fmtMoney(selectedCategory.price) + ' each';
+          btn.textContent = `Add to Cart – ${fmtMoney(total)}`;
+          btn.disabled = false;
+        } else {
+          priceEl.textContent = 'Prices vary';
+          btn.textContent = 'Select a Category';
+          btn.disabled = true;
+        }
+      }
+
+      function wireCategoryButtons() {
+        document.querySelectorAll('.option-button').forEach(btn => {
+          btn.addEventListener('click', () => {
+            // clear selection
+            document.querySelectorAll('.option-button').forEach(b => {
+              b.classList.remove('selected');
+              b.setAttribute('aria-pressed', 'false');
+            });
+
+            // set selection
+            btn.classList.add('selected');
+            btn.setAttribute('aria-pressed', 'true');
+
+            const price = parseFloat(btn.dataset.price || '0');
+            const label = btn.textContent.trim();
+
+            selectedCategory = { label, price };
+            renderPriceAndButton();
+          });
+        });
+      }
+
+      function wireQuantity() {
+        const input = document.getElementById('quantity');
+        const buttons = document.querySelectorAll('.qty-btn');
+
+        const clamp = (val) => Math.max(1, Math.min(50, val));
+
+        buttons.forEach(b => {
+          b.addEventListener('click', () => {
+            const delta = parseInt(b.dataset.delta, 10);
+            const next = clamp((parseInt(input.value || '1', 10) || 1) + delta);
+            input.value = next;
+            quantity = next;
+            renderPriceAndButton();
+          });
+        });
+
+        input.addEventListener('input', () => {
+          const next = clamp(parseInt(input.value || '1', 10) || 1);
+          quantity = next;
+          renderPriceAndButton();
+        });
+      }
+
+      async function fetchCartCountFromShopify() {
+        try {
+          const res = await fetch('/cart.js', { credentials: 'same-origin' });
+          if (!res.ok) throw new Error('cart.js failed');
+          const cart = await res.json();
+          return cart.item_count || 0;
+        } catch (e) {
+          // Fallback to localStorage (if you still store local shadow cart elsewhere)
+          try {
+            const ls = JSON.parse(localStorage.getItem('wtf-cart') || '[]');
+            return Array.isArray(ls) ? ls.length : 0;
+          } catch { return 0; }
+        }
+      }
+
+      async function updateCartCountBadge() {
+        const count = await fetchCartCountFromShopify();
+        const node = document.getElementById('cart-count');
+        if (node) node.textContent = count;
+      }
+
+      function successToast(html) {
+        const box = document.getElementById('success-message');
+        box.innerHTML = html;
+        box.classList.add('show');
+        box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => box.classList.remove('show'), 5000);
+      }
+
+      function assertVariantConfigured() {
+        if (!TAKE_HOME_VARIANT_ID || String(TAKE_HOME_VARIANT_ID).trim() === '') {
+          alert('Theme setting "Take-Home Items: Variant ID" is not configured. Please set it in Theme Settings.');
+          return false;
+        }
+        return true;
+      }
+
+      async function addToCartAJAX() {
+        if (!assertVariantConfigured()) return;
+        if (!selectedCategory) {
+          alert('Please select a category first.');
+          return;
+        }
+
+        const btn = document.getElementById('add-to-cart-btn');
+        const original = btn.textContent;
+        btn.textContent = '⏳ Adding...';
+        btn.disabled = true;
+
+        const comments = (document.getElementById('order-comments')?.value || '').trim();
+
+        // Build payload for /cart/add.js
+        const payload = {
+          id: Number(TAKE_HOME_VARIANT_ID),
+          quantity: quantity,
+          properties: {
+            'Category': selectedCategory.label,
+            'Comments': comments || undefined
+          }
+        };
+
+        try {
+          const res = await fetch('/cart/add.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(payload),
+            credentials: 'same-origin'
+          });
+
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.description || 'Add to cart failed');
+          }
+
+          const line = await res.json();
+
+          // Update cart badge from Shopify
+          await updateCartCountBadge();
+
+          successToast(
+            `<strong>✅ Added to Cart!</strong><br>
+             🏠 Category: ${selectedCategory.label}<br>
+             🔢 Quantity: ${quantity}<br>
+             💰 <strong>Total: ${fmtMoney(computeTotal())}</strong>
+             ${comments ? `<br>💬 Comments: ${comments}` : ''}`
+          );
+        } catch (e) {
+          console.error('Add to cart error', e);
+          alert('❌ Error adding to cart. ' + (e.message || 'Please try again.'));
+        } finally {
+          btn.textContent = original;
+          btn.disabled = false;
+        }
+      }
+
+      // Init
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('🚀 Take Home Items page initialized');
+        wireCategoryButtons();
+        wireQuantity();
+        renderPriceAndButton();
+        updateCartCountBadge();
+
+        document.getElementById('add-to-cart-btn').addEventListener('click', addToCartAJAX);
+      });
+    </script>
+  </body>
+</html>

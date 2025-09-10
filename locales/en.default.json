@@ -1,0 +1,16 @@
+{
+  "general": {
+    "404": {
+      "title": "Page not found",
+      "subtext": "The page you requested does not exist."
+    }
+  },
+  "accessibility": {
+    "skip_to_text": "Skip to content"
+  },
+  "sections": {
+    "header": {
+      "menu": "Menu"
+    }
+  }
+}

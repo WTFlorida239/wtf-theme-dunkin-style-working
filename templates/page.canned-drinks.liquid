@@ -1,0 +1,551 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Canned Drinks - WTF | Welcome To Florida</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f9fa; line-height: 1.6; }
+      .header { background: #ff6600; color: white; padding: 15px 0; text-align: center; font-size: 24px; font-weight: bold; }
+      .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+      .back-link { display: inline-block; color: #ff6600; text-decoration: none; font-weight: bold; font-size: 16px; margin-bottom: 20px; padding: 10px 15px; border: 2px solid #ff6600; border-radius: 5px; transition: all 0.3s ease; }
+      .back-link:hover { background: #ff6600; color: white; }
+      .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+      .product-image { width: 100%; max-width: 400px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+      .product-details { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+      .product-title { font-size: 32px; color: #333; margin-bottom: 10px; font-weight: bold; }
+      .product-price { font-size: 24px; color: #ff6600; font-weight: bold; margin-bottom: 15px; }
+      .price-placeholder { background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin: 10px 0; font-size: 14px; border: 1px solid #ffeaa7; }
+      .product-description { color: #666; margin-bottom: 30px; line-height: 1.6; font-size: 16px; }
+      .selection-section { margin: 30px 0; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+      .selection-section:last-child { border-bottom: none; }
+      .section-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 15px; }
+      .brand-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
+      .brand-button { padding: 15px; border: 3px solid #ddd; border-radius: 8px; text-align: center; background: white; cursor: pointer; transition: all 0.3s ease; color: #333; font-size: 14px; font-family: inherit; min-height: 60px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+      .brand-button:hover { border-color: #ff6600; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(255,102,0,0.2); }
+      .brand-button.selected { background: #ff6600; color: white; border-color: #ff6600; }
+      .flavor-section { display: none; margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; }
+      .flavor-section.show { display: block; }
+      .flavor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+      .flavor-button { padding: 12px 8px; border: 2px solid #ddd; border-radius: 6px; text-align: center; background: white; cursor: pointer; transition: all 0.3s ease; font-size: 13px; color: #333; font-family: inherit; min-height: 50px; display: flex; align-items: center; justify-content: center; }
+      .flavor-button:hover { border-color: #28a745; transform: translateY(-1px); }
+      .flavor-button.selected { background: #28a745; color: white; border-color: #28a745; font-weight: bold; }
+      .quantity-controls { display: flex; align-items: center; gap: 15px; }
+      .qty-btn { width: 40px; height: 40px; border: 2px solid #ff6600; background: white; color: #ff6600; border-radius: 50%; cursor: pointer; font-size: 18px; font-weight: bold; font-family: inherit; transition: all 0.3s ease; }
+      .qty-btn:hover { background: #ff6600; color: white; transform: scale(1.1); }
+      .qty-input { width: 80px; text-align: center; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; font-family: inherit; }
+      .comments-textarea { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; resize: vertical; font-family: inherit; font-size: 14px; line-height: 1.4; }
+      .comments-textarea:focus { border-color: #ff6600; outline: none; }
+      .add-to-cart-btn { width: 100%; padding: 18px; background: #ff6600; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; font-family: inherit; transition: all 0.3s ease; }
+      .add-to-cart-btn:hover { background: #e55a00; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,102,0,0.3); }
+      .add-to-cart-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+      .success-message { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #c3e6cb; display: none; font-size: 14px; line-height: 1.4; }
+      .success-message.show { display: block; }
+      .cart-status { position: fixed; top: 20px; right: 20px; background: #ff6600; color: white; padding: 10px 15px; border-radius: 25px; font-weight: bold; z-index: 1000; box-shadow: 0 4px 12px rgba(255,102,0,0.3); }
+      .info-box { background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; color: #333; font-size: 14px; line-height: 1.4; }
+      @media (max-width: 768px) { .product-grid { grid-template-columns: 1fr; } .brand-grid { grid-template-columns: repeat(2, 1fr); } .flavor-grid { grid-template-columns: repeat(2, 1fr); } .product-details { padding: 20px; } }
+    </style>
+
+    <!-- If set in theme settings, this provides the Shopify variant to add to cart -->
+    <script>
+      window.CANNED_VARIANT_ID = {{ settings.canned_drinks_variant_id | json }};
+      // Optional: override via metafield on this page if you prefer:
+      // window.CANNED_VARIANT_ID = {{ page.metafields.custom.canned_variant_id | json }};
+    </script>
+  </head>
+  <body>
+    <div class="header">WTF | Welcome To Florida</div>
+    <div class="cart-status" id="cart-status">Cart: <span id="cart-count">0</span> items</div>
+
+    <div class="container">
+      <a href="/" class="back-link">← Back to Menu</a>
+
+      <div class="product-grid">
+        <div class="product-image-section">
+          <img src="{{ 'edibles_150x150.png' | asset_url }}" alt="Canned Drinks" class="product-image">
+        </div>
+
+        <div class="product-details">
+          <h1 class="product-title">Canned Drinks</h1>
+          <div class="product-price" id="product-price">$10.00 each</div>
+          <div class="price-placeholder">💰 Price Placeholder - Update manually in admin</div>
+          <p class="product-description">
+            Premium ready-to-drink beverages from top brands. Perfect for on-the-go enjoyment.
+          </p>
+
+          <div class="selection-section">
+            <h3 class="section-title">🥤 Choose Your Brand</h3>
+            <div class="info-box">
+              <strong>Premium Canned Beverages:</strong> Select a brand first, then choose from available flavors.
+            </div>
+            <div class="brand-grid">
+              <button type="button" class="brand-button" onclick="selectBrand('White Rabbit Energy')">
+                White Rabbit Energy
+              </button>
+              <button type="button" class="brand-button" onclick="selectBrand('Rapture')">Rapture</button>
+              <button type="button" class="brand-button" onclick="selectBrand('Drippy')">Drippy</button>
+              <button type="button" class="brand-button" onclick="selectBrand('Uncle Skunk')">Uncle Skunk</button>
+              <button type="button" class="brand-button" onclick="selectBrand('Chronic Harvest Lemonade')">
+                Chronic Harvest Lemonade
+              </button>
+              <button type="button" class="brand-button" onclick="selectBrand('Crank')">Crank</button>
+              <button type="button" class="brand-button" onclick="selectBrand('Tea Time')">Tea Time</button>
+              <button type="button" class="brand-button" onclick="selectBrand('Much Love')">Much Love</button>
+              <button type="button" class="brand-button" onclick="selectBrand('Mitra')">Mitra</button>
+              <button type="button" class="brand-button" onclick="selectBrand('Imba')">Imba</button>
+              <button type="button" class="brand-button" onclick="selectBrand('Torch')">Torch</button>
+              <button type="button" class="brand-button" onclick="selectBrand('Two Scoops')">Two Scoops</button>
+            </div>
+          </div>
+
+          <!-- FLAVOR SECTIONS (spell-corrected) -->
+          <div class="flavor-section" id="flavors-white-rabbit-energy">
+            <h4 class="section-title">🍋 Choose Your White Rabbit Energy Flavor</h4>
+            <div class="flavor-grid">
+              <button type="button" class="flavor-button" onclick="selectFlavor('Root Beer')">Root Beer</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Mangoberry')">Mangoberry</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Raspberry Lemonade')">
+                Raspberry Lemonade
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Cherry Bomb')">Cherry Bomb</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Watermelon Candy')">
+                Watermelon Candy
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Larry Wheels Lemon Iced Tea')">
+                Larry Wheels Lemon Iced Tea
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Passionfruit')">Passionfruit</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Sweet Peach')">Sweet Peach</button>
+            </div>
+          </div>
+
+          <div class="flavor-section" id="flavors-rapture">
+            <h4 class="section-title">🍋 Choose Your Rapture Flavor</h4>
+            <div class="flavor-grid">
+              <button type="button" class="flavor-button" onclick="selectFlavor('Blueberry')">Blueberry</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Blackberry Lemonade')">
+                Blackberry Lemonade
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Bombsicle')">Bombsicle</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Orange Ice Dream')">
+                Orange Ice Dream
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Miami Vibe')">Miami Vibe</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Peach Mango')">Peach Mango</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Sour Watermelon')">
+                Sour Watermelon
+              </button>
+            </div>
+          </div>
+
+          <div class="flavor-section" id="flavors-drippy">
+            <h4 class="section-title">🍋 Choose Your Drippy Flavor</h4>
+            <div class="flavor-grid">
+              <button type="button" class="flavor-button" onclick="selectFlavor('Citrus Fade')">Citrus Fade</button>
+            </div>
+          </div>
+
+          <!-- STRICTLY FROM SPREADSHEET -->
+          <div class="flavor-section" id="flavors-uncle-skunk">
+            <h4 class="section-title">🍋 Choose Your Uncle Skunk Flavor</h4>
+            <div class="flavor-grid">
+              <button type="button" class="flavor-button" onclick="selectFlavor('Cola')">Cola</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Cherry Cola')">Cherry Cola</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Root Beer')">Root Beer</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Bourbon Cream Soda')">
+                Bourbon Cream Soda
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Dr. Pepe')">Dr. Pepe</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Grape')">Grape</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Orange')">Orange</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Lemon Lime')">Lemon Lime</button>
+            </div>
+          </div>
+
+          <div class="flavor-section" id="flavors-chronic-harvest-lemonade">
+            <h4 class="section-title">🍋 Choose Your Chronic Harvest Lemonade Flavor</h4>
+            <div class="flavor-grid">
+              <button type="button" class="flavor-button" onclick="selectFlavor('Cherry Lemonade')">
+                Cherry Lemonade
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Lemon Lemonade')">
+                Lemon Lemonade
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Grape Lemonade')">
+                Grape Lemonade
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Strawberry Lemonade')">
+                Strawberry Lemonade
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Blueberry Lemonade')">
+                Blueberry Lemonade
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Passionfruit Lemonade')">
+                Passionfruit Lemonade
+              </button>
+            </div>
+          </div>
+
+          <div class="flavor-section" id="flavors-crank">
+            <h4 class="section-title">🍋 Choose Your Crank Flavor</h4>
+            <div class="flavor-grid">
+              <button type="button" class="flavor-button" onclick="selectFlavor('Cotton Candy Lemonade')">
+                Cotton Candy Lemonade
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Salted Caramel Cold Brew')">
+                Salted Caramel Cold Brew
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Orange Push Pop')">
+                Orange Push Pop
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Moscow Mule')">Moscow Mule</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Cotton Candy Lemonade Shot')">
+                Cotton Candy Lemonade Shot
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Tropical Punch Shot')">
+                Tropical Punch Shot
+              </button>
+            </div>
+          </div>
+
+          <div class="flavor-section" id="flavors-tea-time">
+            <h4 class="section-title">🍋 Choose Your Tea Time Flavor</h4>
+            <div class="flavor-grid">
+              <button type="button" class="flavor-button" onclick="selectFlavor('Pineapple Mango')">
+                Pineapple Mango
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Limeade')">Limeade</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Watermelon Twist')">
+                Watermelon Twist
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Blue Razz')">Blue Razz</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Citrus')">Citrus</button>
+            </div>
+          </div>
+          <!-- /STRICTLY FROM SPREADSHEET -->
+
+          <div class="flavor-section" id="flavors-much-love">
+            <h4 class="section-title">🍋 Choose Your Much Love Flavor</h4>
+            <div class="flavor-grid">
+              <button type="button" class="flavor-button" onclick="selectFlavor('Mango Peach')">Mango Peach</button>
+            </div>
+          </div>
+
+          <div class="flavor-section" id="flavors-mitra">
+            <h4 class="section-title">🍋 Choose Your Mitra Flavor</h4>
+            <div class="flavor-grid">
+              <button type="button" class="flavor-button" onclick="selectFlavor('Tropical')">Tropical</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Dragon Fruit')">Dragon Fruit</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Watermelon')">Watermelon</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Root Beer')">Root Beer</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Tangerine')">Tangerine</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Cream Soda')">Cream Soda</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Coconut Lychee Kava')">
+                Coconut Lychee Kava
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Lemonade Kava')">Lemonade Kava</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Orange Creamsicle Kava')">
+                Orange Creamsicle Kava
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Strawberry Watermelon Kava')">
+                Strawberry Watermelon Kava
+              </button>
+            </div>
+          </div>
+
+          <div class="flavor-section" id="flavors-imba">
+            <h4 class="section-title">🍋 Choose Your Imba Flavor</h4>
+            <div class="flavor-grid">
+              <button type="button" class="flavor-button" onclick="selectFlavor('Pineapple')">Pineapple</button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Sour Blue Razz')">
+                Sour Blue Razz
+              </button>
+            </div>
+          </div>
+
+          <div class="flavor-section" id="flavors-torch">
+            <h4 class="section-title">🍋 Choose Your Torch Flavor</h4>
+            <div class="flavor-grid">
+              <button type="button" class="flavor-button" onclick="selectFlavor('Blue Razz Lemonade')">
+                Blue Razz Lemonade
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Raspberry Lemonade')">
+                Raspberry Lemonade
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Black Cherry')">Black Cherry</button>
+            </div>
+          </div>
+
+          <div class="flavor-section" id="flavors-two-scoops">
+            <h4 class="section-title">🍋 Choose Your Two Scoops Flavor</h4>
+            <div class="flavor-grid">
+              <button type="button" class="flavor-button" onclick="selectFlavor('Root Beer Float')">
+                Root Beer Float
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Cherry Cream Float')">
+                Cherry Cream Float
+              </button>
+              <button type="button" class="flavor-button" onclick="selectFlavor('Orange Cream Float')">
+                Orange Cream Float
+              </button>
+            </div>
+          </div>
+
+          <div class="selection-section">
+            <h3 class="section-title">💬 Special Requests & Comments</h3>
+            <textarea
+              id="order-comments"
+              class="comments-textarea"
+              placeholder="Any special requests or modifications? We'll try to accommodate!"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="selection-section">
+            <h3 class="section-title">🔢 Quantity</h3>
+            <div class="quantity-controls">
+              <button type="button" class="qty-btn" onclick="changeQuantity(-1)">−</button>
+              <input
+                type="number"
+                id="quantity"
+                value="1"
+                min="1"
+                max="50"
+                class="qty-input"
+                onchange="updateAddToCartButton()"
+              >
+              <button type="button" class="qty-btn" onclick="changeQuantity(1)">+</button>
+            </div>
+          </div>
+
+          <div id="success-message" class="success-message"></div>
+
+          <button type="button" id="add-to-cart-btn" class="add-to-cart-btn" onclick="addToCart()">
+            Select Brand & Flavor First
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let selectedBrand = '';
+      let selectedFlavor = '';
+      let basePrice = 10.0; // aligned with shown price
+
+      document.addEventListener('DOMContentLoaded', function () {
+        console.log('🚀 Enhanced Canned Drinks page loaded');
+
+        // Restore last selection if available
+        const savedBrand = sessionStorage.getItem('canned_brand');
+        const savedFlavor = sessionStorage.getItem('canned_flavor');
+
+        // If we have a saved brand, select it; else auto-open the first brand
+        const brandButtons = Array.from(document.querySelectorAll('.brand-button'));
+        if (savedBrand) {
+          selectBrand(savedBrand);
+          // If a saved flavor exists for this brand, select it
+          if (savedFlavor) selectFlavor(savedFlavor);
+        } else if (brandButtons.length) {
+          selectBrand(brandButtons[0].textContent.trim());
+        }
+
+        updateCartCount();
+        updateAddToCartButton();
+      });
+
+      function selectBrand(brand) {
+        console.log('Brand selected:', brand);
+        selectedBrand = brand;
+        sessionStorage.setItem('canned_brand', brand);
+        // Reset flavor when changing brand unless the saved flavor matches this brand section
+        selectedFlavor = '';
+        sessionStorage.removeItem('canned_flavor');
+
+        // Update visual selection
+        document.querySelectorAll('.brand-button').forEach((btn) => {
+          btn.classList.remove('selected');
+          if (btn.textContent.trim() === brand) {
+            btn.classList.add('selected');
+          }
+        });
+
+        // Hide all flavor sections
+        document.querySelectorAll('.flavor-section').forEach((section) => {
+          section.classList.remove('show');
+        });
+
+        // Show selected brand's flavors
+        const brandId = brand.toLowerCase().replace(/[^a-z0-9]/g, '-');
+        const flavorSection = document.getElementById('flavors-' + brandId);
+        if (flavorSection) {
+          flavorSection.classList.add('show');
+        }
+
+        // Clear flavor selection
+        document.querySelectorAll('.flavor-button').forEach((btn) => btn.classList.remove('selected'));
+        updateAddToCartButton();
+      }
+
+      function selectFlavor(flavor) {
+        console.log('Flavor selected:', flavor);
+        selectedFlavor = flavor;
+        sessionStorage.setItem('canned_flavor', flavor);
+
+        // Update visual selection within current brand section
+        const currentSection = document.querySelector('.flavor-section.show');
+        if (currentSection) {
+          currentSection.querySelectorAll('.flavor-button').forEach((btn) => {
+            btn.classList.remove('selected');
+            if (btn.textContent.trim() === flavor) {
+              btn.classList.add('selected');
+            }
+          });
+        }
+
+        updateAddToCartButton();
+      }
+
+      function updateAddToCartButton() {
+        const button = document.getElementById('add-to-cart-btn');
+        const quantity = parseInt(document.getElementById('quantity').value || 1);
+        const totalPrice = basePrice * quantity;
+
+        if (selectedBrand && selectedFlavor) {
+          button.textContent = `Add to Cart — ${selectedBrand} / ${selectedFlavor} × ${quantity} ($${totalPrice.toFixed(
+            2
+          )})`;
+          button.disabled = false;
+          button.style.background = '#ff6600';
+        } else {
+          button.textContent = 'Select Brand & Flavor First';
+          button.disabled = true;
+          button.style.background = '#ccc';
+        }
+      }
+
+      function changeQuantity(change) {
+        const input = document.getElementById('quantity');
+        const newValue = Math.max(1, Math.min(50, parseInt(input.value || 1) + change));
+        input.value = newValue;
+        updateAddToCartButton();
+      }
+
+      async function updateCartCount() {
+        // Prefer Shopify cart count, fall back to localStorage cart length
+        try {
+          const res = await fetch('/cart.js', { credentials: 'same-origin' });
+          if (res.ok) {
+            const cart = await res.json();
+            document.getElementById('cart-count').textContent = cart.item_count || 0;
+            return;
+          }
+        } catch (e) {
+          console.log('Shopify cart fetch failed, falling back to localStorage');
+        }
+        try {
+          const local = JSON.parse(localStorage.getItem('wtf-cart') || '[]');
+          document.getElementById('cart-count').textContent = local.length;
+        } catch {
+          document.getElementById('cart-count').textContent = '0';
+        }
+      }
+
+      async function addToCart() {
+        if (!selectedBrand || !selectedFlavor) {
+          alert('Please select both a brand and flavor first!');
+          return;
+        }
+
+        const button = document.getElementById('add-to-cart-btn');
+        const originalText = button.textContent;
+        button.textContent = '⏳ Adding...';
+        button.disabled = true;
+
+        const quantity = parseInt(document.getElementById('quantity').value || 1);
+        const comments = document.getElementById('order-comments').value.trim();
+        const totalPrice = basePrice * quantity;
+
+        const order = {
+          id: 'canned-drinks-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+          product: 'Canned Drinks',
+          brand: selectedBrand,
+          flavor: selectedFlavor,
+          quantity: quantity,
+          comments: comments,
+          price: totalPrice.toFixed(2),
+          timestamp: new Date().toISOString(),
+          dateAdded: new Date().toLocaleDateString(),
+        };
+
+        // Try Shopify AJAX cart first if variant ID is configured
+        const variantId = typeof window.CANNED_VARIANT_ID === 'number' ? window.CANNED_VARIANT_ID : null;
+
+        try {
+          if (variantId) {
+            // Build form-encoded body with line item properties
+            const body = new URLSearchParams();
+            body.set('id', String(variantId));
+            body.set('quantity', String(quantity));
+            body.set('properties[Brand]', selectedBrand);
+            body.set('properties[Flavor]', selectedFlavor);
+            if (comments) body.set('properties[Comments]', comments);
+
+            const res = await fetch('/cart/add.js', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                Accept: 'application/json',
+              },
+              body,
+              credentials: 'same-origin',
+            });
+
+            if (!res.ok) {
+              const err = await res.text();
+              throw new Error(err || 'Add to cart failed');
+            }
+          } else {
+            // Fallback to localStorage cart
+            let cart = [];
+            try {
+              cart = JSON.parse(localStorage.getItem('wtf-cart') || '[]');
+            } catch {
+              cart = [];
+            }
+            cart.push(order);
+            localStorage.setItem('wtf-cart', JSON.stringify(cart));
+          }
+
+          // Success UI
+          await updateCartCount();
+          const successMsg = document.getElementById('success-message');
+          successMsg.innerHTML =
+            `✅ <strong>Added to cart!</strong><br>
+                     <strong>${order.brand}</strong> — ${order.flavor}<br>
+                     Qty: ${order.quantity} • Est. Total: $${order.price}` +
+            (order.comments ? `<br><em>Note:</em> ${order.comments}` : '');
+          successMsg.classList.add('show');
+          successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          // Event hook for other scripts
+          document.dispatchEvent(
+            new CustomEvent('canned:added', {
+              detail: { brand: selectedBrand, flavor: selectedFlavor, quantity, comments, variantId },
+            })
+          );
+        } catch (error) {
+          console.error('Error adding to cart:', error);
+          alert('❌ Error adding to cart. Please try again.');
+        }
+
+        // Reset button after 5 seconds
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.disabled = false;
+          document.getElementById('success-message').classList.remove('show');
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>

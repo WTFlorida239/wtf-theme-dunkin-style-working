@@ -1,0 +1,331 @@
+{% comment %}
+  templates/page.fun-stuff.liquid
+  Production-ready "Fun Stuff" page
+  - AJAX /cart/add.js
+  - Reads variant ID from:
+      1) Page metafield: namespace `wtf`, key `variant_id` (optional override)
+      2) Theme setting: settings.fun_stuff_variant_id (fallback)
+  - Captures line item properties: Category, Comments
+  - Live price math + validation
+  - Cart count synced from Shopify (fallback to 0 if API fails)
+{% endcomment %}
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fun Stuff - WTF | Welcome To Florida</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f9fa; line-height: 1.6; }
+      .header { background: #ff6600; color: white; padding: 15px 0; text-align: center; font-size: 24px; font-weight: bold; }
+      .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+      .back-link { display: inline-block; color: #ff6600; text-decoration: none; font-weight: bold; font-size: 16px; margin-bottom: 20px; padding: 10px 15px; border: 2px solid #ff6600; border-radius: 5px; transition: all 0.3s ease; }
+      .back-link:hover { background: #ff6600; color: white; }
+      .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+      .product-image { width: 100%; max-width: 400px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+      .product-details { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+      .product-title { font-size: 32px; color: #333; margin-bottom: 10px; font-weight: bold; }
+      .product-price { font-size: 24px; color: #ff6600; font-weight: bold; margin-bottom: 15px; }
+      .product-description { color: #666; margin-bottom: 30px; line-height: 1.6; font-size: 16px; }
+      .selection-section { margin: 30px 0; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+      .selection-section:last-child { border-bottom: none; }
+      .section-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 15px; }
+      .option-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+      .option-button { padding: 15px; border: 3px solid #ddd; border-radius: 8px; text-align: center; background: white; cursor: pointer; transition: all 0.3s ease; color: #333; font-size: 14px; font-family: inherit; min-height: 60px; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+      .option-button:hover { border-color: #ff6600; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(255,102,0,0.2); }
+      .option-button.selected { background: #ff6600; color: white; border-color: #ff6600; font-weight: bold; }
+      .quantity-controls { display: flex; align-items: center; gap: 15px; }
+      .qty-btn { width: 40px; height: 40px; border: 2px solid #ff6600; background: white; color: #ff6600; border-radius: 50%; cursor: pointer; font-size: 18px; font-weight: bold; font-family: inherit; transition: all 0.3s ease; }
+      .qty-btn:hover { background: #ff6600; color: white; transform: scale(1.1); }
+      .qty-input { width: 80px; text-align: center; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; font-family: inherit; }
+      .comments-textarea { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; resize: vertical; font-family: inherit; font-size: 14px; line-height: 1.4; }
+      .comments-textarea:focus { border-color: #ff6600; outline: none; }
+      .add-to-cart-btn { width: 100%; padding: 18px; background: #ff6600; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; font-family: inherit; transition: all 0.3s ease; }
+      .add-to-cart-btn:hover { background: #e55a00; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,102,0,0.3); }
+      .add-to-cart-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+      .success-message { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #c3e6cb; display: none; font-size: 14px; line-height: 1.4; }
+      .success-message.show { display: block; }
+      .cart-status { position: fixed; top: 20px; right: 20px; background: #ff6600; color: white; padding: 10px 15px; border-radius: 25px; font-weight: bold; z-index: 1000; box-shadow: 0 4px 12px rgba(255,102,0,0.3); }
+      .info-box { background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; color: #333; font-size: 14px; line-height: 1.4; }
+      @media (max-width: 768px) { .product-grid { grid-template-columns: 1fr; } .option-grid { grid-template-columns: repeat(2, 1fr); } .product-details { padding: 20px; } }
+    </style>
+  </head>
+  <body
+    {%- comment -%}
+      Calculate the variant id we'll add to cart.
+      Prefer page metafield wtf.variant_id; fallback to theme setting fun_stuff_variant_id.
+    {%- endcomment -%}
+    {%- assign fun_variant_id = 0 -%}
+    {%- if page.metafields.wtf.variant_id.value -%}
+      {%- assign fun_variant_id = page.metafields.wtf.variant_id.value | plus: 0 -%}
+    {%- elsif settings.fun_stuff_variant_id -%}
+      {%- assign fun_variant_id = settings.fun_stuff_variant_id | plus: 0 -%}
+    {%- endif -%}
+    data-variant-id="{{ fun_variant_id }}"
+  >
+    <div class="header">WTF | Welcome To Florida</div>
+    <div class="cart-status" id="cart-status">Cart: <span id="cart-count">0</span> items</div>
+
+    <div class="container">
+      <a href="/" class="back-link">← Back to Menu</a>
+
+      <div class="product-grid">
+        <div class="product-image-section">
+          <img src="{{ 'fun-stuff_150x150.png' | asset_url }}" alt="Fun Stuff" class="product-image">
+        </div>
+
+        <div class="product-details">
+          <h1 class="product-title">Fun Stuff</h1>
+          <div class="product-price" id="product-price">Prices vary</div>
+          <p class="product-description">
+            Specialty items and unique products for those looking for something different. Age verification required for
+            certain items.
+          </p>
+
+          <div class="selection-section">
+            <h3 class="section-title">🎉 Choose Your Fun Item</h3>
+            <div class="info-box">
+              <strong>Specialty Items:</strong> Unique products for adventurous customers. Age restrictions may apply.
+            </div>
+            <div class="option-grid" id="fun-item-grid">
+              <!-- Update prices/labels as needed -->
+              <button type="button" class="option-button" data-price="15.00">Prerolls</button>
+              <button type="button" class="option-button" data-price="25.00">Mushroom Products</button>
+              <button type="button" class="option-button" data-price="8.00">THC Candy</button>
+              <button type="button" class="option-button" data-price="12.00">CBD Gummies</button>
+              <button type="button" class="option-button" data-price="20.00">Specialty Edibles</button>
+              <button type="button" class="option-button" data-price="10.00">Novelty Items</button>
+              <button type="button" class="option-button" data-price="18.00">Party Packs</button>
+              <button type="button" class="option-button" data-price="30.00">Premium Selection</button>
+            </div>
+          </div>
+
+          <div class="selection-section">
+            <h3 class="section-title">💬 Special Requests & Comments</h3>
+            <textarea
+              id="order-comments"
+              class="comments-textarea"
+              placeholder="Any special requests or modifications? We'll try to accommodate!"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <div class="selection-section">
+            <h3 class="section-title">🔢 Quantity</h3>
+            <div class="quantity-controls">
+              <button type="button" class="qty-btn" id="qty-minus">−</button>
+              <input type="number" id="quantity" value="1" min="1" max="50" class="qty-input">
+              <button type="button" class="qty-btn" id="qty-plus">+</button>
+            </div>
+          </div>
+
+          <div id="success-message" class="success-message" role="status" aria-live="polite"></div>
+
+          <button type="button" id="add-to-cart-btn" class="add-to-cart-btn" disabled>Select an item to add</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        // ---- State ----
+        let selectedCategory = null;
+        let unitPrice = 0; // price for a single item based on selectedCategory
+
+        // ---- DOM helpers ----
+        const $ = (sel, ctx = document) => ctx.querySelector(sel);
+        const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+        const fmt = (n) => Number(n).toFixed(2);
+
+        // ---- Elements ----
+        const bodyEl = document.body;
+        const addBtn = $('#add-to-cart-btn');
+        const qtyInput = $('#quantity');
+        const qtyMinus = $('#qty-minus');
+        const qtyPlus = $('#qty-plus');
+        const successMsg = $('#success-message');
+        const cartCountEl = $('#cart-count');
+
+        // ---- Variant source (Liquid wrote this data attribute) ----
+        const VARIANT_ID = parseInt(bodyEl.getAttribute('data-variant-id') || '0', 10);
+
+        // ---- Init ----
+        document.addEventListener('DOMContentLoaded', () => {
+          wireOptions();
+          wireQuantity();
+          updateCartCount();
+          updateButton();
+
+          // Surface admin hint if variant is not configured
+          if (!VARIANT_ID || Number.isNaN(VARIANT_ID)) {
+            addBtn.textContent = 'Configure fun_stuff_variant_id in Theme settings';
+            addBtn.disabled = true;
+            addBtn.style.background = '#ccc';
+          }
+        });
+
+        // ---- Wire option buttons (single-select) ----
+        function wireOptions() {
+          $$('.option-button').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              // toggle selection (single-select)
+              const already = btn.classList.contains('selected');
+              $$('.option-button').forEach((b) => b.classList.remove('selected'));
+              if (!already) {
+                btn.classList.add('selected');
+                selectedCategory = btn.textContent.trim();
+                unitPrice = parseFloat(btn.dataset.price || '0');
+              } else {
+                selectedCategory = null;
+                unitPrice = 0;
+              }
+              updateButton();
+            });
+          });
+        }
+
+        // ---- Quantity controls ----
+        function wireQuantity() {
+          qtyMinus.addEventListener('click', () => changeQty(-1));
+          qtyPlus.addEventListener('click', () => changeQty(1));
+          qtyInput.addEventListener('input', () => {
+            clampQty();
+            updateButton();
+          });
+        }
+
+        function clampQty() {
+          const v = parseInt(qtyInput.value || '1', 10);
+          if (Number.isNaN(v) || v < 1) qtyInput.value = 1;
+          if (v > 50) qtyInput.value = 50;
+        }
+
+        function changeQty(delta) {
+          const v = parseInt(qtyInput.value || '1', 10);
+          const next = Math.max(1, Math.min(50, v + delta));
+          qtyInput.value = next;
+          updateButton();
+        }
+
+        // ---- Price + button text ----
+        function currentTotal() {
+          const q = parseInt(qtyInput.value || '1', 10);
+          return unitPrice * q || 0;
+        }
+
+        function updateButton() {
+          const total = currentTotal();
+          if (!VARIANT_ID || Number.isNaN(VARIANT_ID)) {
+            addBtn.textContent = 'Configure fun_stuff_variant_id in Theme settings';
+            addBtn.disabled = true;
+            return;
+          }
+          if (!selectedCategory) {
+            addBtn.textContent = 'Select an item to add';
+            addBtn.disabled = true;
+            return;
+          }
+          addBtn.textContent = `Add to Cart - $${fmt(total)}`;
+          addBtn.disabled = false;
+        }
+
+        // ---- Cart count from Shopify (fallback 0) ----
+        async function updateCartCount() {
+          try {
+            const res = await fetch('/cart.js', { credentials: 'same-origin' });
+            if (!res.ok) throw new Error('Cart fetch failed');
+            const cart = await res.json();
+            cartCountEl.textContent = cart.item_count || 0;
+          } catch (err) {
+            console.warn('Cart sync fallback:', err);
+            cartCountEl.textContent = '0';
+          }
+        }
+
+        // ---- Add to cart via AJAX ----
+        addBtn.addEventListener('click', async () => {
+          // Validation
+          if (!VARIANT_ID || Number.isNaN(VARIANT_ID)) {
+            alert('This page is not configured yet. Please set a product variant in the theme settings.');
+            return;
+          }
+          if (!selectedCategory) {
+            alert('Please choose a Fun Item.');
+            return;
+          }
+
+          const quantity = parseInt(qtyInput.value || '1', 10);
+          const comments = ($('#order-comments')?.value || '').trim();
+
+          // Disable button while adding
+          const originalText = addBtn.textContent;
+          addBtn.textContent = '⏳ Adding...';
+          addBtn.disabled = true;
+
+          const properties = {
+            Category: selectedCategory,
+            Comments: comments,
+          };
+
+          try {
+            const payload = {
+              id: VARIANT_ID,
+              quantity,
+              properties,
+            };
+
+            const res = await fetch('/cart/add.js', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+              body: JSON.stringify(payload),
+              credentials: 'same-origin',
+            });
+
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              throw new Error(err.description || 'Error adding to cart');
+            }
+
+            // Success UI
+            await updateCartCount();
+            showSuccess({
+              category: selectedCategory,
+              comments,
+              quantity,
+              total: fmt(currentTotal()),
+            });
+          } catch (e) {
+            console.error('Add to cart error:', e);
+            alert('❌ Error adding to cart. Please try again.');
+          } finally {
+            // Restore button
+            addBtn.textContent = originalText;
+            addBtn.disabled = false;
+          }
+        });
+
+        function showSuccess({ category, comments, quantity, total }) {
+          successMsg.innerHTML = `<strong>✅ Added to cart!</strong><br>
+           🎉 Item: ${escapeHtml(category)}<br>
+           ${comments ? `💬 Comments: ${escapeHtml(comments)}<br>` : ''}
+           🔢 Quantity: ${quantity}<br>
+           💰 <strong>Total: $${total}</strong>`;
+          successMsg.classList.add('show');
+          successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => successMsg.classList.remove('show'), 4500);
+        }
+
+        function escapeHtml(str) {
+          return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,718 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "WTF Clean Dunkin Style",
+    "theme_version": "1.0.0",
+    "theme_author": "WTF Team",
+    "theme_documentation_url": "https://wtfswag.com/help",
+    "theme_support_email": "support@wtfswag.com"
+  },
+  {
+    "name": "Branding",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Base colors"
+      },
+      {
+        "type": "color",
+        "id": "color_primary",
+        "label": "Primary (Buttons & Accents)",
+        "default": "#ff6600"
+      },
+      {
+        "type": "color",
+        "id": "color_success",
+        "label": "Success (Selections)",
+        "default": "#28a745"
+      },
+      {
+        "type": "color",
+        "id": "color_background",
+        "label": "Background",
+        "default": "#f8f9fa"
+      },
+      {
+        "type": "color",
+        "id": "color_text",
+        "label": "Body text",
+        "default": "#333333"
+      },
+      {
+        "type": "header",
+        "content": "Typography"
+      },
+      {
+        "type": "select",
+        "id": "font_scale",
+        "label": "Base font size",
+        "default": "16",
+        "options": [
+          {
+            "value": "15",
+            "label": "Small (15px)"
+          },
+          {
+            "value": "16",
+            "label": "Default (16px)"
+          },
+          {
+            "value": "17",
+            "label": "Large (17px)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Cart & UX",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "enable_cart_drawer",
+        "label": "Enable cart drawer (if theme supports it)",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_ajax_adds",
+        "label": "Enable AJAX add-to-cart (global)",
+        "default": true
+      },
+      {
+        "type": "radio",
+        "id": "cart_count_strategy",
+        "label": "Cart count strategy",
+        "default": "shopify_then_local",
+        "options": [
+          {
+            "value": "shopify_only",
+            "label": "Shopify cart.js only"
+          },
+          {
+            "value": "shopify_then_local",
+            "label": "Shopify cart.js with localStorage fallback"
+          },
+          {
+            "value": "local_only",
+            "label": "localStorage only (dev/local)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Global Drink Defaults",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Flavor pump defaults (used by drink pages; can be overridden via page metafields)"
+      },
+      {
+        "type": "text",
+        "id": "included_pumps_default",
+        "label": "Included pumps (default)",
+        "default": "2"
+      },
+      {
+        "type": "text",
+        "id": "extra_pump_price_default",
+        "label": "Extra pump price (default)",
+        "default": "0.50"
+      },
+      {
+        "type": "checkbox",
+        "id": "even_pump_distribution",
+        "label": "Evenly distribute included pumps across selected flavors",
+        "default": true
+      },
+      {
+        "type": "text",
+        "id": "max_flavors_default",
+        "label": "Max flavors selectable (default)",
+        "default": "4"
+      },
+      {
+        "type": "paragraph",
+        "content": "Per-page metafield overrides (Namespace: custom): included_pumps (integer), extra_pump_price (money), max_flavors (integer)."
+      }
+    ]
+  },
+  {
+    "name": "Canned Drinks",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Canned Drinks (AJAX cart)"
+      },
+      {
+        "type": "number",
+        "id": "canned_drinks_variant_id",
+        "label": "Canned Drinks — Variant ID",
+        "default": 0,
+        "info": "Enter the numeric Shopify variant ID to add via AJAX on the Canned Drinks page. Leave 0 to disable. Line item properties sent: Brand, Flavor, Comments."
+      }
+    ]
+  },
+  {
+    "name": "Custom Kratom Tea",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Custom Kratom Tea (AJAX cart)"
+      },
+      {
+        "type": "number",
+        "id": "kratom_tea_variant_id",
+        "label": "Kratom Tea — Variant ID",
+        "default": 0,
+        "info": "Variant ID added via /cart/add.js. Page metafield overrides: custom.kratom_variant_id (integer). Line item properties: Size, Strain, Flavors, Extra Pumps, Pump Distribution, Comments."
+      },
+      {
+        "type": "header",
+        "content": "Price configuration (used by the page UI)"
+      },
+      {
+        "type": "text",
+        "id": "kratom_price_medium",
+        "label": "Medium base price",
+        "default": "9.00"
+      },
+      {
+        "type": "text",
+        "id": "kratom_price_large",
+        "label": "Large base price",
+        "default": "15.00"
+      },
+      {
+        "type": "text",
+        "id": "kratom_price_gallon",
+        "label": "Gallon base price",
+        "default": "100.00"
+      },
+      {
+        "type": "text",
+        "id": "kratom_extra_pump_price",
+        "label": "Extra pump price (override)",
+        "default": "0.50",
+        "info": "Defaults to Global Drink Defaults when blank."
+      },
+      {
+        "type": "text",
+        "id": "kratom_included_pumps",
+        "label": "Included pumps (override)",
+        "info": "Defaults to Global Drink Defaults when blank."
+      }
+    ]
+  },
+  {
+    "name": "THC Drinks",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Delta 9 THC Drinks (AJAX cart)"
+      },
+      {
+        "type": "number",
+        "id": "thc_drinks_variant_id",
+        "label": "THC Drinks — Variant ID",
+        "default": 0,
+        "info": "Variant ID added via /cart/add.js. Page metafield overrides: custom.thc_variant_id (integer). Line item properties: Size, Flavors, Extra Pumps, Pump Distribution, Comments."
+      },
+      {
+        "type": "header",
+        "content": "Rotation flavors (shown on THC Drinks & shared with THC Shots)"
+      },
+      {
+        "type": "text",
+        "id": "thc_flavor_1",
+        "label": "Flavor 1",
+        "default": "Banana Runtz"
+      },
+      {
+        "type": "text",
+        "id": "thc_flavor_2",
+        "label": "Flavor 2",
+        "default": "Pink Starburst"
+      },
+      {
+        "type": "text",
+        "id": "thc_flavor_3",
+        "label": "Flavor 3",
+        "default": "Vanilla Lavender"
+      },
+      {
+        "type": "text",
+        "id": "thc_flavor_4",
+        "label": "Flavor 4",
+        "default": "Watermelon Cherry"
+      },
+      {
+        "type": "header",
+        "content": "Pump settings (overrides)"
+      },
+      {
+        "type": "text",
+        "id": "thc_included_pumps",
+        "label": "Included pumps (override)",
+        "info": "Default is Global Drink Defaults (2)."
+      },
+      {
+        "type": "text",
+        "id": "thc_extra_pump_price",
+        "label": "Extra pump price (override)",
+        "info": "Default is Global Drink Defaults ($0.50)."
+      }
+    ]
+  },
+  {
+    "name": "THC Shots",
+    "settings": [
+      {
+        "type": "header",
+        "content": "THC Shots (AJAX cart)"
+      },
+      {
+        "type": "number",
+        "id": "thc_shots_variant_id",
+        "label": "THC Shots — Variant ID",
+        "default": 0,
+        "info": "Variant ID added via /cart/add.js. Line item properties: Size/Type, Flavors (inherits rotation from THC Drinks), Comments."
+      },
+      {
+        "type": "checkbox",
+        "id": "shots_inherit_thc_flavors",
+        "label": "Always mirror THC Drinks rotation flavors",
+        "default": true
+      },
+      {
+        "type": "header",
+        "content": "Custom rotation (only used if mirroring is off)"
+      },
+      {
+        "type": "text",
+        "id": "shots_flavor_1",
+        "label": "Flavor 1 (override)"
+      },
+      {
+        "type": "text",
+        "id": "shots_flavor_2",
+        "label": "Flavor 2 (override)"
+      },
+      {
+        "type": "text",
+        "id": "shots_flavor_3",
+        "label": "Flavor 3 (override)"
+      },
+      {
+        "type": "text",
+        "id": "shots_flavor_4",
+        "label": "Flavor 4 (override)"
+      }
+    ]
+  },
+  {
+    "name": "Kava Drinks",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Custom Kava Drink (AJAX cart)"
+      },
+      {
+        "type": "number",
+        "id": "kava_drink_variant_id",
+        "label": "Kava Drink — Variant ID",
+        "default": 0,
+        "info": "Variant ID added via /cart/add.js. Line item properties: Size, Flavors, Extra Pumps, Pump Distribution, Comments."
+      },
+      {
+        "type": "header",
+        "content": "Price configuration (used by the page UI)"
+      },
+      {
+        "type": "text",
+        "id": "kava_price_medium",
+        "label": "Medium base price",
+        "default": "9.00"
+      },
+      {
+        "type": "text",
+        "id": "kava_price_large",
+        "label": "Large base price",
+        "default": "15.00"
+      },
+      {
+        "type": "text",
+        "id": "kava_price_gallon",
+        "label": "Gallon base price",
+        "default": "100.00"
+      },
+      {
+        "type": "text",
+        "id": "kava_extra_pump_price",
+        "label": "Extra pump price (override)",
+        "info": "Default is Global Drink Defaults."
+      },
+      {
+        "type": "text",
+        "id": "kava_included_pumps",
+        "label": "Included pumps (override)",
+        "info": "Default is Global Drink Defaults."
+      }
+    ]
+  },
+  {
+    "name": "Draft Pours",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Draft Pours (AJAX cart)"
+      },
+      {
+        "type": "number",
+        "id": "draft_pours_variant_id",
+        "label": "Draft Pours — Variant ID",
+        "default": 0,
+        "info": "Variant ID added via /cart/add.js. Line item properties: Draft Name, Comments."
+      },
+      {
+        "type": "text",
+        "id": "draft_default_price",
+        "label": "Default price per 16 oz pour",
+        "default": "8.00"
+      }
+    ]
+  },
+  {
+    "name": "Take Home Items",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Take Home Items (AJAX cart)"
+      },
+      {
+        "type": "number",
+        "id": "take_home_items_variant_id",
+        "label": "Take Home Items — Variant ID",
+        "default": 0,
+        "info": "Variant ID added via /cart/add.js. Line item properties: Category, Comments."
+      }
+    ]
+  },
+  {
+    "name": "Category Cards (Global)",
+    "settings": [
+      {
+        "type": "header",
+        "content": "Global category cards"
+      },
+      {
+        "type": "paragraph",
+        "content": "Configure up to 8 global category cards. Sections can reference these settings as defaults. Only populated cards will render."
+      },
+      {
+        "type": "header",
+        "content": "Card 1"
+      },
+      {
+        "type": "image_picker",
+        "id": "card_1_image",
+        "label": "Image"
+      },
+      {
+        "type": "text",
+        "id": "card_1_title",
+        "label": "Title"
+      },
+      {
+        "type": "url",
+        "id": "card_1_link",
+        "label": "Link"
+      },
+      {
+        "type": "text",
+        "id": "card_1_badge",
+        "label": "Badge (optional)"
+      },
+      {
+        "type": "color",
+        "id": "card_1_badge_bg",
+        "label": "Badge background",
+        "default": "#ff6600"
+      },
+      {
+        "type": "color",
+        "id": "card_1_badge_text",
+        "label": "Badge text color",
+        "default": "#ffffff"
+      },
+      {
+        "type": "header",
+        "content": "Card 2"
+      },
+      {
+        "type": "image_picker",
+        "id": "card_2_image",
+        "label": "Image"
+      },
+      {
+        "type": "text",
+        "id": "card_2_title",
+        "label": "Title"
+      },
+      {
+        "type": "url",
+        "id": "card_2_link",
+        "label": "Link"
+      },
+      {
+        "type": "text",
+        "id": "card_2_badge",
+        "label": "Badge (optional)"
+      },
+      {
+        "type": "color",
+        "id": "card_2_badge_bg",
+        "label": "Badge background",
+        "default": "#ff6600"
+      },
+      {
+        "type": "color",
+        "id": "card_2_badge_text",
+        "label": "Badge text color",
+        "default": "#ffffff"
+      },
+      {
+        "type": "header",
+        "content": "Card 3"
+      },
+      {
+        "type": "image_picker",
+        "id": "card_3_image",
+        "label": "Image"
+      },
+      {
+        "type": "text",
+        "id": "card_3_title",
+        "label": "Title"
+      },
+      {
+        "type": "url",
+        "id": "card_3_link",
+        "label": "Link"
+      },
+      {
+        "type": "text",
+        "id": "card_3_badge",
+        "label": "Badge (optional)"
+      },
+      {
+        "type": "color",
+        "id": "card_3_badge_bg",
+        "label": "Badge background",
+        "default": "#ff6600"
+      },
+      {
+        "type": "color",
+        "id": "card_3_badge_text",
+        "label": "Badge text color",
+        "default": "#ffffff"
+      },
+      {
+        "type": "header",
+        "content": "Card 4"
+      },
+      {
+        "type": "image_picker",
+        "id": "card_4_image",
+        "label": "Image"
+      },
+      {
+        "type": "text",
+        "id": "card_4_title",
+        "label": "Title"
+      },
+      {
+        "type": "url",
+        "id": "card_4_link",
+        "label": "Link"
+      },
+      {
+        "type": "text",
+        "id": "card_4_badge",
+        "label": "Badge (optional)"
+      },
+      {
+        "type": "color",
+        "id": "card_4_badge_bg",
+        "label": "Badge background",
+        "default": "#ff6600"
+      },
+      {
+        "type": "color",
+        "id": "card_4_badge_text",
+        "label": "Badge text color",
+        "default": "#ffffff"
+      },
+      {
+        "type": "header",
+        "content": "Card 5"
+      },
+      {
+        "type": "image_picker",
+        "id": "card_5_image",
+        "label": "Image"
+      },
+      {
+        "type": "text",
+        "id": "card_5_title",
+        "label": "Title"
+      },
+      {
+        "type": "url",
+        "id": "card_5_link",
+        "label": "Link"
+      },
+      {
+        "type": "text",
+        "id": "card_5_badge",
+        "label": "Badge (optional)"
+      },
+      {
+        "type": "color",
+        "id": "card_5_badge_bg",
+        "label": "Badge background",
+        "default": "#ff6600"
+      },
+      {
+        "type": "color",
+        "id": "card_5_badge_text",
+        "label": "Badge text color",
+        "default": "#ffffff"
+      },
+      {
+        "type": "header",
+        "content": "Card 6"
+      },
+      {
+        "type": "image_picker",
+        "id": "card_6_image",
+        "label": "Image"
+      },
+      {
+        "type": "text",
+        "id": "card_6_title",
+        "label": "Title"
+      },
+      {
+        "type": "url",
+        "id": "card_6_link",
+        "label": "Link"
+      },
+      {
+        "type": "text",
+        "id": "card_6_badge",
+        "label": "Badge (optional)"
+      },
+      {
+        "type": "color",
+        "id": "card_6_badge_bg",
+        "label": "Badge background",
+        "default": "#ff6600"
+      },
+      {
+        "type": "color",
+        "id": "card_6_badge_text",
+        "label": "Badge text color",
+        "default": "#ffffff"
+      },
+      {
+        "type": "header",
+        "content": "Card 7"
+      },
+      {
+        "type": "image_picker",
+        "id": "card_7_image",
+        "label": "Image"
+      },
+      {
+        "type": "text",
+        "id": "card_7_title",
+        "label": "Title"
+      },
+      {
+        "type": "url",
+        "id": "card_7_link",
+        "label": "Link"
+      },
+      {
+        "type": "text",
+        "id": "card_7_badge",
+        "label": "Badge (optional)"
+      },
+      {
+        "type": "color",
+        "id": "card_7_badge_bg",
+        "label": "Badge background",
+        "default": "#ff6600"
+      },
+      {
+        "type": "color",
+        "id": "card_7_badge_text",
+        "label": "Badge text color",
+        "default": "#ffffff"
+      },
+      {
+        "type": "header",
+        "content": "Card 8"
+      },
+      {
+        "type": "image_picker",
+        "id": "card_8_image",
+        "label": "Image"
+      },
+      {
+        "type": "text",
+        "id": "card_8_title",
+        "label": "Title"
+      },
+      {
+        "type": "url",
+        "id": "card_8_link",
+        "label": "Link"
+      },
+      {
+        "type": "text",
+        "id": "card_8_badge",
+        "label": "Badge (optional)"
+      },
+      {
+        "type": "color",
+        "id": "card_8_badge_bg",
+        "label": "Badge background",
+        "default": "#ff6600"
+      },
+      {
+        "type": "color",
+        "id": "card_8_badge_text",
+        "label": "Badge text color",
+        "default": "#ffffff"
+      }
+    ]
+  },
+  {
+    "name": "Developer",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "enable_console_logs",
+        "label": "Enable verbose console logs on custom pages",
+        "default": false
+      },
+      {
+        "type": "paragraph",
+        "content": "Metafield keys used by pages (namespace: custom): kratom_variant_id, thc_variant_id, included_pumps, extra_pump_price, max_flavors."
+      }
+    ]
+  }
+]

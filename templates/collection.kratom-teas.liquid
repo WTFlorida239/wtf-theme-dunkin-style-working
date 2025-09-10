@@ -1,0 +1,954 @@
+<!-- WTF Kratom Tea Collection Page - Enhanced Dunkin Style -->
+<!-- File: templates/collection.kratom-teas.liquid -->
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f8f9fa; }
+
+  /* Header Navigation */
+  .wtf-header { 
+    background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); 
+    padding: 15px 0; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+    position: sticky; 
+    top: 0; 
+    z-index: 1000; 
+  }
+  .wtf-nav-container { 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 0 20px; 
+  }
+  .wtf-logo-section { display: flex; align-items: center; gap: 15px; }
+  .wtf-logo-circle { 
+    background: white; 
+    border-radius: 50%; 
+    width: 60px; 
+    height: 60px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
+    overflow: hidden; 
+  }
+  .wtf-logo-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .wtf-logo-text h1 { 
+    color: white; 
+    margin: 0; 
+    font-size: 28px; 
+    font-weight: bold; 
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
+  }
+  .wtf-logo-text p { color: white; margin: 0; font-size: 14px; opacity: 0.9; }
+  .wtf-main-nav { display: flex; gap: 30px; align-items: center; }
+  .wtf-nav-link { 
+    color: white; 
+    text-decoration: none; 
+    font-weight: 600; 
+    font-size: 16px; 
+    padding: 8px 16px; 
+    border-radius: 25px; 
+    transition: all 0.3s ease; 
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3); 
+  }
+  .wtf-nav-link:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+  .wtf-cart-btn { 
+    background: white; 
+    color: #ff6600; 
+    text-decoration: none; 
+    font-weight: bold; 
+    font-size: 16px; 
+    padding: 10px 20px; 
+    border-radius: 25px; 
+    transition: all 0.3s ease; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
+  }
+  .wtf-cart-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+
+  /* Product Page */
+  .wtf-product-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  .wtf-back-button {
+    display: inline-block;
+    color: #ff6600;
+    text-decoration: none;
+    font-weight: 600;
+    margin-bottom: 30px;
+    padding: 10px 20px;
+    border: 2px solid #ff6600;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+  }
+
+  .wtf-back-button:hover {
+    background: #ff6600;
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .wtf-product-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: start;
+  }
+
+  .wtf-product-images {
+    position: sticky;
+    top: 120px;
+  }
+
+  .wtf-main-image {
+    width: 100%;
+    height: 500px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+  }
+
+  .wtf-main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .wtf-product-info {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  }
+
+  .wtf-product-title {
+    font-size: 36px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+  }
+
+  .wtf-product-price {
+    font-size: 28px;
+    font-weight: bold;
+    color: #ff6600;
+    margin-bottom: 25px;
+  }
+
+  .wtf-product-description {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 30px;
+  }
+
+  /* Dunkin-Style Selection Sections */
+  .wtf-selection-section {
+    margin-bottom: 35px;
+    padding: 25px;
+    background: #f8f9fa;
+    border-radius: 15px;
+    border: 2px solid #e9ecef;
+  }
+
+  .wtf-selection-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .wtf-selection-title::before {
+    content: "☕";
+    font-size: 24px;
+  }
+
+  .wtf-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .wtf-selection-option {
+    position: relative;
+  }
+
+  .wtf-selection-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .wtf-selection-option label {
+    display: block;
+    padding: 15px 20px;
+    background: white;
+    border: 3px solid #e9ecef;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+
+  .wtf-selection-option input[type="radio"]:checked + label {
+    background: #ff6600;
+    color: white;
+    border-color: #ff6600;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(255, 102, 0, 0.3);
+  }
+
+  .wtf-selection-option label:hover {
+    border-color: #ff6600;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+
+  /* Strain Mix Section */
+  .wtf-strain-mix {
+    display: none;
+    margin-top: 20px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    border: 2px solid #ff6600;
+  }
+
+  .wtf-strain-mix.active {
+    display: block;
+  }
+
+  .wtf-strain-mix h4 {
+    color: #ff6600;
+    margin-bottom: 15px;
+    font-size: 18px;
+  }
+
+  .wtf-strain-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+
+  .wtf-strain-select {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* Flavor Grid */
+  .wtf-flavor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    background: white;
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+  }
+
+  .wtf-flavor-option {
+    position: relative;
+  }
+
+  .wtf-flavor-option input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .wtf-flavor-option label {
+    display: block;
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .wtf-flavor-option input[type="checkbox"]:checked + label {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+    transform: scale(1.05);
+  }
+
+  .wtf-flavor-option label:hover {
+    border-color: #28a745;
+    transform: scale(1.02);
+  }
+
+  /* Pump System Styles */
+  .wtf-pump-info {
+    background: #e8f4fd;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #007bff;
+  }
+
+  .wtf-pump-info p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #495057;
+  }
+
+  .wtf-pump-display {
+    margin-top: 20px;
+    padding: 15px;
+    background: #fff3cd;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+    display: none;
+  }
+
+  .wtf-pump-display.active {
+    display: block;
+  }
+
+  .wtf-pump-display h4 {
+    color: #856404;
+    margin-bottom: 10px;
+    font-size: 16px;
+  }
+
+  #pump-breakdown {
+    font-size: 14px;
+    color: #495057;
+  }
+
+  .wtf-extra-cost {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ff6600;
+    margin-left: 15px;
+  }
+
+  /* Comments Box */
+  .wtf-comments-box {
+    width: 100%;
+    min-height: 100px;
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.3s ease;
+  }
+
+  .wtf-comments-box:focus {
+    outline: none;
+    border-color: #ff6600;
+  }
+
+  /* Quantity and Add to Cart */
+  .wtf-quantity-section {
+    margin-bottom: 30px;
+  }
+
+  .wtf-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .wtf-quantity-input {
+    display: flex;
+    align-items: center;
+    border: 3px solid #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .wtf-quantity-btn {
+    background: #f8f9fa;
+    border: none;
+    padding: 15px 20px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .wtf-quantity-btn:hover {
+    background: #ff6600;
+    color: white;
+  }
+
+  .wtf-quantity-number {
+    padding: 15px 25px;
+    font-size: 18px;
+    font-weight: 600;
+    border: none;
+    text-align: center;
+    width: 100px;
+  }
+
+  .wtf-add-to-cart {
+    width: 100%;
+    background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%);
+    color: white;
+    border: none;
+    padding: 20px 30px;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(255, 102, 0, 0.3);
+    margin-bottom: 20px;
+  }
+
+  .wtf-add-to-cart:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 102, 0, 0.4);
+  }
+
+  /* Footer */
+  .wtf-footer { 
+    background: #333; 
+    color: white; 
+    padding: 40px 20px; 
+    text-align: center; 
+    margin-top: 60px;
+  }
+  .wtf-footer-content { max-width: 1200px; margin: 0 auto; }
+  .wtf-footer h3 { color: #ff6600; margin-bottom: 20px; }
+  .wtf-footer p { margin-bottom: 10px; }
+
+  /* Mobile Responsive */
+  @media (max-width: 768px) {
+    .wtf-nav-container { flex-direction: column; gap: 20px; }
+    .wtf-main-nav { gap: 15px; flex-wrap: wrap; justify-content: center; }
+    .wtf-product-container { grid-template-columns: 1fr; gap: 30px; }
+    .wtf-product-images { position: static; }
+    .wtf-main-image { height: 300px; }
+    .wtf-product-info { padding: 25px; }
+    .wtf-product-title { font-size: 28px; }
+    .wtf-selection-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+    .wtf-flavor-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  }
+</style>
+
+<!-- Header Navigation -->
+<header class="wtf-header">
+  <div class="wtf-nav-container">
+    <div class="wtf-logo-section">
+      <div class="wtf-logo-circle">
+        <img src="{{ 'wtf-logo.png' | asset_url }}" alt="WTF Logo">
+      </div>
+      <div class="wtf-logo-text">
+        <h1>{{ shop.name | default: 'WTF' }}</h1>
+        <p>Welcome To Florida</p>
+      </div>
+    </div>
+    <nav class="wtf-main-nav">
+      <a href="{{ routes.root_url }}" class="wtf-nav-link">Home</a>
+      <a href="{{ routes.collections_url }}" class="wtf-nav-link">Shop</a>
+      <a href="{{ pages['about'].url | default: '#about' }}" class="wtf-nav-link">About</a>
+      <a href="{{ pages['contact'].url | default: '#contact' }}" class="wtf-nav-link">Contact</a>
+      <a href="{{ routes.cart_url }}" class="wtf-cart-btn">🛒 Cart (<span id="wtf-cart-count">{{ cart.item_count }}</span>)</a>
+    </nav>
+  </div>
+</header>
+
+<!-- Product Page -->
+<div class="wtf-product-page">
+  <a href="{{ routes.root_url }}" class="wtf-back-button">← Back to Menu</a>
+  
+  <div class="wtf-product-container">
+    <!-- Product Images -->
+    <div class="wtf-product-images">
+      <div class="wtf-main-image">
+        <img src="{{ 'kratom_teas_150x150.png' | asset_url }}" alt="Kratom Tea" id="main-product-image">
+      </div>
+    </div>
+
+    <!-- Product Info -->
+    <div class="wtf-product-info">
+      <h1 class="wtf-product-title">Custom Kratom Tea</h1>
+      
+      <div class="wtf-product-price">
+        <span id="product-price">Starting at $8.00</span>
+      </div>
+
+      <div class="wtf-product-description">
+        Create your perfect kratom tea with our premium selection of strains and flavors. Choose your size, strain (or mix strains), and flavor combination for a personalized experience.
+      </div>
+
+      <form action="/cart/add" method="post" enctype="multipart/form-data" id="kratom-form">
+        
+        <!-- Size Selection -->
+        <div class="wtf-selection-section">
+          <div class="wtf-selection-title">Choose Your Size</div>
+          <div class="wtf-selection-grid">
+            <div class="wtf-selection-option">
+              <input type="radio" id="size-medium" name="size" value="Medium" data-price="8.00" checked>
+              <label for="size-medium">Medium<br><small>12 oz - $8.00</small></label>
+            </div>
+            <div class="wtf-selection-option">
+              <input type="radio" id="size-large" name="size" value="Large" data-price="12.00">
+              <label for="size-large">Large<br><small>16 oz - $12.00</small></label>
+            </div>
+            <div class="wtf-selection-option">
+              <input type="radio" id="size-gallon" name="size" value="Gallon" data-price="45.00">
+              <label for="size-gallon">Gallon<br><small>128 oz - $45.00</small></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Strain Selection -->
+        <div class="wtf-selection-section">
+          <div class="wtf-selection-title">Choose Your Strain</div>
+          <div class="wtf-selection-grid">
+            <div class="wtf-selection-option">
+              <input type="radio" id="strain-green" name="strain-type" value="Green" checked>
+              <label for="strain-green">Green Strain</label>
+            </div>
+            <div class="wtf-selection-option">
+              <input type="radio" id="strain-red" name="strain-type" value="Red">
+              <label for="strain-red">Red Strain</label>
+            </div>
+            <div class="wtf-selection-option">
+              <input type="radio" id="strain-white" name="strain-type" value="White">
+              <label for="strain-white">White Strain</label>
+            </div>
+            <div class="wtf-selection-option">
+              <input type="radio" id="strain-yellow" name="strain-type" value="Yellow">
+              <label for="strain-yellow">Yellow Strain</label>
+            </div>
+            <div class="wtf-selection-option">
+              <input type="radio" id="strain-mix" name="strain-type" value="mix">
+              <label for="strain-mix">Mix Strains<br><small>½ & ½</small></label>
+            </div>
+          </div>
+          
+          <!-- Strain Mix Options -->
+          <div class="wtf-strain-mix" id="strain-mix-options">
+            <h4>Choose Your Strain Combination</h4>
+            <div class="wtf-strain-row">
+              <select class="wtf-strain-select" name="strain-1">
+                <option value="Green">Green Strain</option>
+                <option value="Red">Red Strain</option>
+                <option value="White">White Strain</option>
+                <option value="Yellow">Yellow Strain</option>
+              </select>
+              <span>+</span>
+              <select class="wtf-strain-select" name="strain-2">
+                <option value="Red">Red Strain</option>
+                <option value="Green">Green Strain</option>
+                <option value="White">White Strain</option>
+                <option value="Yellow">Yellow Strain</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flavor Selection with Pump System -->
+        <div class="wtf-selection-section">
+          <div class="wtf-selection-title">Choose Your Flavors & Pumps</div>
+          <div class="wtf-pump-info">
+            <p><strong>Pump System:</strong> Medium = 4 pumps, Large = 6 pumps, Gallon = Custom (discuss with staff)</p>
+            <p><strong>How it works:</strong> 1 flavor = all pumps of that flavor, 2 flavors = split evenly, etc.</p>
+          </div>
+          <div class="wtf-flavor-grid">
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-lemon" name="flavor" value="lemon">
+              <label for="flavor-lemon">Lemon</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-lime" name="flavor" value="lime">
+              <label for="flavor-lime">Lime</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-orange" name="flavor" value="orange">
+              <label for="flavor-orange">Orange</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-blood-orange" name="flavor" value="blood orange">
+              <label for="flavor-blood-orange">Blood Orange</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-strawberry" name="flavor" value="strawberry">
+              <label for="flavor-strawberry">Strawberry</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-raspberry" name="flavor" value="raspberry">
+              <label for="flavor-raspberry">Raspberry</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-blueberry" name="flavor" value="blueberry">
+              <label for="flavor-blueberry">Blueberry</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-coconut" name="flavor" value="coconut">
+              <label for="flavor-coconut">Coconut</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-mango" name="flavor" value="mango">
+              <label for="flavor-mango">Mango</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-watermelon" name="flavor" value="watermelon">
+              <label for="flavor-watermelon">Watermelon</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-simple-syrup" name="flavor" value="simple syrup">
+              <label for="flavor-simple-syrup">Simple Syrup</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-sour-apple" name="flavor" value="sour apple">
+              <label for="flavor-sour-apple">Sour Apple</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-dragon-fruit" name="flavor" value="dragon fruit">
+              <label for="flavor-dragon-fruit">Dragon Fruit</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-blackberry" name="flavor" value="blackberry">
+              <label for="flavor-blackberry">Blackberry</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-smores" name="flavor" value="smores">
+              <label for="flavor-smores">S'mores</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-pumpkin-spice" name="flavor" value="pumpkin spice">
+              <label for="flavor-pumpkin-spice">Pumpkin Spice</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-cranberry" name="flavor" value="cranberry">
+              <label for="flavor-cranberry">Cranberry</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-grenadine" name="flavor" value="grenadine">
+              <label for="flavor-grenadine">Grenadine</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-lavender" name="flavor" value="lavender">
+              <label for="flavor-lavender">Lavender</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-chocolate" name="flavor" value="chocolate">
+              <label for="flavor-chocolate">Chocolate</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-caramel" name="flavor" value="caramel">
+              <label for="flavor-caramel">Caramel</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-maple" name="flavor" value="maple">
+              <label for="flavor-maple">Maple</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-agave" name="flavor" value="agave">
+              <label for="flavor-agave">Agave</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-hazelnut" name="flavor" value="hazelnut">
+              <label for="flavor-hazelnut">Hazelnut</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-rose" name="flavor" value="rose">
+              <label for="flavor-rose">Rose</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-passion-fruit" name="flavor" value="passion fruit">
+              <label for="flavor-passion-fruit">Passion Fruit</label>
+            </div>
+            <div class="wtf-flavor-option">
+              <input type="checkbox" id="flavor-hibiscus" name="flavor" value="hibiscus">
+              <label for="flavor-hibiscus">Hibiscus</label>
+            </div>
+          </div>
+          
+          <!-- Pump Distribution Display -->
+          <div class="wtf-pump-display" id="pump-display">
+            <h4>Pump Distribution:</h4>
+            <div id="pump-breakdown"></div>
+          </div>
+        </div>
+
+        <!-- Additional Pumps -->
+        <div class="wtf-selection-section">
+          <div class="wtf-selection-title">Additional Pumps (+$0.50 each)</div>
+          <div class="wtf-quantity-controls">
+            <div class="wtf-quantity-input">
+              <button type="button" class="wtf-quantity-btn" onclick="changeExtraPumps(-1)">−</button>
+              <input type="number" name="extra-pumps" value="0" min="0" class="wtf-quantity-number" id="extra-pumps">
+              <button type="button" class="wtf-quantity-btn" onclick="changeExtraPumps(1)">+</button>
+            </div>
+            <span class="wtf-extra-cost" id="extra-pump-cost">+$0.00</span>
+          </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="wtf-selection-section">
+          <div class="wtf-selection-title">Special Requests & Comments</div>
+          <textarea name="comments" id="order-comments" class="wtf-comments-box" placeholder="Any special requests or modifications? We'll try to accommodate!"></textarea>
+        </div>
+
+        <!-- Quantity Selection -->
+        <div class="wtf-quantity-section">
+          <div class="wtf-selection-title">Quantity</div>
+          <div class="wtf-quantity-controls">
+            <div class="wtf-quantity-input">
+              <button type="button" class="wtf-quantity-btn" onclick="changeQuantity(-1)">−</button>
+              <input type="number" name="quantity" value="1" min="1" class="wtf-quantity-number" id="quantity">
+              <button type="button" class="wtf-quantity-btn" onclick="changeQuantity(1)">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden inputs for Shopify -->
+        <input type="hidden" name="id" value="44567890123456">
+        <input type="hidden" name="properties[Size]" id="selected-size" value="Medium">
+        <input type="hidden" name="properties[Strain]" id="selected-strain" value="Green">
+        <input type="hidden" name="properties[Flavors]" id="selected-flavors" value="">
+        <input type="hidden" name="properties[Pump Distribution]" id="selected-pumps" value="">
+        <input type="hidden" name="properties[Extra Pumps]" id="selected-extra-pumps" value="0">
+        <input type="hidden" name="properties[Comments]" id="selected-comments" value="">
+
+        <!-- Add to Cart Button -->
+        <button type="submit" class="wtf-add-to-cart" id="add-to-cart-btn">
+          Add to Cart - <span id="cart-price">$8.00</span>
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="wtf-footer">
+  <div class="wtf-footer-content">
+    <h3>WTF - Welcome To Florida</h3>
+    <p>📍 1520 SE 46th Ln, Unit B, Cape Coral, FL 33904</p>
+    <p>☎️ (239) 955-0314</p>
+    <p>🌐 Premium Kava Bar & Cannabis Products</p>
+    <p style="margin-top: 20px; opacity: 0.7;">© {{ 'now' | date: '%Y' }} {{ shop.name | default: 'WTF Welcome To Florida' }}. All rights reserved.</p>
+  </div>
+</footer>
+
+<script>
+  // Price mapping
+  const prices = {
+    'Medium': 8.00,
+    'Large': 12.00,
+    'Gallon': 45.00
+  };
+
+  // Pump mapping
+  const pumpCounts = {
+    'Medium': 4,
+    'Large': 6,
+    'Gallon': 'Custom'
+  };
+
+  let selectedFlavors = [];
+  let extraPumps = 0;
+  let basePrice = 8.00;
+
+  // Update price based on size selection and extra pumps
+  function updatePrice() {
+    const selectedSize = document.querySelector('input[name="size"]:checked');
+    if (selectedSize) {
+      basePrice = prices[selectedSize.value];
+      const extraCost = extraPumps * 0.50;
+      const totalPrice = basePrice + extraCost;
+      
+      document.getElementById('product-price').textContent = `$${totalPrice.toFixed(2)}`;
+      document.getElementById('cart-price').textContent = `$${totalPrice.toFixed(2)}`;
+      document.getElementById('selected-size').value = selectedSize.value;
+    }
+  }
+
+  // Update strain selection
+  function updateStrain() {
+    const strainType = document.querySelector('input[name="strain-type"]:checked');
+    const mixOptions = document.getElementById('strain-mix-options');
+    
+    if (strainType && strainType.value === 'mix') {
+      mixOptions.classList.add('active');
+      const strain1 = document.querySelector('select[name="strain-1"]').value;
+      const strain2 = document.querySelector('select[name="strain-2"]').value;
+      document.getElementById('selected-strain').value = `${strain1} + ${strain2}`;
+    } else {
+      mixOptions.classList.remove('active');
+      if (strainType) {
+        document.getElementById('selected-strain').value = strainType.value;
+      }
+    }
+  }
+
+  // Update flavor selection and pump distribution
+  function updateFlavors() {
+    const checkedFlavors = document.querySelectorAll('input[name="flavor"]:checked');
+    selectedFlavors = Array.from(checkedFlavors).map(input => input.value);
+    
+    const selectedSize = document.querySelector('input[name="size"]:checked');
+    const totalPumps = selectedSize ? pumpCounts[selectedSize.value] : 4;
+    
+    // Update hidden field
+    document.getElementById('selected-flavors').value = selectedFlavors.join(', ');
+    
+    // Calculate pump distribution
+    if (selectedFlavors.length > 0 && totalPumps !== 'Custom') {
+      const pumpDisplay = document.getElementById('pump-display');
+      const pumpBreakdown = document.getElementById('pump-breakdown');
+      
+      pumpDisplay.classList.add('active');
+      
+      if (selectedFlavors.length === 1) {
+        pumpBreakdown.innerHTML = `<strong>${selectedFlavors[0]}:</strong> ${totalPumps} pumps`;
+        document.getElementById('selected-pumps').value = `${selectedFlavors[0]}: ${totalPumps} pumps`;
+      } else {
+        const pumpsPerFlavor = Math.floor(totalPumps / selectedFlavors.length);
+        const remainingPumps = totalPumps % selectedFlavors.length;
+        
+        let breakdown = [];
+        selectedFlavors.forEach((flavor, index) => {
+          const pumps = pumpsPerFlavor + (index < remainingPumps ? 1 : 0);
+          breakdown.push(`<strong>${flavor}:</strong> ${pumps} pump${pumps !== 1 ? 's' : ''}`);
+        });
+        
+        pumpBreakdown.innerHTML = breakdown.join('<br>');
+        document.getElementById('selected-pumps').value = breakdown.map(b => b.replace(/<\/?strong>/g, '')).join(', ');
+      }
+    } else if (totalPumps === 'Custom') {
+      const pumpDisplay = document.getElementById('pump-display');
+      const pumpBreakdown = document.getElementById('pump-breakdown');
+      
+      pumpDisplay.classList.add('active');
+      pumpBreakdown.innerHTML = '<strong>Gallon Size:</strong> Custom pump distribution - discuss with staff';
+      document.getElementById('selected-pumps').value = 'Gallon - Custom (discuss with staff)';
+    } else {
+      document.getElementById('pump-display').classList.remove('active');
+      document.getElementById('selected-pumps').value = '';
+    }
+  }
+
+  // Extra pumps controls
+  function changeExtraPumps(change) {
+    const extraPumpsInput = document.getElementById('extra-pumps');
+    const currentExtra = parseInt(extraPumpsInput.value);
+    const newExtra = Math.max(0, currentExtra + change);
+    
+    extraPumpsInput.value = newExtra;
+    extraPumps = newExtra;
+    
+    const extraCost = extraPumps * 0.50;
+    document.getElementById('extra-pump-cost').textContent = `+$${extraCost.toFixed(2)}`;
+    document.getElementById('selected-extra-pumps').value = extraPumps;
+    
+    updatePrice();
+  }
+
+  // Quantity controls
+  function changeQuantity(change) {
+    const quantityInput = document.getElementById('quantity');
+    const currentQuantity = parseInt(quantityInput.value);
+    const newQuantity = Math.max(1, currentQuantity + change);
+    quantityInput.value = newQuantity;
+  }
+
+  // Update comments
+  function updateComments() {
+    const comments = document.getElementById('order-comments').value;
+    document.getElementById('selected-comments').value = comments;
+  }
+
+  // Add to cart functionality
+  document.getElementById('kratom-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Validate selections
+    if (selectedFlavors.length === 0) {
+      alert('Please select at least one flavor.');
+      return;
+    }
+    
+    const button = document.getElementById('add-to-cart-btn');
+    const originalText = button.innerHTML;
+    
+    button.textContent = 'Adding...';
+    button.disabled = true;
+    
+    // Simulate successful add to cart
+    setTimeout(() => {
+      button.textContent = 'Added!';
+      
+      setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+      }, 2000);
+    }, 1000);
+  });
+
+  // Initialize event listeners
+  document.addEventListener('DOMContentLoaded', function() {
+    // Size selection listeners
+    document.querySelectorAll('input[name="size"]').forEach(input => {
+      input.addEventListener('change', function() {
+        updatePrice();
+        updateFlavors(); // Recalculate pump distribution when size changes
+      });
+    });
+    
+    // Strain selection listeners
+    document.querySelectorAll('input[name="strain-type"]').forEach(input => {
+      input.addEventListener('change', updateStrain);
+    });
+    
+    // Strain mix listeners
+    document.querySelectorAll('select[name^="strain-"]').forEach(select => {
+      select.addEventListener('change', updateStrain);
+    });
+    
+    // Flavor selection listeners (checkboxes)
+    document.querySelectorAll('input[name="flavor"]').forEach(input => {
+      input.addEventListener('change', updateFlavors);
+    });
+    
+    // Extra pumps input listener
+    document.getElementById('extra-pumps').addEventListener('input', function() {
+      extraPumps = parseInt(this.value) || 0;
+      const extraCost = extraPumps * 0.50;
+      document.getElementById('extra-pump-cost').textContent = `+$${extraCost.toFixed(2)}`;
+      document.getElementById('selected-extra-pumps').value = extraPumps;
+      updatePrice();
+    });
+    
+    // Comments listener
+    document.getElementById('order-comments').addEventListener('input', updateComments);
+    
+    // Initial updates
+    updatePrice();
+    updateStrain();
+    updateFlavors();
+  });
+</script>
+

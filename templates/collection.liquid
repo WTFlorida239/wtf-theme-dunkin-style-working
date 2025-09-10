@@ -1,0 +1,378 @@
+<!-- WTF Collection Template -->
+<!-- File: templates/collection.liquid -->
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f8f9fa; }
+
+  /* Header Navigation */
+  .wtf-header { 
+    background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); 
+    padding: 15px 0; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+    position: sticky; 
+    top: 0; 
+    z-index: 1000; 
+  }
+  .wtf-nav-container { 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 0 20px; 
+  }
+  .wtf-logo-section { display: flex; align-items: center; gap: 15px; }
+  .wtf-logo-circle { 
+    background: white; 
+    border-radius: 50%; 
+    width: 60px; 
+    height: 60px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
+    overflow: hidden; 
+  }
+  .wtf-logo-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .wtf-logo-text h1 { 
+    color: white; 
+    margin: 0; 
+    font-size: 28px; 
+    font-weight: bold; 
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
+  }
+  .wtf-logo-text p { color: white; margin: 0; font-size: 14px; opacity: 0.9; }
+  .wtf-main-nav { display: flex; gap: 30px; align-items: center; }
+  .wtf-nav-link { 
+    color: white; 
+    text-decoration: none; 
+    font-weight: 600; 
+    font-size: 16px; 
+    padding: 8px 16px; 
+    border-radius: 25px; 
+    transition: all 0.3s ease; 
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3); 
+  }
+  .wtf-nav-link:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+  .wtf-cart-btn { 
+    background: white; 
+    color: #ff6600; 
+    text-decoration: none; 
+    font-weight: bold; 
+    font-size: 16px; 
+    padding: 10px 20px; 
+    border-radius: 25px; 
+    transition: all 0.3s ease; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
+  }
+  .wtf-cart-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+
+  /* Collection Header */
+  .wtf-collection-header {
+    background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%);
+    padding: 60px 20px;
+    text-align: center;
+    color: white;
+  }
+
+  .wtf-collection-title {
+    font-size: 48px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  }
+
+  .wtf-collection-description {
+    font-size: 18px;
+    opacity: 0.9;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* Back Button */
+  .wtf-back-button {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 25px;
+    display: inline-block;
+    margin-bottom: 30px;
+    transition: all 0.3s ease;
+  }
+
+  .wtf-back-button:hover {
+    background: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
+    color: white;
+    text-decoration: none;
+  }
+
+  /* Products Grid */
+  .wtf-products-section {
+    padding: 60px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .wtf-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+  }
+
+  .wtf-product-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    text-align: center;
+  }
+
+  .wtf-product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+  }
+
+  .wtf-product-image {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 20px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+
+  .wtf-product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .wtf-product-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+  }
+
+  .wtf-product-price {
+    font-size: 20px;
+    color: #ff6600;
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+
+  .wtf-product-description {
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .wtf-add-to-cart {
+    background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-shadow: 0 4px 15px rgba(255,102,0,0.3);
+  }
+
+  .wtf-add-to-cart:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255,102,0,0.4);
+    color: white;
+    text-decoration: none;
+  }
+
+  /* Empty Collection */
+  .wtf-empty-collection {
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .wtf-empty-title {
+    font-size: 32px;
+    color: #666;
+    margin-bottom: 15px;
+  }
+
+  .wtf-empty-description {
+    font-size: 18px;
+    color: #888;
+    margin-bottom: 30px;
+  }
+
+  /* Footer */
+  .wtf-footer { 
+    background: #333; 
+    color: white; 
+    padding: 40px 20px; 
+    text-align: center; 
+    margin-top: 60px;
+  }
+  .wtf-footer-content { max-width: 1200px; margin: 0 auto; }
+  .wtf-footer h3 { color: #ff6600; margin-bottom: 20px; }
+  .wtf-footer p { margin-bottom: 10px; }
+
+  /* Mobile Responsive */
+  @media (max-width: 768px) {
+    .wtf-nav-container { flex-direction: column; gap: 20px; }
+    .wtf-main-nav { gap: 15px; flex-wrap: wrap; justify-content: center; }
+    .wtf-collection-title { font-size: 36px; }
+    .wtf-products-grid { grid-template-columns: 1fr; gap: 20px; }
+  }
+</style>
+
+<!-- Header Navigation -->
+<header class="wtf-header">
+  <div class="wtf-nav-container">
+    <div class="wtf-logo-section">
+      <div class="wtf-logo-circle">
+        <img src="https://cdn.shopify.com/s/files/1/0676/5848/1842/files/Official_WTF_LOGO_Background_Removed.png?v=1756895318" alt="WTF Logo">
+      </div>
+      <div class="wtf-logo-text">
+        <h1>{{ shop.name | default: 'WTF' }}</h1>
+        <p>Welcome To Florida</p>
+      </div>
+    </div>
+    <nav class="wtf-main-nav">
+      <a href="{{ routes.root_url }}" class="wtf-nav-link">Home</a>
+      <a href="{{ routes.collections_url }}" class="wtf-nav-link">Shop</a>
+      <a href="{{ pages['about'].url | default: '#about' }}" class="wtf-nav-link">About</a>
+      <a href="{{ pages['contact'].url | default: '#contact' }}" class="wtf-nav-link">Contact</a>
+      <a href="{{ routes.cart_url }}" class="wtf-cart-btn">🛒 Cart (<span id="wtf-cart-count">{{ cart.item_count }}</span>)</a>
+    </nav>
+  </div>
+</header>
+
+<!-- Collection Header -->
+<section class="wtf-collection-header">
+  <div class="wtf-collection-container">
+    <a href="{{ routes.root_url }}" class="wtf-back-button">← Back to Menu</a>
+    <h1 class="wtf-collection-title">{{ collection.title | default: 'Products' }}</h1>
+    {% if collection.description != blank %}
+      <p class="wtf-collection-description">{{ collection.description }}</p>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Products Section -->
+<section class="wtf-products-section">
+  {% if collection.products.size > 0 %}
+    <div class="wtf-products-grid">
+      {% for product in collection.products %}
+        <div class="wtf-product-card">
+          <div class="wtf-product-image">
+            {% if product.featured_image %}
+              <img src="{{ product.featured_image | img_url: '400x400' }}" alt="{{ product.title }}">
+            {% else %}
+              <img src="{{ 'placeholder-product.png' | asset_url }}" alt="{{ product.title }}">
+            {% endif %}
+          </div>
+          
+          <h3 class="wtf-product-title">{{ product.title }}</h3>
+          
+          <div class="wtf-product-price">
+            {% if product.compare_at_price > product.price %}
+              <span style="text-decoration: line-through; color: #999;">{{ product.compare_at_price | money }}</span>
+            {% endif %}
+            {{ product.price | money }}
+          </div>
+          
+          {% if product.description != blank %}
+            <p class="wtf-product-description">{{ product.description | strip_html | truncate: 100 }}</p>
+          {% endif %}
+          
+          <form action="/cart/add" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="id" value="{{ product.variants.first.id }}">
+            <button type="submit" class="wtf-add-to-cart">
+              {% if product.available %}
+                Add to Cart
+              {% else %}
+                Sold Out
+              {% endif %}
+            </button>
+          </form>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="wtf-empty-collection">
+      <h2 class="wtf-empty-title">Coming Soon!</h2>
+      <p class="wtf-empty-description">We're working on adding products to this collection. Check back soon!</p>
+      <a href="{{ routes.root_url }}" class="wtf-add-to-cart">Browse Other Categories</a>
+    </div>
+  {% endif %}
+</section>
+
+<!-- Footer -->
+<footer class="wtf-footer">
+  <div class="wtf-footer-content">
+    <h3>WTF - Welcome To Florida</h3>
+    <p>📍 1520 SE 46th Ln, Unit B, Cape Coral, FL 33904</p>
+    <p>☎️ (239) 955-0314</p>
+    <p>🌐 Premium Kava Bar & Cannabis Products</p>
+    <p style="margin-top: 20px; opacity: 0.7;">© {{ 'now' | date: '%Y' }} {{ shop.name | default: 'WTF Welcome To Florida' }}. All rights reserved.</p>
+  </div>
+</footer>
+
+<script>
+  // Add to cart functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('form[action="/cart/add"]');
+    
+    forms.forEach(form => {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const button = form.querySelector('.wtf-add-to-cart');
+        const originalText = button.textContent;
+        
+        button.textContent = 'Adding...';
+        button.disabled = true;
+        
+        fetch('/cart/add.js', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          button.textContent = 'Added!';
+          
+          // Update cart count
+          fetch('/cart.js')
+            .then(response => response.json())
+            .then(cart => {
+              const cartCount = document.getElementById('wtf-cart-count');
+              if (cartCount) {
+                cartCount.textContent = cart.item_count;
+              }
+            });
+          
+          setTimeout(() => {
+            button.textContent = originalText;
+            button.disabled = false;
+          }, 2000);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          button.textContent = 'Error';
+          setTimeout(() => {
+            button.textContent = originalText;
+            button.disabled = false;
+          }, 2000);
+        });
+      });
+    });
+  });
+</script>

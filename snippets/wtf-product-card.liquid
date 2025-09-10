@@ -1,0 +1,91 @@
+{% render 'wtf-flavor-data' %}
+
+{%- comment -%}
+Props:
+- mode: "custom" | "browse" (default: "custom")
+- product_handle: handle (custom mode)
+- product_type: "kratom" | "kava" | "delta9" (custom)
+- title, image, button_label
+- fixed_price
+- subtitle_1, subtitle_2 (optional, for the two tidy lines under title)
+- link_url, description (browse mode)
+{%- endcomment -%}
+
+{% assign mode = mode | default: 'custom' %}
+
+{% if mode == 'browse' %}
+  <div class="wtf-product-card">
+    <div class="wtf-product-image">
+      {% if image %}
+        <img src="{{ image }}" alt="{{ title }}">
+      {% endif %}
+    </div>
+    <h3>{{ title }}</h3>
+    {% if description %}<p class="wtf-subtle">{{ description }}</p>{% endif %}
+    <a class="wtf-order-btn" href="{{ link_url | default: '#' }}">
+      {{ button_label | default: 'Browse' }}
+    </a>
+  </div>
+{% else %}
+  {% assign product = all_products[product_handle] %}
+  {% if product == nil %}
+    <div class="wtf-product-card">Missing product handle: {{ product_handle }}</div>
+  {% else %}
+    <div class="wtf-product-card">
+      <div class="wtf-product-image">
+        {% if image %}
+          <!-- If an explicit URL was provided, use it as-is -->
+          <img src="{{ image }}" alt="{{ title | default: product.title }}">
+        {% elsif product.featured_image %}
+          <!-- Otherwise use the product featured image -->
+          <img src="{{ product.featured_image | img_url: '600x' }}" alt="{{ title | default: product.title }}">
+        {% endif %}
+      </div>
+
+      <h3>{{ title | default: product.title }}</h3>
+
+      {%- if subtitle_1 %}<p class="wtf-subtle">{{ subtitle_1 }}</p>{% endif -%}
+      {%- if subtitle_2 %}<p class="wtf-subtle">{{ subtitle_2 }}</p>{% endif -%}
+
+      <div class="wtf-options">
+        {%- if product_type == 'kratom' -%}
+          <select class="wtf-select" data-opt="strain" aria-label="Strain">
+            {% for s in KRATOM_STRAINS %}
+              <option value="{{ s | strip | downcase }}">{{ s | strip }}</option>
+            {% endfor %}
+          </select>
+        {%- endif -%}
+
+        <select class="wtf-select" data-opt="flavor" aria-label="Flavor">
+          {% for f in SHARED_FLAVORS %}
+            {% assign label = f | strip %}
+            <option value="{{ label | downcase | replace: ' ', '-' }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+
+        {%- if product_type == 'kava' -%}
+          <select class="wtf-select" data-opt="creamer" aria-label="Creamer">
+            {% for c in KAVA_CREAMERS %}
+              {% assign label = c | strip %}
+              <option value="{{ label | downcase | replace: ' ', '-' }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        {%- endif -%}
+
+        <input class="wtf-qty" type="number" min="1" value="1" aria-label="Quantity" />
+      </div>
+
+      <div class="wtf-card__price"><span class="wtf-price"
+        data-base-price="{% if fixed_price %}{{ fixed_price }}{% else %}{% if product_type == 'kratom' %}{{ KRATOM_BASE_PRICE }}{% elsif product_type == 'kava' %}{{ KAVA_BASE_PRICE }}{% else %}{{ DELTA9_BASE_PRICE }}{% endif %}{% endif %}">
+        $0.00
+      </span></div>
+
+      <button class="wtf-order-btn"
+              data-add-to-cart
+              data-product-id="{{ product.id }}"
+              data-variant-id="{{ product.variants.first.id }}">
+        {{ button_label | default: "Customize Order" }}
+      </button>
+    </div>
+  {% endif %}
+{% endif %}

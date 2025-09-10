@@ -1,0 +1,539 @@
+<!-- WTF Product Page with Flavor Selection -->
+<!-- File: templates/product.liquid -->
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; background: #f8f9fa; }
+
+  /* Header Navigation */
+  .wtf-header { 
+    background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); 
+    padding: 15px 0; 
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+    position: sticky; 
+    top: 0; 
+    z-index: 1000; 
+  }
+  .wtf-nav-container { 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 0 20px; 
+  }
+  .wtf-logo-section { display: flex; align-items: center; gap: 15px; }
+  .wtf-logo-circle { 
+    background: white; 
+    border-radius: 50%; 
+    width: 60px; 
+    height: 60px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
+    overflow: hidden; 
+  }
+  .wtf-logo-circle img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+  .wtf-logo-text h1 { 
+    color: white; 
+    margin: 0; 
+    font-size: 28px; 
+    font-weight: bold; 
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
+  }
+  .wtf-logo-text p { color: white; margin: 0; font-size: 14px; opacity: 0.9; }
+  .wtf-main-nav { display: flex; gap: 30px; align-items: center; }
+  .wtf-nav-link { 
+    color: white; 
+    text-decoration: none; 
+    font-weight: 600; 
+    font-size: 16px; 
+    padding: 8px 16px; 
+    border-radius: 25px; 
+    transition: all 0.3s ease; 
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3); 
+  }
+  .wtf-nav-link:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+  .wtf-cart-btn { 
+    background: white; 
+    color: #ff6600; 
+    text-decoration: none; 
+    font-weight: bold; 
+    font-size: 16px; 
+    padding: 10px 20px; 
+    border-radius: 25px; 
+    transition: all 0.3s ease; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); 
+  }
+  .wtf-cart-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+
+  /* Product Page */
+  .wtf-product-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  .wtf-back-button {
+    display: inline-block;
+    color: #ff6600;
+    text-decoration: none;
+    font-weight: 600;
+    margin-bottom: 30px;
+    padding: 10px 20px;
+    border: 2px solid #ff6600;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+  }
+
+  .wtf-back-button:hover {
+    background: #ff6600;
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  .wtf-product-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: start;
+  }
+
+  .wtf-product-images {
+    position: sticky;
+    top: 120px;
+  }
+
+  .wtf-main-image {
+    width: 100%;
+    height: 500px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+  }
+
+  .wtf-main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .wtf-product-info {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  }
+
+  .wtf-product-title {
+    font-size: 36px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+  }
+
+  .wtf-product-price {
+    font-size: 28px;
+    font-weight: bold;
+    color: #ff6600;
+    margin-bottom: 25px;
+  }
+
+  .wtf-product-price .compare-price {
+    text-decoration: line-through;
+    color: #999;
+    font-size: 24px;
+    margin-right: 10px;
+  }
+
+  .wtf-product-description {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 30px;
+  }
+
+  /* Variant Selection */
+  .wtf-variant-section {
+    margin-bottom: 30px;
+  }
+
+  .wtf-variant-label {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+    display: block;
+  }
+
+  .wtf-variant-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .wtf-variant-option {
+    position: relative;
+  }
+
+  .wtf-variant-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .wtf-variant-option label {
+    display: block;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .wtf-variant-option input[type="radio"]:checked + label {
+    background: #ff6600;
+    color: white;
+    border-color: #ff6600;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+  }
+
+  .wtf-variant-option label:hover {
+    border-color: #ff6600;
+    transform: translateY(-1px);
+  }
+
+  /* Quantity Selection */
+  .wtf-quantity-section {
+    margin-bottom: 30px;
+  }
+
+  .wtf-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .wtf-quantity-input {
+    display: flex;
+    align-items: center;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .wtf-quantity-btn {
+    background: #f8f9fa;
+    border: none;
+    padding: 12px 16px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .wtf-quantity-btn:hover {
+    background: #ff6600;
+    color: white;
+  }
+
+  .wtf-quantity-number {
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    text-align: center;
+    width: 80px;
+  }
+
+  /* Add to Cart */
+  .wtf-add-to-cart {
+    width: 100%;
+    background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%);
+    color: white;
+    border: none;
+    padding: 18px 30px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(255, 102, 0, 0.3);
+    margin-bottom: 20px;
+  }
+
+  .wtf-add-to-cart:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 102, 0, 0.4);
+  }
+
+  .wtf-add-to-cart:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Footer */
+  .wtf-footer { 
+    background: #333; 
+    color: white; 
+    padding: 40px 20px; 
+    text-align: center; 
+    margin-top: 60px;
+  }
+  .wtf-footer-content { max-width: 1200px; margin: 0 auto; }
+  .wtf-footer h3 { color: #ff6600; margin-bottom: 20px; }
+  .wtf-footer p { margin-bottom: 10px; }
+
+  /* Mobile Responsive */
+  @media (max-width: 768px) {
+    .wtf-nav-container { flex-direction: column; gap: 20px; }
+    .wtf-main-nav { gap: 15px; flex-wrap: wrap; justify-content: center; }
+    .wtf-product-container { grid-template-columns: 1fr; gap: 30px; }
+    .wtf-product-images { position: static; }
+    .wtf-main-image { height: 300px; }
+    .wtf-product-info { padding: 25px; }
+    .wtf-product-title { font-size: 28px; }
+    .wtf-variant-options { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+  }
+</style>
+
+<!-- Header Navigation -->
+<header class="wtf-header">
+  <div class="wtf-nav-container">
+    <div class="wtf-logo-section">
+      <div class="wtf-logo-circle">
+        <img src="{{ 'wtf-logo.png' | asset_url }}" alt="WTF Logo">
+      </div>
+      <div class="wtf-logo-text">
+        <h1>{{ shop.name | default: 'WTF' }}</h1>
+        <p>Welcome To Florida</p>
+      </div>
+    </div>
+    <nav class="wtf-main-nav">
+      <a href="{{ routes.root_url }}" class="wtf-nav-link">Home</a>
+      <a href="{{ routes.collections_url }}" class="wtf-nav-link">Shop</a>
+      <a href="{{ pages['about'].url | default: '#about' }}" class="wtf-nav-link">About</a>
+      <a href="{{ pages['contact'].url | default: '#contact' }}" class="wtf-nav-link">Contact</a>
+      <a href="{{ routes.cart_url }}" class="wtf-cart-btn">🛒 Cart (<span id="wtf-cart-count">{{ cart.item_count }}</span>)</a>
+    </nav>
+  </div>
+</header>
+
+<!-- Product Page -->
+<div class="wtf-product-page">
+  <a href="{{ collection.url | default: routes.root_url }}" class="wtf-back-button">← Back to {{ collection.title | default: 'Menu' }}</a>
+  
+  <div class="wtf-product-container">
+    <!-- Product Images -->
+    <div class="wtf-product-images">
+      <div class="wtf-main-image">
+        {% if product.featured_image %}
+          <img src="{{ product.featured_image | img_url: '600x600' }}" alt="{{ product.title }}" id="main-product-image">
+        {% else %}
+          <img src="{{ 'placeholder-product.png' | asset_url }}" alt="{{ product.title }}" id="main-product-image">
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Product Info -->
+    <div class="wtf-product-info">
+      <h1 class="wtf-product-title">{{ product.title }}</h1>
+      
+      <div class="wtf-product-price">
+        {% if product.compare_at_price > product.price %}
+          <span class="compare-price">{{ product.compare_at_price | money }}</span>
+        {% endif %}
+        <span id="product-price">{{ product.price | money }}</span>
+      </div>
+
+      {% if product.description != blank %}
+        <div class="wtf-product-description">
+          {{ product.description }}
+        </div>
+      {% endif %}
+
+      <form action="/cart/add" method="post" enctype="multipart/form-data" id="product-form">
+        <!-- Variant Selection -->
+        {% unless product.has_only_default_variant %}
+          {% for option in product.options_with_values %}
+            <div class="wtf-variant-section">
+              <label class="wtf-variant-label">{{ option.name }}:</label>
+              <div class="wtf-variant-options">
+                {% for value in option.values %}
+                  <div class="wtf-variant-option">
+                    <input type="radio" 
+                           id="{{ option.name | handleize }}-{{ value | handleize }}" 
+                           name="{{ option.name | handleize }}" 
+                           value="{{ value }}"
+                           {% if forloop.first %}checked{% endif %}>
+                    <label for="{{ option.name | handleize }}-{{ value | handleize }}">{{ value }}</label>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        {% endunless %}
+
+        <!-- Quantity Selection -->
+        <div class="wtf-quantity-section">
+          <label class="wtf-variant-label">Quantity:</label>
+          <div class="wtf-quantity-controls">
+            <div class="wtf-quantity-input">
+              <button type="button" class="wtf-quantity-btn" onclick="changeQuantity(-1)">−</button>
+              <input type="number" name="quantity" value="1" min="1" class="wtf-quantity-number" id="quantity">
+              <button type="button" class="wtf-quantity-btn" onclick="changeQuantity(1)">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden variant ID input -->
+        <input type="hidden" name="id" id="variant-id" value="{{ product.selected_or_first_available_variant.id }}">
+
+        <!-- Add to Cart Button -->
+        <button type="submit" class="wtf-add-to-cart" id="add-to-cart-btn">
+          {% if product.available %}
+            Add to Cart - <span id="cart-price">{{ product.selected_or_first_available_variant.price | money }}</span>
+          {% else %}
+            Sold Out
+          {% endif %}
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="wtf-footer">
+  <div class="wtf-footer-content">
+    <h3>WTF - Welcome To Florida</h3>
+    <p>📍 1520 SE 46th Ln, Unit B, Cape Coral, FL 33904</p>
+    <p>☎️ (239) 955-0314</p>
+    <p>🌐 Premium Kava Bar & Cannabis Products</p>
+    <p style="margin-top: 20px; opacity: 0.7;">© {{ 'now' | date: '%Y' }} {{ shop.name | default: 'WTF Welcome To Florida' }}. All rights reserved.</p>
+  </div>
+</footer>
+
+<script>
+  // Product variants data
+  const productVariants = {{ product.variants | json }};
+  
+  // Update variant selection
+  function updateVariant() {
+    const selectedOptions = {};
+    
+    // Get all selected options
+    {% for option in product.options_with_values %}
+      const {{ option.name | handleize }}Input = document.querySelector('input[name="{{ option.name | handleize }}"]:checked');
+      if ({{ option.name | handleize }}Input) {
+        selectedOptions['{{ option.name }}'] = {{ option.name | handleize }}Input.value;
+      }
+    {% endfor %}
+    
+    // Find matching variant
+    const selectedVariant = productVariants.find(variant => {
+      return {% for option in product.options_with_values %}
+        variant.option{{ forloop.index }} === selectedOptions['{{ option.name }}']{% unless forloop.last %} && {% endunless %}
+      {% endfor %};
+    });
+    
+    if (selectedVariant) {
+      // Update hidden input
+      document.getElementById('variant-id').value = selectedVariant.id;
+      
+      // Update price
+      const price = (selectedVariant.price / 100).toFixed(2);
+      document.getElementById('product-price').textContent = '$' + price;
+      document.getElementById('cart-price').textContent = '$' + price;
+      
+      // Update availability
+      const addToCartBtn = document.getElementById('add-to-cart-btn');
+      if (selectedVariant.available) {
+        addToCartBtn.disabled = false;
+        addToCartBtn.innerHTML = 'Add to Cart - <span id="cart-price">$' + price + '</span>';
+      } else {
+        addToCartBtn.disabled = true;
+        addToCartBtn.textContent = 'Sold Out';
+      }
+      
+      // Update image if variant has image
+      if (selectedVariant.featured_image) {
+        document.getElementById('main-product-image').src = selectedVariant.featured_image.src;
+      }
+    }
+  }
+  
+  // Quantity controls
+  function changeQuantity(change) {
+    const quantityInput = document.getElementById('quantity');
+    const currentQuantity = parseInt(quantityInput.value);
+    const newQuantity = Math.max(1, currentQuantity + change);
+    quantityInput.value = newQuantity;
+  }
+  
+  // Add to cart functionality
+  document.getElementById('product-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const button = document.getElementById('add-to-cart-btn');
+    const originalText = button.innerHTML;
+    
+    button.textContent = 'Adding...';
+    button.disabled = true;
+    
+    fetch('/cart/add.js', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      button.textContent = 'Added!';
+      
+      // Update cart count
+      fetch('/cart.js')
+        .then(response => response.json())
+        .then(cart => {
+          const cartCount = document.getElementById('wtf-cart-count');
+          if (cartCount) {
+            cartCount.textContent = cart.item_count;
+          }
+        });
+      
+      setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+      }, 2000);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      button.textContent = 'Error';
+      setTimeout(() => {
+        button.innerHTML = originalText;
+        button.disabled = false;
+      }, 2000);
+    });
+  });
+  
+  // Initialize variant selection
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners to variant options
+    {% for option in product.options_with_values %}
+      document.querySelectorAll('input[name="{{ option.name | handleize }}"]').forEach(input => {
+        input.addEventListener('change', updateVariant);
+      });
+    {% endfor %}
+    
+    // Initial variant update
+    updateVariant();
+  });
+</script>
