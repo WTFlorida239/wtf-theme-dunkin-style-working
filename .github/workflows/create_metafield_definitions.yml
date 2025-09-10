@@ -1,0 +1,34 @@
+name: Create metafield definitions (one-time)
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  run-once:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Shopify GraphQL
+        env:
+          SHOPIFY_DOMAIN: ${{ secrets.SHOPIFY_DOMAIN }}
+          TOKEN: ${{ secrets.SHOPIFY_ADMIN_API_TOKEN }}
+        run: |
+          API="https://${SHOPIFY_DOMAIN}/admin/api/2024-07/graphql.json"
+          read -r -d '' GQL <<'EOF'
+          mutation metafieldDefs {
+            kd: metafieldDefinitionCreateOrUpdate(input:{ name:"Kratom Variant ID", namespace:"custom", key:"kratom_variant_id", ownerType:PAGE, type:"number_integer" }){userErrors{field message}}
+            kv: metafieldDefinitionCreateOrUpdate(input:{ name:"Kava Variant ID", namespace:"custom", key:"kava_variant_id", ownerType:PAGE, type:"number_integer" }){userErrors{field message}}
+            td: metafieldDefinitionCreateOrUpdate(input:{ name:"THC Drink Variant ID", namespace:"custom", key:"thc_drink_variant_id", ownerType:PAGE, type:"number_integer" }){userErrors{field message}}
+            dp: metafieldDefinitionCreateOrUpdate(input:{ name:"Draft Pour Variant ID", namespace:"custom", key:"draft_pour_variant_id", ownerType:PAGE, type:"number_integer" }){userErrors{field message}}
+            ts: metafieldDefinitionCreateOrUpdate(input:{ name:"THC Shot Variant ID", namespace:"custom", key:"thc_shot_variant_id", ownerType:PAGE, type:"number_integer" }){userErrors{field message}}
+            cd: metafieldDefinitionCreateOrUpdate(input:{ name:"Canned Drink Variant ID", namespace:"custom", key:"canned_drink_variant_id", ownerType:PAGE, type:"number_integer" }){userErrors{field message}}
+            fs: metafieldDefinitionCreateOrUpdate(input:{ name:"Fun Stuff Variant ID", namespace:"custom", key:"fun_stuff_variant_id", ownerType:PAGE, type:"number_integer" }){userErrors{field message}}
+            th: metafieldDefinitionCreateOrUpdate(input:{ name:"Take Home Variant ID", namespace:"custom", key:"take_home_variant_id", ownerType:PAGE, type:"number_integer" }){userErrors{field message}}
+            pumps: metafieldDefinitionCreateOrUpdate(input:{ name:"Pumps Included", namespace:"custom", key:"pumps_included", ownerType:PAGE, type:"number_integer" }){userErrors{field message}}
+            extra: metafieldDefinitionCreateOrUpdate(input:{ name:"Extra Pump Price", namespace:"custom", key:"extra_pump_price", ownerType:PAGE, type:"number_decimal" }){userErrors{field message}}
+            rot: metafieldDefinitionCreateOrUpdate(input:{ name:"Rotation Flavors", namespace:"custom", key:"rotation_flavors", ownerType:PAGE, type:"list.single_line_text_field" }){userErrors{field message}}
+          }
+          EOF
+          curl -sS -X POST "$API" \
+            -H "X-Shopify-Access-Token: $TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary "$(jq -n --arg q "$GQL" '{query:$q}')"
