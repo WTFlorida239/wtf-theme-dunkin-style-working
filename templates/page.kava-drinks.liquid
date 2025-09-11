@@ -1,440 +1,286 @@
+{% comment %}
+  Custom Kava Drinks builder (AJAX cart)
+  - Variant ID: page.metafields.custom.kava_variant_id OR settings.kava_drinks_variant_id
+  - Pumps: Medium 4, Large 6 (extra pumps charged)
+{% endcomment %}
+{% assign kava_variant_id = page.metafields.custom.kava_variant_id
+  | default: settings.kava_drinks_variant_id
+  | default: 0
+%}
+
+{% assign price_medium = page.metafields.custom.kava_price_medium
+  | default: settings.kava_price_medium
+  | default: '9.00'
+%}
+{% assign price_large = page.metafields.custom.kava_price_large
+  | default: settings.kava_price_large
+  | default: '15.00'
+%}
+{% assign price_gallon = page.metafields.custom.kava_price_gallon
+  | default: settings.kava_price_gallon
+  | default: '100.00'
+%}
+{% assign extra_pump_price = page.metafields.custom.extra_pump_price
+  | default: settings.kava_extra_pump_price
+  | default: '0.50'
+%}
+
 <!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Custom Kava Drink - WTF | Welcome To Florida</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Kava Drinks - WTF | Welcome To Florida</title>
     <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f9fa; line-height: 1.6; }
-      .header { background: #ff6600; color: white; padding: 15px 0; text-align: center; font-size: 24px; font-weight: bold; }
-      .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-      .back-link { display: inline-block; color: #ff6600; text-decoration: none; font-weight: bold; font-size: 16px; margin-bottom: 20px; padding: 10px 15px; border: 2px solid #ff6600; border-radius: 5px; transition: all 0.3s ease; }
-      .back-link:hover { background: #ff6600; color: white; }
-      .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
-      .product-image { width: 100%; max-width: 400px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-      .product-details { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-      .product-title { font-size: 32px; color: #333; margin-bottom: 10px; font-weight: bold; }
-      .product-price { font-size: 24px; color: #ff6600; font-weight: bold; margin-bottom: 15px; }
-      .product-description { color: #666; margin-bottom: 30px; line-height: 1.6; font-size: 16px; }
-      .selection-section { margin: 30px 0; border-bottom: 1px solid #eee; padding-bottom: 20px; }
-      .selection-section:last-child { border-bottom: none; }
-      .section-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 15px; }
-
-      .option-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-      .option-button { padding: 15px; border: 3px solid #ddd; border-radius: 8px; text-align: center; background: white; cursor: pointer; transition: all 0.3s ease; color: #333; font-size: 14px; font-family: inherit; min-height: 60px; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-      .option-button:hover { border-color: #ff6600; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(255,102,0,0.2); }
-      .option-button.selected { background: #ff6600; color: white; border-color: #ff6600; font-weight: bold; }
-
-      .flavor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
-      .flavor-button { padding: 12px 8px; border: 2px solid #ddd; border-radius: 6px; text-align: center; background: white; cursor: pointer; transition: all 0.3s ease; font-size: 13px; color: #333; font-family: inherit; min-height: 45px; display: flex; align-items: center; justify-content: center; }
-      .flavor-button:hover { border-color: #28a745; transform: translateY(-1px); }
-      .flavor-button.selected { background: #28a745; color: white; border-color: #28a745; font-weight: bold; }
-
-      .quantity-controls { display: flex; align-items: center; gap: 15px; }
-      .qty-btn { width: 40px; height: 40px; border: 2px solid #ff6600; background: white; color: #ff6600; border-radius: 50%; cursor: pointer; font-size: 18px; font-weight: bold; font-family: inherit; transition: all 0.3s ease; }
-      .qty-btn:hover { background: #ff6600; color: white; transform: scale(1.1); }
-      .qty-input { width: 80px; text-align: center; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; font-family: inherit; }
-
-      .comments-textarea { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; resize: vertical; font-family: inherit; font-size: 14px; line-height: 1.4; }
-      .comments-textarea:focus { border-color: #ff6600; outline: none; }
-
-      .add-to-cart-btn { width: 100%; padding: 18px; background: #ff6600; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; font-family: inherit; transition: all 0.3s ease; }
-      .add-to-cart-btn:hover { background: #e55a00; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,102,0,0.3); }
-      .add-to-cart-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
-
-      .success-message { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #c3e6cb; display: none; font-size: 14px; line-height: 1.4; }
-      .success-message.show { display: block; }
-
-      .cart-status { position: fixed; top: 20px; right: 20px; background: #ff6600; color: white; padding: 10px 15px; border-radius: 25px; font-weight: bold; z-index: 1000; box-shadow: 0 4px 12px rgba(255,102,0,0.3); }
-
-      .info-box { background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; color: #333; font-size: 14px; line-height: 1.4; }
-
-      @media (max-width: 768px) {
-        .product-grid { grid-template-columns: 1fr; }
-        .option-grid { grid-template-columns: repeat(2, 1fr); }
-        .flavor-grid { grid-template-columns: repeat(2, 1fr); }
-        .product-details { padding: 20px; }
-      }
+      :root{--primary: {{ settings.color_primary | default: '#ff6600' }};--success: {{ settings.color_success | default: '#28a745' }};--bg: {{ settings.color_background | default: '#f8f9fa' }};--text: {{ settings.color_text | default: '#333' }}}
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+      .header{background:var(--primary);color:#fff;padding:15px 0;text-align:center;font-size:24px;font-weight:700}
+      .container{max-width:1100px;margin:0 auto;padding:20px}
+      .back{display:inline-block;color:var(--primary);border:2px solid var(--primary);padding:10px 14px;border-radius:8px;font-weight:700;text-decoration:none;margin-bottom:18px}
+      .grid{display:grid;grid-template-columns:1fr 1fr;gap:32px}
+      .card{background:#fff;border-radius:12px;padding:22px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+      .img{width:100%;max-width:420px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+      .title{font-size:30px;font-weight:800;margin-bottom:6px}
+      .price{font-weight:800;color:var(--primary);margin-bottom:10px}
+      .section{margin:22px 0;padding-bottom:14px;border-bottom:1px solid #eee}
+      .section:last-child{border-bottom:0}
+      .pill{padding:14px;border:2px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;transition:.2s;text-align:center}
+      .pill:hover{border-color:var(--primary);transform:translateY(-2px)}
+      .pill.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
+      .grid-sm{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+      .grid-flavors{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+      .flv{padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer}
+      .flv:hover{border-color:var(--success);transform:translateY(-1px)}
+      .flv.selected{background:var(--success);color:#fff;border-color:var(--success)}
+      .note{background:#e7f3ff;border-radius:8px;padding:12px;font-size:14px}
+      .qty{display:flex;gap:12px;align-items:center}
+      .btn{border:2px solid var(--primary);background:#fff;color:var(--primary);width:40px;height:40px;border-radius:50%;font-weight:800;cursor:pointer}
+      .btn:hover{background:var(--primary);color:#fff}
+      input[type="number"]{width:84px;text-align:center;padding:10px;border:2px solid #ddd;border-radius:8px}
+      textarea{width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;resize:vertical}
+      .cta{width:100%;padding:16px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer;margin-top:14px}
+      .cta[disabled]{background:#bbb;cursor:not-allowed}
+      .success{display:none;margin-top:12px;background:#d4edda;color:#155724;border:1px solid #c3e6cb;border-radius:8px;padding:12px}
+      .success.show{display:block}
+      @media(max-width:820px){.grid{grid-template-columns:1fr}}
     </style>
-
-    <!-- Settings & overrides -->
-    <script>
-      window.KAVA_VARIANT_ID = {{ page.metafields.custom.kava_variant_id | default: settings.kava_drinks_variant_id | json }};
-      window.KAVA_EXTRA_PUMP_PRICE = {{ page.metafields.custom.kava_extra_pump_price | default: settings.kava_extra_pump_price | default: 0.50 | json }};
-      window.KAVA_INCLUDED_PUMPS_MEDIUM = {{ page.metafields.custom.kava_included_pumps_medium | default: settings.kava_included_pumps_medium | default: 2 | json }};
-      window.KAVA_INCLUDED_PUMPS_LARGE  = {{ page.metafields.custom.kava_included_pumps_large  | default: settings.kava_included_pumps_large  | default: 2 | json }};
-    </script>
   </head>
   <body>
     <div class="header">WTF | Welcome To Florida</div>
-    <div class="cart-status" id="cart-status">Cart: <span id="cart-count">0</span> items</div>
-
     <div class="container">
-      <a href="/" class="back-link">← Back to Menu</a>
-
-      <div class="product-grid">
-        <div class="product-image-section">
-          <img src="{{ 'kava-drinks_150x150.png' | asset_url }}" alt="Custom Kava Drink" class="product-image">
-        </div>
-
-        <div class="product-details">
-          <h1 class="product-title">Custom Kava Drink</h1>
-          <div class="product-price" id="product-price">Starting at $9.00</div>
-          <p class="product-description">
-            Relax and unwind with our premium kava drinks. Choose your size and flavor combination for the perfect kava
-            experience.
+      <a class="back" href="/">← Back to Menu</a>
+      <div class="grid">
+        <img class="img" src="{{ 'kava_drinks_150x150.png' | asset_url }}" alt="Kava Drinks">
+        <div class="card">
+          <h1 class="title">Kava Drinks</h1>
+          <div class="price">
+            Total: <span id="live-price">${{ price_medium }}</span>
+          </div>
+          <p>
+            Create your perfect kava drink. Medium includes <b>4</b> pumps, Large includes <b>6</b>. Extra pumps cost
+            <b>${{ extra_pump_price }}</b> each.
           </p>
 
-          <!-- SIZE -->
-          <div class="selection-section">
-            <h3 class="section-title">☕ Choose Your Size</h3>
-            <div class="option-grid" id="size-options">
-              <button type="button" class="option-button" data-size="Medium" data-price="9.00">
-                <strong>Medium</strong><br>
-                12 oz — $9.00
+          <div class="section">
+            <h3>☕ Size</h3>
+            <div class="grid-sm" id="size">
+              <button class="pill" data-size="Medium" data-price="{{ price_medium }}">
+                Medium — ${{ price_medium }}
               </button>
-              <button type="button" class="option-button" data-size="Large" data-price="15.00">
-                <strong>Large</strong><br>
-                16 oz — $15.00
-              </button>
-              <button type="button" class="option-button" data-size="Gallon" data-price="100.00">
-                <strong>Gallon</strong><br>
-                128 oz — $100.00
+              <button class="pill" data-size="Large" data-price="{{ price_large }}">Large — ${{ price_large }}</button>
+              <button class="pill" data-size="Gallon" data-price="{{ price_gallon }}">
+                Gallon — ${{ price_gallon }}
               </button>
             </div>
           </div>
 
-          <!-- FLAVORS -->
-          <div class="selection-section">
-            <h3 class="section-title">🥥 Choose Your Flavors</h3>
-            <div class="info-box">
-              <strong>Kava Flavors:</strong> Multiple selections allowed. First <em>included pumps</em> are free by size
-              (Medium & Large default to 2). Additional flavors automatically add extra pumps at your configured price.
+          <div class="section">
+            <h3>🍋 Flavors</h3>
+            <div class="note">We’ll split the included pumps evenly across selected flavors.</div>
+            <div class="grid-flavors" id="flavors">
+              {% assign kava_flavors = 'Lemon,Lime,Orange,Strawberry,Blueberry,Simple Syrup,Coconut,Passion Fruit,Hibiscus'
+                | split: ','
+              %}
+              {% for f in kava_flavors %}
+                <button class="flv" data-flavor="{{ f | escape }}">{{ f }}</button>
+              {% endfor %}
             </div>
-            <div class="flavor-grid" id="flavor-grid">
-              <button type="button" class="flavor-button" data-flavor="Lemon">Lemon</button>
-              <button type="button" class="flavor-button" data-flavor="Lime">Lime</button>
-              <button type="button" class="flavor-button" data-flavor="Orange">Orange</button>
-              <button type="button" class="flavor-button" data-flavor="Blood Orange">Blood Orange</button>
-              <button type="button" class="flavor-button" data-flavor="Strawberry">Strawberry</button>
-              <button type="button" class="flavor-button" data-flavor="Raspberry">Raspberry</button>
-              <button type="button" class="flavor-button" data-flavor="Blueberry">Blueberry</button>
-              <button type="button" class="flavor-button" data-flavor="Coconut">Coconut</button>
-              <button type="button" class="flavor-button" data-flavor="Mango">Mango</button>
-              <button type="button" class="flavor-button" data-flavor="Watermelon">Watermelon</button>
-              <button type="button" class="flavor-button" data-flavor="Simple Syrup">Simple Syrup</button>
-              <button type="button" class="flavor-button" data-flavor="Sour Apple">Sour Apple</button>
-              <button type="button" class="flavor-button" data-flavor="Dragon Fruit">Dragon Fruit</button>
-              <button type="button" class="flavor-button" data-flavor="Blackberry">Blackberry</button>
-              <button type="button" class="flavor-button" data-flavor="S'mores">S'mores</button>
-              <button type="button" class="flavor-button" data-flavor="Pumpkin Spice">Pumpkin Spice</button>
-              <button type="button" class="flavor-button" data-flavor="Cranberry">Cranberry</button>
-              <button type="button" class="flavor-button" data-flavor="Grenadine">Grenadine</button>
-              <button type="button" class="flavor-button" data-flavor="Lavender">Lavender</button>
-              <button type="button" class="flavor-button" data-flavor="Chocolate">Chocolate</button>
-              <button type="button" class="flavor-button" data-flavor="Caramel">Caramel</button>
-              <button type="button" class="flavor-button" data-flavor="Maple">Maple</button>
-              <button type="button" class="flavor-button" data-flavor="Agave">Agave</button>
-              <button type="button" class="flavor-button" data-flavor="Hazelnut">Hazelnut</button>
-              <button type="button" class="flavor-button" data-flavor="Rose">Rose</button>
-              <button type="button" class="flavor-button" data-flavor="Passion Fruit">Passion Fruit</button>
-              <button type="button" class="flavor-button" data-flavor="Hibiscus">Hibiscus</button>
-              <button type="button" class="flavor-button" data-flavor="Creamer">Creamer</button>
-              <button type="button" class="flavor-button" data-flavor="Oat Milk">Oat Milk</button>
-            </div>
-            <div id="pump-distribution" class="info-box" style="display:none;"></div>
+            <div id="pump-dist" class="note" style="display:none;margin-top:8px"></div>
           </div>
 
-          <!-- COMMENTS -->
-          <div class="selection-section">
-            <h3 class="section-title">💬 Special Requests & Comments</h3>
-            <textarea
-              id="order-comments"
-              class="comments-textarea"
-              placeholder="Any special requests or modifications? We'll try to accommodate!"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <!-- QUANTITY -->
-          <div class="selection-section">
-            <h3 class="section-title">🔢 Quantity</h3>
-            <div class="quantity-controls">
-              <button type="button" class="qty-btn" onclick="changeQuantity(-1)">−</button>
-              <input type="number" id="quantity" value="1" min="1" max="50" class="qty-input">
-              <button type="button" class="qty-btn" onclick="changeQuantity(1)">+</button>
+          <div class="section">
+            <h3>➕ Extra Pumps (${{ extra_pump_price }} each)</h3>
+            <div class="qty">
+              <button class="btn" data-extra="-1">−</button>
+              <input id="extra" type="number" min="0" value="0">
+              <button class="btn" data-extra="1">+</button>
+              <strong id="extra-cost"></strong>
             </div>
           </div>
 
-          <div id="success-message" class="success-message"></div>
+          <div class="section">
+            <h3>💬 Comments</h3>
+            <textarea id="comments" rows="3" placeholder="Any special requests?"></textarea>
+          </div>
 
-          <button type="button" id="add-to-cart-btn" class="add-to-cart-btn" onclick="addToCart()">
-            Add to Cart - $9.00
-          </button>
+          <div class="section">
+            <h3>🔢 Quantity</h3>
+            <div class="qty">
+              <button class="btn" data-qty="-1">−</button>
+              <input id="qty" type="number" min="1" value="1">
+              <button class="btn" data-qty="1">+</button>
+            </div>
+          </div>
+
+          <button id="add" class="cta">Add to Cart</button>
+          <div id="ok" class="success"></div>
         </div>
       </div>
     </div>
 
     <script>
-      // ---------- State ----------
-      let selectedSize = null;
-      let basePrice = 9.0;
-      let selectedFlavors = [];
-      let extraPumps = 0;
+      (function () {
+        const VARIANT = Number('{{ kava_variant_id }}') || 0;
+        const PRICE = {
+          Medium: Number('{{ price_medium }}') || 9,
+          Large: Number('{{ price_large }}') || 15,
+          Gallon: Number('{{ price_gallon }}') || 100,
+        };
+        const INCLUDED = { Medium: 4, Large: 6, Gallon: 0 };
+        const EXTRA_PRICE = Number('{{ extra_pump_price }}') || 0.5;
 
-      const EXTRA_PUMP_PRICE = Number(window.KAVA_EXTRA_PUMP_PRICE || 0.5);
-      const INCLUDED_PUMPS = {
-        Medium: Number(window.KAVA_INCLUDED_PUMPS_MEDIUM || 2),
-        Large: Number(window.KAVA_INCLUDED_PUMPS_LARGE || 2),
-        Gallon: 'Custom',
-      };
+        let size = 'Medium',
+          qty = 1,
+          extra = 0,
+          flavors = new Set();
 
-      // ---------- Init ----------
-      document.addEventListener('DOMContentLoaded', () => {
-        wireSizeButtons();
-        wireFlavorButtons();
-        // Default to Medium
-        const defaultBtn = document.querySelector('#size-options .option-button[data-size="Medium"]');
-        if (defaultBtn) defaultBtn.click();
-        updateCartCount();
-        updatePrice();
-      });
+        const $live = document.getElementById('live-price');
+        const $extra = document.getElementById('extra');
+        const $extraCost = document.getElementById('extra-cost');
+        const $qty = document.getElementById('qty');
+        const $dist = document.getElementById('pump-dist');
+        const $ok = document.getElementById('ok');
 
-      function wireSizeButtons() {
-        document.querySelectorAll('#size-options .option-button').forEach((btn) => {
-          btn.addEventListener('click', () => {
-            document.querySelectorAll('#size-options .option-button').forEach((b) => b.classList.remove('selected'));
-            btn.classList.add('selected');
-
-            selectedSize = btn.dataset.size;
-            basePrice = parseFloat(btn.dataset.price || '0') || 0;
-
-            autoPumpsFromFlavors();
-            renderPumpDistribution();
-            updatePrice();
-          });
-        });
-      }
-
-      function wireFlavorButtons() {
-        document.querySelectorAll('#flavor-grid .flavor-button').forEach((btn) => {
-          btn.addEventListener('click', () => {
-            const flavor = btn.dataset.flavor;
-            if (!flavor) return;
-
-            if (btn.classList.contains('selected')) {
-              btn.classList.remove('selected');
-              selectedFlavors = selectedFlavors.filter((f) => f !== flavor);
-            } else {
-              btn.classList.add('selected');
-              selectedFlavors.push(flavor);
-            }
-
-            autoPumpsFromFlavors();
-            renderPumpDistribution();
-            updatePrice();
-          });
-        });
-      }
-
-      // Auto extra-pump logic: if flavors > included pumps for the size, the difference becomes extra pumps.
-      function autoPumpsFromFlavors() {
-        const included = INCLUDED_PUMPS[selectedSize] ?? 0;
-        if (included === 'Custom') {
-          // Gallon
-          // You can keep this at 0 if gallons are handled in-store.
-          extraPumps = selectedFlavors.length; // or 0 — your call
-          return;
+        function money(n) {
+          return '$' + (Math.round(n * 100) / 100).toFixed(2);
         }
-        const count = selectedFlavors.length;
-        extraPumps = Math.max(0, count - Number(included || 0));
-      }
-
-      function renderPumpDistribution() {
-        const box = document.getElementById('pump-distribution');
-        if (!selectedSize || selectedFlavors.length === 0) {
-          box.style.display = 'none';
-          box.innerHTML = '';
-          return;
+        function unit() {
+          return (PRICE[size] || 0) + extra * EXTRA_PRICE;
         }
-        const included = INCLUDED_PUMPS[selectedSize];
-        let html = '<strong>🎯 Pump Distribution</strong><br>';
-
-        if (included === 'Custom') {
-          html += '📞 Gallon orders are custom — please discuss pump distribution with staff.';
-        } else {
-          const totalPumps = Number(included || 0) + Number(extraPumps || 0);
-          const per = Math.floor(totalPumps / selectedFlavors.length);
-          const rem = totalPumps % selectedFlavors.length;
-          selectedFlavors.forEach((f, i) => {
-            const pumps = per + (i < rem ? 1 : 0);
-            html += `• ${f}: ${pumps} pump${pumps !== 1 ? 's' : ''}<br>`;
-          });
-          html += `<em>Included: ${included}, Extra: ${extraPumps} × $${EXTRA_PUMP_PRICE.toFixed(2)}</em>`;
+        function render() {
+          $live.textContent = money(unit() * qty);
+          $extraCost.textContent = extra > 0 ? '(+' + money(extra * EXTRA_PRICE) + ')' : '';
+          document.getElementById('add').textContent = 'Add to Cart — ' + money(unit() * qty);
         }
-
-        box.innerHTML = html;
-        box.style.display = 'block';
-      }
-
-      function getTotalPrice() {
-        const qty = parseInt(document.getElementById('quantity').value || 1);
-        const extras = extraPumps * EXTRA_PUMP_PRICE;
-        return (basePrice + extras) * qty;
-      }
-
-      function updatePrice() {
-        const total = getTotalPrice();
-        document.getElementById('product-price').textContent = '$' + total.toFixed(2);
-        document.getElementById('add-to-cart-btn').textContent = 'Add to Cart - $' + total.toFixed(2);
-      }
-
-      function changeQuantity(delta) {
-        const input = document.getElementById('quantity');
-        const newVal = Math.max(1, Math.min(50, (parseInt(input.value) || 1) + delta));
-        input.value = newVal;
-        updatePrice();
-      }
-
-      async function updateCartCount() {
-        try {
-          const res = await fetch('/cart.js', { credentials: 'same-origin' });
-          if (res.ok) {
-            const cart = await res.json();
-            document.getElementById('cart-count').textContent = cart.item_count || 0;
+        function renderDist() {
+          const list = [...flavors];
+          if (!list.length || !INCLUDED[size]) {
+            $dist.style.display = 'none';
             return;
           }
-        } catch (e) {}
-        // Fallback to localStorage
-        try {
-          const local = JSON.parse(localStorage.getItem('wtf-cart') || '[]');
-          document.getElementById('cart-count').textContent = local.length;
-        } catch {
-          document.getElementById('cart-count').textContent = '0';
+          const total = INCLUDED[size],
+            per = Math.floor(total / list.length),
+            rem = total % list.length;
+          let html = '<b>🎯 Pump Distribution</b><br>';
+          list.forEach((f, i) => {
+            const p = per + (i < rem ? 1 : 0);
+            html += `• ${f}: ${p} pump${p !== 1 ? 's' : ''}<br>`;
+          });
+          $dist.innerHTML = html;
+          $dist.style.display = 'block';
         }
-      }
 
-      function validateSelections() {
-        if (!selectedSize) {
-          alert('❗ Please select a size.');
-          return false;
-        }
-        if (!selectedFlavors || selectedFlavors.length === 0) {
-          alert('❗ Please select at least one flavor.');
-          return false;
-        }
-        return true;
-      }
+        document.getElementById('size').addEventListener('click', (e) => {
+          const b = e.target.closest('[data-size]');
+          if (!b) return;
+          document.querySelectorAll('#size .pill').forEach((x) => x.classList.remove('selected'));
+          b.classList.add('selected');
+          size = b.dataset.size;
+          render();
+          renderDist();
+        });
+        // default Medium
+        document.querySelector('#size [data-size="Medium"]').click();
 
-      function buildPumpDistributionText() {
-        if (!selectedSize || selectedFlavors.length === 0) return '';
-        const included = INCLUDED_PUMPS[selectedSize];
-        if (included === 'Custom') return 'Custom (Gallon) — discuss with staff';
-        const total = Number(included || 0) + Number(extraPumps || 0);
-        const per = Math.floor(total / selectedFlavors.length);
-        const rem = total % selectedFlavors.length;
-        return selectedFlavors.map((f, i) => `${f}: ${per + (i < rem ? 1 : 0)}`).join(' | ');
-      }
-
-      async function addToCart() {
-        if (!validateSelections()) return;
-
-        const btn = document.getElementById('add-to-cart-btn');
-        const original = btn.textContent;
-        btn.textContent = '⏳ Adding...';
-        btn.disabled = true;
-
-        const variantId = window.KAVA_VARIANT_ID;
-        const quantity = parseInt(document.getElementById('quantity').value || 1);
-        const comments = (document.getElementById('order-comments').value || '').trim();
-
-        const properties = {
-          Size: selectedSize,
-          Flavors: selectedFlavors.join(', '),
-          'Extra Pumps': extraPumps,
-          'Pump Distribution': buildPumpDistributionText(),
-          Comments: comments,
-        };
-
-        try {
-          if (variantId) {
-            const body = new URLSearchParams();
-            body.set('id', String(variantId));
-            body.set('quantity', String(quantity));
-            Object.keys(properties).forEach((k) => {
-              const v = properties[k];
-              if (v !== '' && v !== null && v !== undefined) {
-                body.set(`properties[${k}]`, String(v));
-              }
-            });
-
-            const res = await fetch('/cart/add.js', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                Accept: 'application/json',
-              },
-              credentials: 'same-origin',
-              body,
-            });
-
-            if (!res.ok) {
-              let msg = 'Add to cart failed';
-              try {
-                const data = await res.json();
-                msg = data.description || data.message || msg;
-              } catch {}
-              throw new Error(msg);
-            }
+        document.getElementById('flavors').addEventListener('click', (e) => {
+          const b = e.target.closest('[data-flavor]');
+          if (!b) return;
+          const v = b.dataset.flavor;
+          if (b.classList.contains('selected')) {
+            b.classList.remove('selected');
+            flavors.delete(v);
           } else {
-            // Dev fallback: localStorage cart if no variant configured.
-            const order = {
-              id: 'kava-' + Date.now() + '-' + Math.random().toString(36).slice(2),
-              product: 'Custom Kava Drink',
-              ...properties,
-              quantity,
-              price: getTotalPrice().toFixed(2),
-              timestamp: new Date().toISOString(),
-              dateAdded: new Date().toLocaleDateString(),
-            };
-            let cart = [];
-            try {
-              cart = JSON.parse(localStorage.getItem('wtf-cart') || '[]');
-            } catch {
-              cart = [];
-            }
-            cart.push(order);
-            localStorage.setItem('wtf-cart', JSON.stringify(cart));
+            b.classList.add('selected');
+            flavors.add(v);
           }
+          renderDist();
+          render();
+        });
 
-          await updateCartCount();
+        document.querySelectorAll('[data-extra]').forEach((b) =>
+          b.addEventListener('click', () => {
+            extra = Math.max(0, (Number($extra.value) || 0) + Number(b.dataset.extra));
+            $extra.value = extra;
+            render();
+          })
+        );
+        $extra.addEventListener('input', () => {
+          extra = Math.max(0, Number($extra.value) || 0);
+          $extra.value = extra;
+          render();
+        });
 
-          const success = document.getElementById('success-message');
-          success.innerHTML =
-            `✅ <strong>Added to cart!</strong><br>
-           🥥 Custom Kava Drink<br>
-           📏 Size: ${properties['Size']}<br>
-           🍋 Flavors: ${properties['Flavors']}<br>` +
-            (extraPumps > 0 ? `➕ Extra Pumps: ${extraPumps}<br>` : '') +
-            (properties['Pump Distribution'] ? `🎯 ${properties['Pump Distribution']}<br>` : '') +
-            (comments ? `💬 ${comments}<br>` : '') +
-            `🔢 Qty: ${quantity}`;
-          success.classList.add('show');
-          success.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        document.querySelectorAll('[data-qty]').forEach((b) =>
+          b.addEventListener('click', () => {
+            qty = Math.max(1, (Number($qty.value) || 1) + Number(b.dataset.qty));
+            $qty.value = qty;
+            render();
+          })
+        );
+        $qty.addEventListener('input', () => {
+          qty = Math.max(1, Number($qty.value) || 1);
+          $qty.value = qty;
+          render();
+        });
 
-          document.dispatchEvent(new CustomEvent('kava:added', { detail: { variantId, ...properties, quantity } }));
-        } catch (err) {
-          console.error('Add to cart error:', err);
-          alert('❌ ' + (err && err.message ? err.message : 'Error adding to cart. Please try again.'));
-        } finally {
-          setTimeout(() => {
-            btn.textContent = original;
-            btn.disabled = false;
-            document.getElementById('success-message').classList.remove('show');
-          }, 4000);
-        }
-      }
+        document.getElementById('add').addEventListener('click', async () => {
+          if (!VARIANT) {
+            alert('Set a Kava Variant ID first.');
+            return;
+          }
+          if (!flavors.size) {
+            alert('Pick at least one flavor.');
+            return;
+          }
+          const props = {
+            Size: size,
+            Flavors: [...flavors].join(', '),
+            'Included Pumps': String(INCLUDED[size] || 0),
+            'Extra Pumps': String(extra),
+            'Pump Distribution': $dist.innerText || '',
+            Comments: document.getElementById('comments').value.trim(),
+          };
+          const btn = this;
+          btn.disabled = true;
+          btn.textContent = 'Adding…';
+          try {
+            await WTF.addToCart({ id: VARIANT, quantity: qty, properties: props });
+            $ok.textContent = '✅ Kava drink added to cart!';
+            $ok.classList.add('show');
+            setTimeout(() => {
+              $ok.classList.remove('show');
+            }, 2500);
+          } catch (e) {
+            console.error(e);
+            alert('Add failed.');
+          }
+          btn.disabled = false;
+          render();
+        });
+
+        render();
+      })();
     </script>
   </body>
 </html>
