@@ -221,8 +221,9 @@
   .wtf-label{display:block;font-weight:600;margin-bottom:6px}
   .wtf-note textarea{width:100%;border:1px solid #e1e1e1;border-radius:12px;padding:12px;min-height:92px}
 
-  .wtf-summary{background:#fff;border-radius:16px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
-  .wtf-summary ul{list-style:none;margin:0;padding:0} /* kill any ghost bullets */
+  .wtf-summary ul,
+  .wtf-summary li { list-style: none; padding-left: 0; margin-left: 0; }
+  .wtf-summary li::marker { content: ''; }
   .wtf-subtotal{display:flex;justify-content:space-between;align-items:center;font-size:16px;margin:10px 0 8px}
   .wtf-fineprint{color:#666;font-size:12px;margin:8px 0 14px}
 
