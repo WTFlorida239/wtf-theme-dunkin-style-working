@@ -1,19 +1,22 @@
 {% comment %}
   templates/page.kratom-teas.liquid
   Custom Kratom Tea builder (AJAX cart)
+  - One variant ID for the drink (page metafield or theme setting)
+  - Medium: 4 included pumps, Large: 6 included pumps, Gallon: 0 (custom)
+  - Extra pumps charged at extra_pump_price (default $0.50)
 {% endcomment %}
-{% assign tea_variant_id = page.metafields.custom.kratom_variant_id
+
+{%- assign tea_variant_id = page.metafields.custom.kratom_variant_id
   | default: settings.kratom_tea_variant_id
   | default: 0
-%}
-{% assign extra_pump_price = page.metafields.custom.extra_pump_price
+-%}
+{%- assign extra_pump_price = page.metafields.custom.extra_pump_price
   | default: settings.kratom_extra_pump_price
   | default: 0.5
-%}
-{% assign included_pumps = page.metafields.custom.included_pumps | default: 2 %}
-{% assign price_medium = settings.kratom_price_medium | default: '9.00' %}
-{% assign price_large = settings.kratom_price_large | default: '15.00' %}
-{% assign price_gallon = settings.kratom_price_gallon | default: '100.00' %}
+-%}
+{%- assign price_medium = settings.kratom_price_medium | default: '9.00' -%}
+{%- assign price_large = settings.kratom_price_large | default: '15.00' -%}
+{%- assign price_gallon = settings.kratom_price_gallon | default: '100.00' -%}
 
 <!doctype html>
 <html>
@@ -53,6 +56,7 @@
       .flavor:hover{border-color:var(--success);transform:translateY(-1px)}
       .flavor.selected{background:var(--success);color:#fff;border-color:var(--success)}
       .note{background:#e7f3ff;padding:12px;border-radius:8px;margin-bottom:12px;font-size:14px}
+      .warn{background:#fff3cd;color:#856404}
       .qty{display:flex;align-items:center;gap:12px}
       .qty .btn{width:40px;height:40px;border:2px solid var(--primary);background:#fff;color:var(--primary);border-radius:50%;font-weight:800;cursor:pointer;transition:.2s}
       .qty .btn:hover{background:var(--primary);color:#fff;transform:scale(1.05)}
@@ -86,25 +90,10 @@
             Price: <span id="live-price">${{ price_medium }}</span>
           </div>
           <p class="desc">
-            Choose your size, strain, and flavors. We include <strong>{{ included_pumps }}</strong> pumps; extra pumps
-            are <strong>${{ extra_pump_price }}</strong> each.
+            Medium includes <strong>4</strong> pumps, Large includes <strong>6</strong> pumps. Gallon is custom (talk to
+            staff). Extra pumps are <strong>${{ extra_pump_price }}</strong> each and are the only thing that changes
+            the price.
           </p>
-
-          <!-- QUICK BUTTON (example). Hidden by default; change .hidden to show -->
-          <div class="section hidden">
-            <h3>Quick add (example)</h3>
-            <button
-              class="pill"
-              data-add-to-cart
-              data-variant-id="{{ tea_variant_id }}"
-              data-qty="1"
-              data-prop-Size="Medium"
-              data-prop-Flavors="Lemon"
-              data-prop-Comments="Quick add"
-            >
-              Add a Medium Lemon Tea
-            </button>
-          </div>
 
           <!-- SIZE -->
           <div class="section">
@@ -112,17 +101,18 @@
             <div class="size-grid" id="size-grid">
               <button type="button" class="pill" data-size="Medium" data-price="{{ price_medium }}">
                 Medium<br>
-                <small>12 oz – ${{ price_medium }}</small>
+                <small>12 oz — ${{ price_medium }}</small>
               </button>
               <button type="button" class="pill" data-size="Large" data-price="{{ price_large }}">
                 Large<br>
-                <small>16 oz – ${{ price_large }}</small>
+                <small>16 oz — ${{ price_large }}</small>
               </button>
               <button type="button" class="pill" data-size="Gallon" data-price="{{ price_gallon }}">
                 Gallon<br>
-                <small>128 oz – ${{ price_gallon }}</small>
+                <small>128 oz — ${{ price_gallon }}</small>
               </button>
             </div>
+            <div id="size-note" class="note"></div>
           </div>
 
           <!-- STRAIN -->
@@ -141,17 +131,16 @@
           <div class="section">
             <h3>🍋 Flavors & Pumps</h3>
             <div class="note">
-              Included pumps: <strong id="included-pumps">{{ included_pumps }}</strong>. Extra pumps cost
-              <strong>${{ extra_pump_price }}</strong> each.<br>
-              Add or remove flavors below—extra pumps will auto-calculate.
+              Select flavors below. We’ll split the included pumps **and** any extra pumps evenly across selected
+              flavors.
             </div>
             <div class="flavor-grid" id="flavor-grid">
-              {% assign flavors = "Lemon,Lime,Orange,Blood Orange,Strawberry,Raspberry,Blueberry,Coconut,Mango,Watermelon,Simple Syrup,Sour Apple,Dragon Fruit,Blackberry,S'mores,Pumpkin Spice,Cranberry,Grenadine,Lavender,Chocolate,Caramel,Maple,Agave,Hazelnut,Rose,Passion Fruit,Hibiscus"
+              {%- assign flavors = "Lemon,Lime,Orange,Blood Orange,Strawberry,Raspberry,Blueberry,Coconut,Mango,Watermelon,Simple Syrup,Sour Apple,Dragon Fruit,Blackberry,S'mores,Pumpkin Spice,Cranberry,Grenadine,Lavender,Chocolate,Caramel,Maple,Agave,Hazelnut,Rose,Passion Fruit,Hibiscus"
                 | split: ','
-              %}
-              {% for f in flavors %}
+              -%}
+              {%- for f in flavors -%}
                 <button type="button" class="flavor" data-flavor="{{ f | escape }}">{{ f }}</button>
-              {% endfor %}
+              {%- endfor -%}
             </div>
             <div id="pump-distribution" class="note" style="display:none"></div>
           </div>
@@ -166,6 +155,9 @@
               <input id="extra-pumps" type="number" min="0" value="0">
               <button type="button" class="btn" data-extra-delta="1">+</button>
               <strong id="extra-pumps-cost" style="margin-left:6px"></strong>
+            </div>
+            <div id="gallon-warning" class="note warn hidden">
+              Gallon has 0 included pumps. Add pumps here if needed and discuss exact distribution with staff.
             </div>
           </div>
 
@@ -185,18 +177,18 @@
             </div>
           </div>
 
-          <!-- RECOMMENDED FORM (posts to /cart/add.js via WTF.addToCart) -->
+          <!-- Hidden form (mirrors the payload we send to /cart/add.js) -->
           <form id="wtf-kratom-form" class="hidden">
             <input type="hidden" name="id" value="{{ tea_variant_id }}">
             <input type="number" name="quantity" value="1" min="1">
             <input type="hidden" name="properties[Size]" value="">
+            <input type="hidden" name="properties[Strain]" value="">
             <input type="hidden" name="properties[Flavors]" value="">
             <input type="hidden" name="properties[Extra Pumps]" value="0">
             <input type="hidden" name="properties[Pump Distribution]" value="">
             <input type="hidden" name="properties[Comments]" value="">
           </form>
 
-          <!-- ACTION -->
           <button id="add-btn" class="btn-primary">Add to Cart</button>
           <div id="success" class="success"></div>
         </div>
@@ -205,75 +197,90 @@
 
     <script>
       (function () {
+        // ----- Config coming from Liquid -----
         const VARIANT_ID = Number('{{ tea_variant_id }}') || 0;
-        const INCLUDED_PUMPS = Number('{{ included_pumps }}') || 2;
         const EXTRA_PUMP_PRICE = Number('{{ extra_pump_price }}') || 0.5;
 
-        // Price by size
         const SIZE_PRICE = {
           Medium: Number('{{ price_medium }}') || 9,
           Large: Number('{{ price_large }}') || 15,
           Gallon: Number('{{ price_gallon }}') || 100,
         };
 
-        // State
+        // Included pumps by size (your rule)
+        const INCLUDED_BY_SIZE = { Medium: 4, Large: 6, Gallon: 0 };
+
+        // ----- State -----
         let selectedSize = 'Medium';
         let selectedStrain = null;
         let selectedFlavors = new Set();
         let extraPumps = 0;
         let qty = 1;
 
-        // Elements
+        // ----- Elements -----
         const $livePrice = document.getElementById('live-price');
-        const $extraPumps = document.getElementById('extra-pumps');
+        const $extraInput = document.getElementById('extra-pumps');
         const $extraCost = document.getElementById('extra-pumps-cost');
         const $qty = document.getElementById('quantity');
         const $success = document.getElementById('success');
         const $pumpDist = document.getElementById('pump-distribution');
+        const $sizeNote = document.getElementById('size-note');
+        const $gallonWarn = document.getElementById('gallon-warning');
 
-        // Helpers
-        function money(n) {
-          return '$' + (Math.round(n * 100) / 100).toFixed(2);
-        }
+        // ----- Helpers -----
+        const money = (n) => '$' + (Math.round(n * 100) / 100).toFixed(2);
+        const includedFor = (size) => INCLUDED_BY_SIZE[size] ?? 0;
 
         function calcUnitPrice() {
           const base = SIZE_PRICE[selectedSize] || 0;
           return base + extraPumps * EXTRA_PUMP_PRICE;
         }
 
-        function renderPrice() {
-          const unit = calcUnitPrice();
-          $livePrice.textContent = money(unit * qty);
-          $extraCost.textContent = extraPumps > 0 ? `(+${money(extraPumps * EXTRA_PUMP_PRICE)})` : '';
-          document.getElementById('add-btn').textContent = `Add to Cart — ${money(unit * qty)}`;
+        function renderSizeNote() {
+          const inc = includedFor(selectedSize);
+          if (selectedSize === 'Gallon') {
+            $sizeNote.innerHTML =
+              'Gallon is custom. Included pumps: <strong>0</strong>. Add pumps as needed or discuss with staff.';
+            $gallonWarn.classList.remove('hidden');
+          } else {
+            $sizeNote.innerHTML = `Included pumps: <strong>${inc}</strong> (${selectedSize}).`;
+            $gallonWarn.classList.add('hidden');
+          }
         }
 
         function renderPumpDistribution() {
-          // Simple split across chosen flavors; show only if flavors selected
           const flavors = Array.from(selectedFlavors);
           if (!flavors.length) {
             $pumpDist.style.display = 'none';
             return;
           }
+
+          const totalIncluded = includedFor(selectedSize);
+          const totalPumps = totalIncluded + extraPumps;
+
           let html = '<strong>🎯 Pump Distribution</strong><br>';
-          const totalIncluded = INCLUDED_PUMPS;
-          const per = Math.floor(totalIncluded / flavors.length);
-          const remainder = totalIncluded % flavors.length;
-          flavors.forEach((f, i) => {
-            const pumps = per + (i < remainder ? 1 : 0);
-            html += `• ${f}: ${pumps} pump${pumps !== 1 ? 's' : ''}<br>`;
-          });
+          if (selectedSize === 'Gallon' && totalPumps === 0) {
+            html += '• Custom distribution — please discuss with staff.';
+          } else {
+            const per = Math.floor(totalPumps / flavors.length);
+            const remainder = totalPumps % flavors.length;
+            flavors.forEach((f, i) => {
+              const pumps = per + (i < remainder ? 1 : 0);
+              html += `• ${f}: ${pumps} pump${pumps !== 1 ? 's' : ''}<br>`;
+            });
+          }
+
           $pumpDist.innerHTML = html;
           $pumpDist.style.display = 'block';
         }
 
-        function autoExtraPumps() {
-          // If more flavors than included pumps, auto set extra to cover (1 extra per extra flavor)
-          const over = Math.max(0, selectedFlavors.size - INCLUDED_PUMPS);
-          if (over > extraPumps) {
-            extraPumps = over;
-            $extraPumps.value = extraPumps;
-          }
+        function renderPrice() {
+          const unit = calcUnitPrice();
+          const total = unit * qty;
+          $livePrice.textContent = money(total);
+          $extraCost.textContent = extraPumps > 0 ? `(+${money(extraPumps * EXTRA_PUMP_PRICE)})` : '';
+          document.getElementById('add-btn').textContent = `Add to Cart — ${money(total)}`;
+          renderPumpDistribution();
         }
 
         function validate() {
@@ -296,25 +303,28 @@
           return true;
         }
 
-        // Wire size
+        function toastSuccess(msg) {
+          $success.innerHTML = `<strong>✅ ${msg}</strong>`;
+          $success.classList.add('show');
+          setTimeout(() => $success.classList.remove('show'), 3500);
+        }
+
+        // ----- Wire up controls -----
+
+        // Sizes
         document.getElementById('size-grid').addEventListener('click', (e) => {
           const btn = e.target.closest('[data-size]');
           if (!btn) return;
           document.querySelectorAll('#size-grid .pill').forEach((b) => b.classList.remove('selected'));
           btn.classList.add('selected');
           selectedSize = btn.dataset.size;
+          renderSizeNote();
           renderPrice();
         });
+        // Default to Medium
+        (document.querySelector('#size-grid [data-size="Medium"]') || {}).click?.();
 
-        // Default size select Medium
-        (function () {
-          const m = document.querySelector('#size-grid [data-size="Medium"]');
-          if (m) {
-            m.click();
-          }
-        })();
-
-        // Wire strain
+        // Strains
         document.getElementById('strain-grid').addEventListener('click', (e) => {
           const btn = e.target.closest('[data-strain]');
           if (!btn) return;
@@ -323,7 +333,7 @@
           selectedStrain = btn.dataset.strain;
         });
 
-        // Wire flavors
+        // Flavors
         document.getElementById('flavor-grid').addEventListener('click', (e) => {
           const btn = e.target.closest('[data-flavor]');
           if (!btn) return;
@@ -335,12 +345,10 @@
             btn.classList.add('selected');
             selectedFlavors.add(val);
           }
-          autoExtraPumps();
-          renderPumpDistribution();
           renderPrice();
         });
 
-        // Quantity controls
+        // Quantity
         document.querySelectorAll('[data-qty-delta]').forEach((b) => {
           b.addEventListener('click', () => {
             const d = Number(b.dataset.qtyDelta);
@@ -355,57 +363,28 @@
           renderPrice();
         });
 
-        // Extra pumps controls
+        // Extra pumps
         document.querySelectorAll('[data-extra-delta]').forEach((b) => {
           b.addEventListener('click', () => {
             const d = Number(b.dataset.extraDelta);
-            extraPumps = Math.max(0, (Number($extraPumps.value) || 0) + d);
-            $extraPumps.value = extraPumps;
+            extraPumps = Math.max(0, (Number($extraInput.value) || 0) + d);
+            $extraInput.value = extraPumps;
             renderPrice();
           });
         });
-        $extraPumps.addEventListener('input', () => {
-          extraPumps = Math.max(0, Number($extraPumps.value) || 0);
-          $extraPumps.value = extraPumps;
+        $extraInput.addEventListener('input', () => {
+          extraPumps = Math.max(0, Number($extraInput.value) || 0);
+          $extraInput.value = extraPumps;
           renderPrice();
         });
 
-        // Quick button (data-add-to-cart)
-        document.addEventListener('click', async (e) => {
-          const btn = e.target.closest('[data-add-to-cart]');
-          if (!btn) return;
-          e.preventDefault();
-          try {
-            const id = Number(btn.dataset.variantId);
-            const quantity = Number(btn.dataset.qty) || 1;
-            const props = {};
-            Object.keys(btn.dataset).forEach((k) => {
-              if (k.startsWith('prop')) {
-                const key = k.replace(/^prop/, '').replace(/^-*/, '').replace(/_/g, ' ').trim();
-                props[key] = btn.dataset[k];
-              }
-            });
-            await WTF.addToCart({ id, quantity, properties: props });
-            toastSuccess('Added to cart.');
-          } catch (err) {
-            alert('Add failed.');
-            console.error(err);
-          }
-        });
-
-        function toastSuccess(msg) {
-          $success.innerHTML = `<strong>✅ ${msg}</strong>`;
-          $success.classList.add('show');
-          setTimeout(() => $success.classList.remove('show'), 3500);
-        }
-
-        // Main Add
+        // Main Add to Cart
         document.getElementById('add-btn').addEventListener('click', async () => {
           if (!validate()) return;
 
-          // Build properties
           const props = {
             Size: selectedSize,
+            Strain: selectedStrain || '',
             Flavors: Array.from(selectedFlavors).join(', '),
             'Extra Pumps': String(extraPumps),
             'Pump Distribution': $pumpDist.innerText || '',
@@ -414,7 +393,6 @@
 
           const payload = { id: VARIANT_ID, quantity: qty, properties: props };
 
-          // Disable button while processing
           const btn = document.getElementById('add-btn');
           const old = btn.textContent;
           btn.disabled = true;
@@ -428,18 +406,21 @@
             alert('❌ Error adding to cart.');
           } finally {
             btn.disabled = false;
+            btn.textContent = old;
+            // refresh price/button text in case qty changed meanwhile
             renderPrice();
           }
         });
 
-        // Sync cart badge on load/changes
+        // Sync cart badge
         document.addEventListener('cart:refreshed', (e) => {
           const el = document.getElementById('cart-count');
           if (el && e.detail) el.textContent = e.detail.item_count || 0;
         });
         if (window.WTF && WTF.updateCartCount) WTF.updateCartCount();
 
-        // Initial renders
+        // Initial render
+        renderSizeNote();
         renderPrice();
       })();
     </script>
