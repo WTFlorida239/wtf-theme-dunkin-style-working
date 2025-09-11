@@ -29,14 +29,16 @@
 
     {% render 'meta-tags' %}
 
+    <!-- Core global JS -->
     <script src="{{ 'global.js' | asset_url }}" defer="defer"></script>
+
     {{ content_for_header }}
 
     {%- liquid
       assign body_font_bold = settings.type_body_font | font_modify: 'weight', 'bold'
       assign body_font_italic = settings.type_body_font | font_modify: 'style', 'italic'
       assign body_font_bold_italic = body_font_bold | font_modify: 'style', 'italic'
-    %}
+    -%}
 
     {% style %}
       {{ settings.type_body_font | font_face: font_display: 'swap' }}
@@ -154,7 +156,6 @@
         --text-boxes-shadow-blur-radius: {{ settings.text_boxes_shadow_blur }}px;
 
         --buttons-radius: {{ settings.buttons_radius }}px;
-        --buttons-radius-outset: {% if settings.buttons_radius > 0 %}{{ settings.buttons_radius | plus: settings.buttons_border_thickness }}{% else %}0{% endif %}px;
         --buttons-border-width: {{ settings.buttons_border_thickness }}px;
         --buttons-border-opacity: {{ settings.buttons_border_opacity | divided_by: 100.0 }};
         --buttons-shadow-opacity: {{ settings.buttons_shadow_opacity | divided_by: 100.0 }};
@@ -185,38 +186,24 @@
 
       *,
       *::before,
-      *::after {
-        box-sizing: inherit;
-      }
+      *::after { box-sizing: inherit; }
 
-      html {
-        box-sizing: border-box;
-        font-size: calc(var(--font-body-scale) * 62.5%);
-        height: 100%;
-      }
+      html { box-sizing: border-box; font-size: calc(var(--font-body-scale) * 62.5%); height: 100%; }
 
       body {
-        display: grid;
-        grid-template-rows: auto auto 1fr auto;
-        grid-template-columns: 100%;
-        min-height: 100%;
-        margin: 0;
-        font-size: 1.5rem;
-        letter-spacing: 0.06rem;
+        display: grid; grid-template-rows: auto auto 1fr auto; grid-template-columns: 100%;
+        min-height: 100%; margin: 0; font-size: 1.5rem; letter-spacing: 0.06rem;
         line-height: calc(1 + 0.8 / var(--font-body-scale));
-        font-family: var(--font-body-family);
-        font-style: var(--font-body-style);
-        font-weight: var(--font-body-weight);
+        font-family: var(--font-body-family); font-style: var(--font-body-style); font-weight: var(--font-body-weight);
       }
 
-      @media screen and (min-width: 750px) {
-        body {
-          font-size: 1.6rem;
-        }
-      }
+      @media screen and (min-width: 750px) { body { font-size: 1.6rem; } }
     {% endstyle %}
 
     {{ 'base.css' | asset_url | stylesheet_tag }}
+
+    {%- comment -%} 👇 Your custom global styles for the builders {%- endcomment -%}
+    {{ 'wtf_flavor_system.css' | asset_url | stylesheet_tag }}
 
     {%- unless settings.type_body_font.system? -%}
       <link rel="preload" as="font" href="{{ settings.type_body_font | font_url }}" type="font/woff2" crossorigin>
@@ -236,9 +223,7 @@
 
     <script>
       document.documentElement.className = document.documentElement.className.replace('no-js', 'js');
-      if (Shopify.designMode) {
-        document.documentElement.classList.add('shopify-design-mode');
-      }
+      if (Shopify.designMode) document.documentElement.classList.add('shopify-design-mode');
     </script>
   </head>
 
@@ -256,7 +241,6 @@
     <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
       {{ content_for_layout }}
     </main>
-
     {% section 'footer' %}
 
     <ul hidden>
@@ -297,24 +281,38 @@
     {%- if settings.predictive_search_enabled -%}
       <script src="{{ 'predictive-search.js' | asset_url }}" defer="defer"></script>
     {%- endif -%}
+
+    {%- comment -%} 👇 Your custom helpers (load before the init script) {%- endcomment -%}
     {{ 'wtf-cart.js' | asset_url | script_tag }}
+    {{ 'wtf_flavor_system.js' | asset_url | script_tag }}
+
     <script>
-            window.WTF_THEME = {
-              enableAjaxAdds: {{ settings.enable_ajax_adds | json }},
-              colorPrimary: {{ settings.color_primary | json }},
-            };
+      // Theme-level flags (optional)
+      window.WTF_THEME = {
+        enableAjaxAdds: {{ settings.enable_ajax_adds | json }},
+        colorPrimary: {{ settings.color_primary | json }}
+      };
 
-            {{ 'wtf_flavor_system.css' | asset_url | stylesheet_tag }}
-      {{ 'wtf_flavor_system.js'  | asset_url | script_tag }}
-      {{ 'wtf-cart.js'           | asset_url | script_tag }}
+      // Keep the cart badge (#cart-count) in sync using the WTF cart helper
+      (function () {
+        function syncCount(detail) {
+          const el = document.getElementById('cart-count');
+          if (!el) return;
+          el.textContent = (detail?.item_count || 0);
+        }
+        // On load
+        if (window.WTF && WTF.updateCartCount) WTF.updateCartCount();
 
-            WTFCart.init({
-              onChange: () => {
-                const el = document.getElementById('cart-count');
-                if (!el) return;
-                WTFCart.get().then(cart => el.textContent = (cart?.item_count || 0));
-              }
-            });
+        // After an add
+        document.addEventListener('cart:added', (e) => {
+          if (e.detail?.cart) syncCount(e.detail.cart);
+        });
+
+        // After any refresh
+        document.addEventListener('cart:refreshed', (e) => {
+          if (e.detail) syncCount(e.detail);
+        });
+      })();
     </script>
   </body>
 </html>
