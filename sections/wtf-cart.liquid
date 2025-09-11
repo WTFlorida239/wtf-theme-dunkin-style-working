@@ -1,13 +1,9 @@
 {% comment %}
-  WTF – Cart (polished)
-  Mobile-first, clean, accessible. Progressive enhancement: quantity steppers call /cart/change.js,
-  then reload to reflect server truth. Works without JS via native Update/Checkout.
-
-  Settings:
-  - show_vendor
-  - show_sku
-  - show_discount_code
-  - show_shipping_note
+  WTF – Cart (polished v2)
+  - Cleaner summary card (no empty bullets)
+  - Inline discount code (opens checkout with ?discount=)
+  - Free-shipping progress bar (optional)
+  - Tight spacing, brand buttons, better visual balance
 {% endcomment %}
 
 {% schema %}
@@ -16,11 +12,27 @@
   "settings": [
     { "type": "checkbox", "id": "show_vendor", "label": "Show vendor", "default": false },
     { "type": "checkbox", "id": "show_sku", "label": "Show SKU", "default": false },
-    { "type": "checkbox", "id": "show_discount_code", "label": "Show discount prompt", "default": true },
-    { "type": "checkbox", "id": "show_shipping_note", "label": "Show order note", "default": true }
+    { "type": "checkbox", "id": "show_shipping_note", "label": "Show order note", "default": true },
+    {
+      "type": "number",
+      "id": "free_shipping_threshold",
+      "label": "Free shipping threshold (in shop currency)",
+      "default": 0,
+      "info": "Set to 0 to hide the progress bar"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_discount_code",
+      "label": "Show discount code field (applies at checkout)",
+      "default": true
+    }
   ]
 }
 {% endschema %}
+
+{% liquid
+  assign threshold = section.settings.free_shipping_threshold | times: 100
+%}
 
 <section class="wtf-cart" data-section-id="{{ section.id }}">
   <div class="wtf-container">
@@ -106,6 +118,7 @@
                     <span class="wtf-price__current">{{ item.final_price | money }}</span>
                   </div>
                 {% endif %}
+
                 {% if item.line_level_discount_allocations.size > 0 %}
                   <ul class="wtf-discounts" role="list">
                     {% for alloc in item.line_level_discount_allocations %}
@@ -131,22 +144,28 @@
             {% endif %}
           </div>
 
-          <div class="wtf-summary">
-            {% if section.settings.show_discount_code %}
-              <details class="wtf-discount">
-                <summary>Have a discount code?</summary>
-                <div class="wtf-discount__row">
-                  <input
-                    type="text"
-                    placeholder="Discount code"
-                    id="discount"
-                    class="wtf-input"
-                    name="discount"
-                    formnovalidate
-                  >
-                  <small>Discounts are applied at checkout.</small>
+          <div class="wtf-summary" aria-label="Order summary">
+            {% if threshold > 0 %}
+              {% assign progress = cart.total_price | times: 100 | divided_by: threshold %}
+              {% if cart.total_price >= threshold %}
+                <div class="wtf-freebar success">
+                  <span>🎉 You’ve unlocked free shipping!</span>
+                  <div class="bar"><i style="width:100%"></i></div>
                 </div>
-              </details>
+              {% else %}
+                {% assign remaining = threshold | minus: cart.total_price %}
+                <div class="wtf-freebar">
+                  <span>You're {{ remaining | money }} away from free shipping</span>
+                  <div class="bar"><i style="width:{{ progress | at_most: 100 }}%"></i></div>
+                </div>
+              {% endif %}
+            {% endif %}
+
+            {% if section.settings.show_discount_code %}
+              <div class="wtf-discount-row">
+                <input type="text" id="discount" class="wtf-input" placeholder="Discount code" autocomplete="off">
+                <button type="button" class="btn btn--secondary" id="apply-discount">Apply</button>
+              </div>
             {% endif %}
 
             <div class="wtf-subtotal">
@@ -155,7 +174,7 @@
             </div>
 
             {% if cart.cart_level_discount_applications.size > 0 %}
-              <ul class="wtf-discounts" role="list">
+              <ul class="wtf-discounts wtf-discounts--summary" role="list">
                 {% for app in cart.cart_level_discount_applications %}
                   <li>{{ app.title }} (−{{ app.total_allocated_amount | money }})</li>
                 {% endfor %}
@@ -193,23 +212,38 @@
   .wtf-qty__btn{width:36px;height:36px;border:0;background:#fafafa;cursor:pointer;font-size:18px;line-height:0}
   .wtf-qty__input{width:46px;height:36px;border:0;text-align:center;font-weight:600}
   .wtf-remove{background:none;border:0;color:#888;text-decoration:underline;cursor:pointer}
+
   .wtf-line__price{text-align:right}
   .wtf-price__current{font-weight:700}
   .wtf-price__compare{color:#888;margin-left:6px}
-  .wtf-discounts{margin:6px 0 0;padding-left:0;list-style:none;color:#0a7a3f;font-size:13px}
-  .wtf-cart__bottom{display:grid;grid-template-columns:1fr minmax(280px,360px);gap:20px;margin-top:16px}
+
+  .wtf-cart__bottom{display:grid;grid-template-columns:1fr minmax(300px,360px);gap:28px;margin-top:18px}
   .wtf-label{display:block;font-weight:600;margin-bottom:6px}
   .wtf-note textarea{width:100%;border:1px solid #e1e1e1;border-radius:12px;padding:12px;min-height:92px}
-  .wtf-summary{background:#fff;border-radius:14px;padding:16px;box-shadow:0 1px 0 rgba(0,0,0,.06);align-self:start}
-  .wtf-subtotal{display:flex;justify-content:space-between;align-items:center;font-size:16px;margin:8px 0 6px}
+
+  .wtf-summary{background:#fff;border-radius:16px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+  .wtf-summary ul{list-style:none;margin:0;padding:0} /* kill any ghost bullets */
+  .wtf-subtotal{display:flex;justify-content:space-between;align-items:center;font-size:16px;margin:10px 0 8px}
   .wtf-fineprint{color:#666;font-size:12px;margin:8px 0 14px}
+
   .wtf-actions{display:flex;gap:10px;flex-wrap:wrap}
   .btn{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 16px;border-radius:12px;border:0;cursor:pointer;font-weight:700}
   .btn--primary{background:#ff6600;color:#fff}
   .btn--secondary{background:#f1f1f1;color:#111}
-  .wtf-discount summary{cursor:pointer;margin-bottom:6px}
-  .wtf-discount__row{display:grid;gap:6px}
-  .wtf-input{height:42px;border:1px solid #e1e1e1;border-radius:10px;padding:0 12px}
+
+  .wtf-discount-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:10px}
+  .wtf-input{height:44px;border:1px solid #e1e1e1;border-radius:10px;padding:0 12px}
+
+  .wtf-freebar{background:#fff;border:1px solid #f0f0f0;border-radius:12px;padding:10px;margin-bottom:12px}
+  .wtf-freebar span{display:block;font-size:13px;margin-bottom:6px}
+  .wtf-freebar .bar{height:8px;background:#f3f3f3;border-radius:999px;overflow:hidden}
+  .wtf-freebar .bar i{display:block;height:100%;width:0;background:#ff6600}
+  .wtf-freebar.success{border-color:#e7f7ec}
+  .wtf-freebar.success .bar i{background:#0a7a3f}
+
+  .wtf-discounts{color:#0a7a3f;font-size:13px}
+  .wtf-discounts--summary{margin-top:4px}
+
   @media (max-width: 799px){
     .wtf-line{grid-template-columns:78px 1fr auto}
     .wtf-cart__bottom{grid-template-columns:1fr}
@@ -220,9 +254,11 @@
 
 <script>
   (function () {
+    var ROOT = window.Shopify && Shopify.routes && Shopify.routes.root ? Shopify.routes.root : '/';
     var cartForm = document.querySelector('.wtf-cart__form');
     if (!cartForm) return;
 
+    // Qty stepper
     cartForm.addEventListener('click', function (e) {
       var dec = e.target.closest('[data-qty-dec]');
       var inc = e.target.closest('[data-qty-inc]');
@@ -241,13 +277,12 @@
       }
       input.value = current;
 
-      // Sync server, then refresh to reflect discounts/totals accurately
       var index = line.getAttribute('data-line');
       var form = new FormData();
       form.set('line', index);
       form.set('quantity', current);
 
-      fetch((window.Shopify?.routes?.root || '/') + 'cart/change.js', {
+      fetch(ROOT + 'cart/change.js', {
         method: 'POST',
         credentials: 'same-origin',
         body: form,
@@ -255,5 +290,21 @@
         location.reload();
       });
     });
+
+    // Discount → redirect to checkout with ?discount=
+    var btn = document.getElementById('apply-discount');
+    var input = document.getElementById('discount');
+    if (btn && input) {
+      btn.addEventListener('click', function () {
+        var code = (input.value || '').trim();
+        if (!code) return input.focus();
+        var url =
+          '{{ routes.checkout_url }}' +
+          ('{{ routes.checkout_url }}'.indexOf('?') > -1 ? '&' : '?') +
+          'discount=' +
+          encodeURIComponent(code);
+        window.location.href = url;
+      });
+    }
   })();
 </script>
