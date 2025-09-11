@@ -156,6 +156,7 @@
         --text-boxes-shadow-blur-radius: {{ settings.text_boxes_shadow_blur }}px;
 
         --buttons-radius: {{ settings.buttons_radius }}px;
+        --buttons-radius-outset: {% if settings.buttons_radius > 0 %}{{ settings.buttons_radius | plus: settings.buttons_border_thickness }}{% else %}0{% endif %}px;
         --buttons-border-width: {{ settings.buttons_border_thickness }}px;
         --buttons-border-opacity: {{ settings.buttons_border_opacity | divided_by: 100.0 }};
         --buttons-shadow-opacity: {{ settings.buttons_shadow_opacity | divided_by: 100.0 }};
@@ -201,8 +202,6 @@
     {% endstyle %}
 
     {{ 'base.css' | asset_url | stylesheet_tag }}
-
-    {%- comment -%} 👇 Your custom global styles for the builders {%- endcomment -%}
     {{ 'wtf_flavor_system.css' | asset_url | stylesheet_tag }}
 
     {%- unless settings.type_body_font.system? -%}
@@ -257,19 +256,16 @@
         cart_url: '{{ routes.cart_url }}',
         predictive_search_url: '{{ routes.predictive_search_url }}',
       };
-
       window.cartStrings = {
         error: `{{ 'sections.cart.cart_error' | t }}`,
         quantityError: `{{ 'sections.cart.cart_quantity_error_html' | t: quantity: '[quantity]' }}`,
       };
-
       window.variantStrings = {
         addToCart: `{{ 'products.product.add_to_cart' | t }}`,
         soldOut: `{{ 'products.product.sold_out' | t }}`,
         unavailable: `{{ 'products.product.unavailable' | t }}`,
         unavailable_with_option: `{{ 'products.product.value_unavailable' | t: option_value: '[value]' }}`,
       };
-
       window.accessibilityStrings = {
         imageAvailable: `{{ 'products.product.media.image_available' | t: index: '[index]' }}`,
         shareSuccess: `{{ 'general.share.success_message' | t }}`,
@@ -282,35 +278,26 @@
       <script src="{{ 'predictive-search.js' | asset_url }}" defer="defer"></script>
     {%- endif -%}
 
-    {%- comment -%} 👇 Your custom helpers (load before the init script) {%- endcomment -%}
+    {%- comment -%} Custom helpers (load before the init snippet) {%- endcomment -%}
     {{ 'wtf-cart.js' | asset_url | script_tag }}
     {{ 'wtf_flavor_system.js' | asset_url | script_tag }}
 
+    <!-- Keep the header cart count (#cart-count) correct on every page -->
     <script>
-      // Theme-level flags (optional)
-      window.WTF_THEME = {
-        enableAjaxAdds: {{ settings.enable_ajax_adds | json }},
-        colorPrimary: {{ settings.color_primary | json }}
-      };
-
-      // Keep the cart badge (#cart-count) in sync using the WTF cart helper
       (function () {
-        function syncCount(detail) {
-          const el = document.getElementById('cart-count');
-          if (!el) return;
-          el.textContent = (detail?.item_count || 0);
+        function setCount(n) {
+          var el = document.getElementById('cart-count');
+          if (el) el.textContent = Number(n) || 0;
         }
         // On load
         if (window.WTF && WTF.updateCartCount) WTF.updateCartCount();
-
-        // After an add
-        document.addEventListener('cart:added', (e) => {
-          if (e.detail?.cart) syncCount(e.detail.cart);
+        // On add
+        document.addEventListener('cart:added', function (e) {
+          if (e.detail && e.detail.cart) setCount(e.detail.cart.item_count);
         });
-
-        // After any refresh
-        document.addEventListener('cart:refreshed', (e) => {
-          if (e.detail) syncCount(e.detail);
+        // On refresh
+        document.addEventListener('cart:refreshed', function (e) {
+          if (e.detail) setCount(e.detail.item_count);
         });
       })();
     </script>
