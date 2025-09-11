@@ -299,17 +299,22 @@
     {%- endif -%}
     {{ 'wtf-cart.js' | asset_url | script_tag }}
     <script>
-      window.WTF_THEME = {
-        enableAjaxAdds: {{ settings.enable_ajax_adds | json }},
-        colorPrimary: {{ settings.color_primary | json }},
-      };
-      WTFCart.init({
-        onChange: () => {
-          const el = document.getElementById('cart-count');
-          if (!el) return;
-          WTFCart.get().then(cart => el.textContent = (cart?.item_count || 0));
-        }
-      });
+            window.WTF_THEME = {
+              enableAjaxAdds: {{ settings.enable_ajax_adds | json }},
+              colorPrimary: {{ settings.color_primary | json }},
+            };
+
+            {{ 'wtf_flavor_system.css' | asset_url | stylesheet_tag }}
+      {{ 'wtf_flavor_system.js'  | asset_url | script_tag }}
+      {{ 'wtf-cart.js'           | asset_url | script_tag }}
+
+            WTFCart.init({
+              onChange: () => {
+                const el = document.getElementById('cart-count');
+                if (!el) return;
+                WTFCart.get().then(cart => el.textContent = (cart?.item_count || 0));
+              }
+            });
     </script>
   </body>
 </html>
