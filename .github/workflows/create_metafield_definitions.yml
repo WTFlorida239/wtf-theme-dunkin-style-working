@@ -12,7 +12,7 @@ jobs:
           SHOPIFY_DOMAIN: ${{ secrets.SHOPIFY_DOMAIN }}
           TOKEN: ${{ secrets.SHOPIFY_ADMIN_API_TOKEN }}
         run: |
-          API="https://${SHOPIFY_DOMAIN}/admin/api/2024-07/graphql.json"
+          API="https://${SHOPIFY_DOMAIN}/admin/api/2023-10/graphql.json"
           read -r -d '' GQL <<'EOF'
           mutation metafieldDefs {
             kd: metafieldDefinitionCreateOrUpdate(input:{ name:"Kratom Variant ID", namespace:"custom", key:"kratom_variant_id", ownerType:PAGE, type:"number_integer" }){userErrors{field message}}
