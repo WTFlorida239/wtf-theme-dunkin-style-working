@@ -287,10 +287,10 @@
     <!-- Performance optimizations -->
     <script>
       // Lazy loading for images
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener('DOMContentLoaded', function () {
         if ('IntersectionObserver' in window) {
           const imageObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
+            entries.forEach((entry) => {
               if (entry.isIntersecting) {
                 const img = entry.target;
                 if (img.dataset.src) {
@@ -302,7 +302,7 @@
             });
           });
 
-          document.querySelectorAll('img[data-src]').forEach(img => {
+          document.querySelectorAll('img[data-src]').forEach((img) => {
             imageObserver.observe(img);
           });
         }
@@ -313,5 +313,6 @@
         }
       });
     </script>
+    {% render 'wtf-cart-drawer' %}
   </body>
 </html>
