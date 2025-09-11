@@ -168,6 +168,23 @@
   // Expose globally (what theme.liquid expects)
   window.WTFCart = WTFCart;
 
+  // ---- keep existing WTF.* functions above ----
+
+// Provide a WTFCart alias expected by theme.liquid
+window.WTFCart = {
+  init({ onChange } = {}) {
+    if (typeof onChange === 'function') {
+      document.addEventListener('cart:refreshed', () => onChange());
+      document.addEventListener('cart:added', () => onChange());
+    }
+    // draw the initial badge
+    WTF.updateCartCount();
+  },
+  get: WTF.getCart,
+  add: WTF.addToCart,
+  updateCount: WTF.updateCartCount
+};
+
   // Auto-initialize badge on DOM ready if theme didn’t call init yet
   document.addEventListener('DOMContentLoaded', () => {
     if (!window.__wtfCartInited) {
