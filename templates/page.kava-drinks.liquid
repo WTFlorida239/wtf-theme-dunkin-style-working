@@ -1,286 +1,143 @@
-{% comment %}
-  Custom Kava Drinks builder (AJAX cart)
-  - Variant ID: page.metafields.custom.kava_variant_id OR settings.kava_drinks_variant_id
-  - Pumps: Medium 4, Large 6 (extra pumps charged)
-{% endcomment %}
-{% assign kava_variant_id = page.metafields.custom.kava_variant_id
-  | default: settings.kava_drinks_variant_id
-  | default: 0
-%}
+{%- comment -%}
+  Kava Drinks – page template
+  - Loads shared drink-builder CSS & JS
+  - Adds safe focus style to prevent stray orange outline
+{%- endcomment -%}
 
-{% assign price_medium = page.metafields.custom.kava_price_medium
-  | default: settings.kava_price_medium
-  | default: '9.00'
-%}
-{% assign price_large = page.metafields.custom.kava_price_large
-  | default: settings.kava_price_large
-  | default: '15.00'
-%}
-{% assign price_gallon = page.metafields.custom.kava_price_gallon
-  | default: settings.kava_price_gallon
-  | default: '100.00'
-%}
-{% assign extra_pump_price = page.metafields.custom.extra_pump_price
-  | default: settings.kava_extra_pump_price
-  | default: '0.50'
-%}
+{%- assign css = 'wtf_flavor_system.css' | asset_url -%}
+{%- assign js = 'wtf_flavor_system.js' | asset_url -%}
 
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Kava Drinks - WTF | Welcome To Florida</title>
-    <style>
-      :root{--primary: {{ settings.color_primary | default: '#ff6600' }};--success: {{ settings.color_success | default: '#28a745' }};--bg: {{ settings.color_background | default: '#f8f9fa' }};--text: {{ settings.color_text | default: '#333' }}}
-      *{box-sizing:border-box;margin:0;padding:0}
-      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
-      .header{background:var(--primary);color:#fff;padding:15px 0;text-align:center;font-size:24px;font-weight:700}
-      .container{max-width:1100px;margin:0 auto;padding:20px}
-      .back{display:inline-block;color:var(--primary);border:2px solid var(--primary);padding:10px 14px;border-radius:8px;font-weight:700;text-decoration:none;margin-bottom:18px}
-      .grid{display:grid;grid-template-columns:1fr 1fr;gap:32px}
-      .card{background:#fff;border-radius:12px;padding:22px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
-      .img{width:100%;max-width:420px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
-      .title{font-size:30px;font-weight:800;margin-bottom:6px}
-      .price{font-weight:800;color:var(--primary);margin-bottom:10px}
-      .section{margin:22px 0;padding-bottom:14px;border-bottom:1px solid #eee}
-      .section:last-child{border-bottom:0}
-      .pill{padding:14px;border:2px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;transition:.2s;text-align:center}
-      .pill:hover{border-color:var(--primary);transform:translateY(-2px)}
-      .pill.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
-      .grid-sm{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
-      .grid-flavors{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
-      .flv{padding:12px;border:2px solid #ddd;border-radius:8px;background:#fff;cursor:pointer}
-      .flv:hover{border-color:var(--success);transform:translateY(-1px)}
-      .flv.selected{background:var(--success);color:#fff;border-color:var(--success)}
-      .note{background:#e7f3ff;border-radius:8px;padding:12px;font-size:14px}
-      .qty{display:flex;gap:12px;align-items:center}
-      .btn{border:2px solid var(--primary);background:#fff;color:var(--primary);width:40px;height:40px;border-radius:50%;font-weight:800;cursor:pointer}
-      .btn:hover{background:var(--primary);color:#fff}
-      input[type="number"]{width:84px;text-align:center;padding:10px;border:2px solid #ddd;border-radius:8px}
-      textarea{width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;resize:vertical}
-      .cta{width:100%;padding:16px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer;margin-top:14px}
-      .cta[disabled]{background:#bbb;cursor:not-allowed}
-      .success{display:none;margin-top:12px;background:#d4edda;color:#155724;border:1px solid #c3e6cb;border-radius:8px;padding:12px}
-      .success.show{display:block}
-      @media(max-width:820px){.grid{grid-template-columns:1fr}}
-    </style>
-  </head>
-  <body>
-    <div class="header">WTF | Welcome To Florida</div>
-    <div class="container">
-      <a class="back" href="/">← Back to Menu</a>
-      <div class="grid">
-        <img class="img" src="{{ 'kava_drinks_150x150.png' | asset_url }}" alt="Kava Drinks">
-        <div class="card">
-          <h1 class="title">Kava Drinks</h1>
-          <div class="price">
-            Total: <span id="live-price">${{ price_medium }}</span>
-          </div>
-          <p>
-            Create your perfect kava drink. Medium includes <b>4</b> pumps, Large includes <b>6</b>. Extra pumps cost
-            <b>${{ extra_pump_price }}</b> each.
-          </p>
+<link rel="preload" as="style" href="{{ css }}">
+<link rel="stylesheet" href="{{ css }}">
+<script src="{{ js }}" defer></script>
 
-          <div class="section">
-            <h3>☕ Size</h3>
-            <div class="grid-sm" id="size">
-              <button class="pill" data-size="Medium" data-price="{{ price_medium }}">
-                Medium — ${{ price_medium }}
-              </button>
-              <button class="pill" data-size="Large" data-price="{{ price_large }}">Large — ${{ price_large }}</button>
-              <button class="pill" data-size="Gallon" data-price="{{ price_gallon }}">
-                Gallon — ${{ price_gallon }}
-              </button>
-            </div>
-          </div>
-
-          <div class="section">
-            <h3>🍋 Flavors</h3>
-            <div class="note">We’ll split the included pumps evenly across selected flavors.</div>
-            <div class="grid-flavors" id="flavors">
-              {% assign kava_flavors = 'Lemon,Lime,Orange,Strawberry,Blueberry,Simple Syrup,Coconut,Passion Fruit,Hibiscus'
-                | split: ','
-              %}
-              {% for f in kava_flavors %}
-                <button class="flv" data-flavor="{{ f | escape }}">{{ f }}</button>
-              {% endfor %}
-            </div>
-            <div id="pump-dist" class="note" style="display:none;margin-top:8px"></div>
-          </div>
-
-          <div class="section">
-            <h3>➕ Extra Pumps (${{ extra_pump_price }} each)</h3>
-            <div class="qty">
-              <button class="btn" data-extra="-1">−</button>
-              <input id="extra" type="number" min="0" value="0">
-              <button class="btn" data-extra="1">+</button>
-              <strong id="extra-cost"></strong>
-            </div>
-          </div>
-
-          <div class="section">
-            <h3>💬 Comments</h3>
-            <textarea id="comments" rows="3" placeholder="Any special requests?"></textarea>
-          </div>
-
-          <div class="section">
-            <h3>🔢 Quantity</h3>
-            <div class="qty">
-              <button class="btn" data-qty="-1">−</button>
-              <input id="qty" type="number" min="1" value="1">
-              <button class="btn" data-qty="1">+</button>
-            </div>
-          </div>
-
-          <button id="add" class="cta">Add to Cart</button>
-          <div id="ok" class="success"></div>
-        </div>
-      </div>
+<div class="wtf-page wtf-page--drinks">
+  <div class="wtf-container wtf-grid drink-grid">
+    <div class="drink-media">
+      {%- render 'wtf-product-card', product: all_products['kava-drink-placeholder'] -%}
+      {%- comment -%} If you don't have a product card snippet or placeholder product, keep an <img> here {%- endcomment -%}
     </div>
 
-    <script>
-      (function () {
-        const VARIANT = Number('{{ kava_variant_id }}') || 0;
-        const PRICE = {
-          Medium: Number('{{ price_medium }}') || 9,
-          Large: Number('{{ price_large }}') || 15,
-          Gallon: Number('{{ price_gallon }}') || 100,
-        };
-        const INCLUDED = { Medium: 4, Large: 6, Gallon: 0 };
-        const EXTRA_PRICE = Number('{{ extra_pump_price }}') || 0.5;
+    <div class="drink-builder" data-drink="kava">
+      <h1 class="drink-title">Kava Drinks</h1>
 
-        let size = 'Medium',
-          qty = 1,
-          extra = 0,
-          flavors = new Set();
+      <!-- Sizes -->
+      <div class="pill-group" role="group" aria-label="Sizes">
+        <button class="pill is-active" data-size="medium" data-price="9">Medium — $9.00</button>
+        <button class="pill" data-size="large" data-price="15">Large — $15.00</button>
+        <button class="pill" data-size="gallon" data-price="100">Gallon — $100.00</button>
+      </div>
 
-        const $live = document.getElementById('live-price');
-        const $extra = document.getElementById('extra');
-        const $extraCost = document.getElementById('extra-cost');
-        const $qty = document.getElementById('qty');
-        const $dist = document.getElementById('pump-dist');
-        const $ok = document.getElementById('ok');
+      <div class="helper">We’ll split the included pumps evenly across selected flavors.</div>
 
-        function money(n) {
-          return '$' + (Math.round(n * 100) / 100).toFixed(2);
-        }
-        function unit() {
-          return (PRICE[size] || 0) + extra * EXTRA_PRICE;
-        }
-        function render() {
-          $live.textContent = money(unit() * qty);
-          $extraCost.textContent = extra > 0 ? '(+' + money(extra * EXTRA_PRICE) + ')' : '';
-          document.getElementById('add').textContent = 'Add to Cart — ' + money(unit() * qty);
-        }
-        function renderDist() {
-          const list = [...flavors];
-          if (!list.length || !INCLUDED[size]) {
-            $dist.style.display = 'none';
-            return;
-          }
-          const total = INCLUDED[size],
-            per = Math.floor(total / list.length),
-            rem = total % list.length;
-          let html = '<b>🎯 Pump Distribution</b><br>';
-          list.forEach((f, i) => {
-            const p = per + (i < rem ? 1 : 0);
-            html += `• ${f}: ${p} pump${p !== 1 ? 's' : ''}<br>`;
-          });
-          $dist.innerHTML = html;
-          $dist.style.display = 'block';
-        }
+      <!-- Flavors -->
+      <div class="chip-grid" role="group" aria-label="Flavors">
+        <button class="chip" data-flavor="Lemon">Lemon</button>
+        <button class="chip" data-flavor="Lime">Lime</button>
+        <button class="chip" data-flavor="Orange">Orange</button>
+        <button class="chip" data-flavor="Strawberry">Strawberry</button>
+        <button class="chip" data-flavor="Blueberry">Blueberry</button>
+        <button class="chip" data-flavor="Simple Syrup">Simple Syrup</button>
+        <button class="chip" data-flavor="Coconut">Coconut</button>
+        <button class="chip" data-flavor="Passion Fruit">Passion Fruit</button>
+        <button class="chip" data-flavor="Hibiscus">Hibiscus</button>
+      </div>
 
-        document.getElementById('size').addEventListener('click', (e) => {
-          const b = e.target.closest('[data-size]');
-          if (!b) return;
-          document.querySelectorAll('#size .pill').forEach((x) => x.classList.remove('selected'));
-          b.classList.add('selected');
-          size = b.dataset.size;
-          render();
-          renderDist();
-        });
-        // default Medium
-        document.querySelector('#size [data-size="Medium"]').click();
+      <!-- Note -->
+      <label class="wtf-label" for="drink-note">Any special requests?</label>
+      <textarea id="drink-note" class="wtf-input" rows="3" placeholder="Add a note"></textarea>
 
-        document.getElementById('flavors').addEventListener('click', (e) => {
-          const b = e.target.closest('[data-flavor]');
-          if (!b) return;
-          const v = b.dataset.flavor;
-          if (b.classList.contains('selected')) {
-            b.classList.remove('selected');
-            flavors.delete(v);
-          } else {
-            b.classList.add('selected');
-            flavors.add(v);
-          }
-          renderDist();
-          render();
-        });
+      <!-- Quantity -->
+      <div class="qty-row">
+        <button type="button" class="qty-btn" data-dec>−</button>
+        <input class="qty-input" type="number" min="1" value="1" aria-label="Quantity">
+        <button type="button" class="qty-btn" data-inc>+</button>
+      </div>
 
-        document.querySelectorAll('[data-extra]').forEach((b) =>
-          b.addEventListener('click', () => {
-            extra = Math.max(0, (Number($extra.value) || 0) + Number(b.dataset.extra));
-            $extra.value = extra;
-            render();
-          })
-        );
-        $extra.addEventListener('input', () => {
-          extra = Math.max(0, Number($extra.value) || 0);
-          $extra.value = extra;
-          render();
-        });
+      <!-- Add to cart -->
+      <button class="btn btn--primary add-to-cart" data-sellable="kava-base">
+        Add to Cart — <span class="price">$9.00</span>
+      </button>
+    </div>
+  </div>
+</div>
 
-        document.querySelectorAll('[data-qty]').forEach((b) =>
-          b.addEventListener('click', () => {
-            qty = Math.max(1, (Number($qty.value) || 1) + Number(b.dataset.qty));
-            $qty.value = qty;
-            render();
-          })
-        );
-        $qty.addEventListener('input', () => {
-          qty = Math.max(1, Number($qty.value) || 1);
-          $qty.value = qty;
-          render();
-        });
+<style>
+  /* Kill stray bullets/markers & the orange square while keeping visible focus */
+  .wtf-page .drink-builder *::marker { content: ''; }
+  .wtf-page .drink-builder :focus { outline: none; box-shadow: 0 0 0 3px rgba(255,102,0,.35); border-radius: 10px; }
+  /* If some hidden checkbox/radio causes a tiny orange square, hide any visually-hidden toggles */
+  .wtf-page .drink-builder input[type="checkbox"].visually-hidden,
+  .wtf-page .drink-builder input[type="radio"].visually-hidden { position:absolute; width:1px; height:1px; margin:-1px; clip:rect(0 0 0 0); overflow:hidden; }
 
-        document.getElementById('add').addEventListener('click', async () => {
-          if (!VARIANT) {
-            alert('Set a Kava Variant ID first.');
-            return;
-          }
-          if (!flavors.size) {
-            alert('Pick at least one flavor.');
-            return;
-          }
-          const props = {
-            Size: size,
-            Flavors: [...flavors].join(', '),
-            'Included Pumps': String(INCLUDED[size] || 0),
-            'Extra Pumps': String(extra),
-            'Pump Distribution': $dist.innerText || '',
-            Comments: document.getElementById('comments').value.trim(),
-          };
-          const btn = this;
-          btn.disabled = true;
-          btn.textContent = 'Adding…';
-          try {
-            await WTF.addToCart({ id: VARIANT, quantity: qty, properties: props });
-            $ok.textContent = '✅ Kava drink added to cart!';
-            $ok.classList.add('show');
-            setTimeout(() => {
-              $ok.classList.remove('show');
-            }, 2500);
-          } catch (e) {
-            console.error(e);
-            alert('Add failed.');
-          }
-          btn.disabled = false;
-          render();
-        });
+  /* Layout helpers (use same vibe as cart) */
+  .wtf-container{max-width:1100px;margin:0 auto;padding:clamp(16px,2vw,28px)}
+  .drink-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:24px}
+  .drink-media{background:#fff;border-radius:16px;box-shadow:0 1px 0 rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center;padding:20px}
+  .drink-builder{background:#fff;border-radius:16px;box-shadow:0 1px 0 rgba(0,0,0,.06);padding:18px}
+  .drink-title{margin:0 0 12px;font-weight:800}
+  .pill-group{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+  .pill{height:36px;padding:0 12px;border-radius:999px;border:1px solid #eee;background:#f8f8f8;cursor:pointer}
+  .pill.is-active{background:#ff6600;color:#fff;border-color:#ff6600}
+  .helper{background:#eef6ff;border:1px solid #e2efff;color:#2d3a4a;font-size:13px;padding:8px 10px;border-radius:10px;margin:10px 0}
+  .chip-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 14px}
+  .chip{height:36px;border-radius:10px;border:1px solid #e8e8e8;background:#fff;cursor:pointer}
+  .chip.is-selected{background:#111;color:#fff;border-color:#111}
+  .wtf-label{font-weight:600;margin:8px 0 6px;display:block}
+  .wtf-input{width:100%;border:1px solid #e1e1e1;border-radius:12px;padding:10px}
+  .qty-row{display:inline-flex;gap:8px;align-items:center;margin:12px 0}
+  .qty-btn{width:36px;height:36px;border:1px solid #e1e1e1;border-radius:10px;background:#fafafa}
+  .qty-input{width:56px;height:36px;text-align:center;border:1px solid #e1e1e1;border-radius:10px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 16px;border-radius:12px;border:0;cursor:pointer;font-weight:800}
+  .btn--primary{background:#ff6600;color:#fff}
+  @media (max-width: 900px){ .drink-grid{grid-template-columns:1fr} }
+</style>
 
-        render();
-      })();
-    </script>
-  </body>
-</html>
+<script>
+  // Minimal glue so the drawer opens after add
+  document.addEventListener('DOMContentLoaded', function(){
+    const root = document.querySelector('.drink-builder[data-drink="kava"]');
+    if(!root) return;
+
+    const qtyInput = root.querySelector('.qty-input');
+    const priceEl = root.querySelector('.price');
+    const sizeButtons = root.querySelectorAll('.pill');
+    const chipButtons = root.querySelectorAll('.chip');
+
+    function updatePrice(){
+      const active = root.querySelector('.pill.is-active');
+      const base = Number(active?.dataset.price || 9);
+      priceEl.textContent = (base).toLocaleString(undefined,{style:'currency',currency:'USD'});
+    }
+    sizeButtons.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        sizeButtons.forEach(b=>b.classList.remove('is-active'));
+        btn.classList.add('is-active'); updatePrice();
+      });
+    });
+    chipButtons.forEach(btn=>{
+      btn.addEventListener('click', ()=> btn.classList.toggle('is-selected'));
+    });
+    root.querySelector('[data-dec]').addEventListener('click', ()=>{ qtyInput.value = Math.max(1, (Number(qtyInput.value)||1)-1); });
+    root.querySelector('[data-inc]').addEventListener('click', ()=>{ qtyInput.value = (Number(qtyInput.value)||1)+1; });
+
+    root.querySelector('.add-to-cart').addEventListener('click', async function(){
+      const active = root.querySelector('.pill.is-active');
+      const size = active?.dataset.size || 'medium';
+      const flavors = Array.from(root.querySelectorAll('.chip.is-selected')).map(x=>x.dataset.flavor);
+
+      // Build properties payload
+      const props = { Size: size, Flavors: flavors.join(', '), Note: (root.querySelector('#drink-note').value||'') };
+
+      // You should map "kava-base" to a real variant id server-side; placeholder here uses cart/add by handle.
+      await fetch((window.Shopify?.routes?.root||'/')+'cart/add.js', {
+        method:'POST', credentials:'same-origin',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ items: [{ id: {{ all_products['kava-drink-base'] | default: all_products['kava-drink-placeholder'] | first_available_variant.id | default: 0 }}, quantity: Number(qtyInput.value)||1, properties: props }] })
+      });
+      document.dispatchEvent(new CustomEvent('cart:added'));
+    });
+
+    updatePrice();
+  });
+</script>
