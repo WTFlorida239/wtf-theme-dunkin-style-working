@@ -203,6 +203,7 @@
 
     {{ 'base.css' | asset_url | stylesheet_tag }}
     {{ 'wtf_flavor_system.css' | asset_url | stylesheet_tag }}
+    {{ 'accessibility.css' | asset_url | stylesheet_tag }}
 
     {%- unless settings.type_body_font.system? -%}
       <link rel="preload" as="font" href="{{ settings.type_body_font | font_url }}" type="font/woff2" crossorigin>
@@ -282,24 +283,34 @@
     {{ 'wtf-cart.js' | asset_url | script_tag }}
     {{ 'wtf_flavor_system.js' | asset_url | script_tag }}
 
-    <!-- Keep the header cart count (#cart-count) correct on every page -->
+    <!-- Performance optimizations -->
     <script>
-      (function () {
-        function setCount(n) {
-          var el = document.getElementById('cart-count');
-          if (el) el.textContent = Number(n) || 0;
+      // Lazy loading for images
+      document.addEventListener('DOMContentLoaded', function() {
+        if ('IntersectionObserver' in window) {
+          const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                const img = entry.target;
+                if (img.dataset.src) {
+                  img.src = img.dataset.src;
+                  img.classList.remove('lazy');
+                  observer.unobserve(img);
+                }
+              }
+            });
+          });
+
+          document.querySelectorAll('img[data-src]').forEach(img => {
+            imageObserver.observe(img);
+          });
         }
-        // On load
-        if (window.WTF && WTF.updateCartCount) WTF.updateCartCount();
-        // On add
-        document.addEventListener('cart:added', function (e) {
-          if (e.detail && e.detail.cart) setCount(e.detail.cart.item_count);
-        });
-        // On refresh
-        document.addEventListener('cart:refreshed', function (e) {
-          if (e.detail) setCount(e.detail.item_count);
-        });
-      })();
+
+        // Initialize cart functionality
+        if (window.WTFCart) {
+          window.WTFCart.init();
+        }
+      });
     </script>
   </body>
 </html>

@@ -1,0 +1,118 @@
+{% comment %}
+  Announcement bar section for WTF theme
+{% endcomment %}
+
+{%- if section.settings.show_announcement -%}
+  <div class="announcement-bar color-{{ section.settings.color_scheme }}" role="region" aria-label="{{ 'sections.header.announcement' | t }}">
+    <div class="page-width">
+      {%- if section.settings.announcement_text != blank -%}
+        <div class="announcement-bar__message">
+          {%- if section.settings.announcement_link != blank -%}
+            <a href="{{ section.settings.announcement_link }}" class="announcement-bar__link">
+              {{ section.settings.announcement_text | escape }}
+            </a>
+          {%- else -%}
+            <p class="announcement-bar__text">{{ section.settings.announcement_text | escape }}</p>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+{%- endif -%}
+
+<style>
+  .announcement-bar {
+    background-color: var(--color-base-accent-1);
+    color: rgb(var(--color-base-solid-button-labels));
+    text-align: center;
+    padding: 1rem 0;
+    font-size: 1.4rem;
+    line-height: 1.2;
+  }
+
+  .announcement-bar__message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 4rem;
+  }
+
+  .announcement-bar__link,
+  .announcement-bar__text {
+    color: inherit;
+    text-decoration: none;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .announcement-bar__link:hover {
+    text-decoration: underline;
+  }
+
+  @media screen and (max-width: 749px) {
+    .announcement-bar {
+      font-size: 1.3rem;
+      padding: 0.8rem 0;
+    }
+    
+    .announcement-bar__message {
+      min-height: 3.5rem;
+    }
+  }
+</style>
+
+{% schema %}
+{
+  "name": "Announcement bar",
+  "max_blocks": 1,
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_announcement",
+      "label": "Show announcement",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "announcement_text",
+      "label": "Announcement text",
+      "default": "Welcome to our store"
+    },
+    {
+      "type": "url",
+      "id": "announcement_link",
+      "label": "Announcement link"
+    },
+    {
+      "type": "select",
+      "id": "color_scheme",
+      "options": [
+        {
+          "value": "accent-1",
+          "label": "Accent 1"
+        },
+        {
+          "value": "accent-2", 
+          "label": "Accent 2"
+        },
+        {
+          "value": "background-1",
+          "label": "Background 1"
+        },
+        {
+          "value": "background-2",
+          "label": "Background 2"
+        }
+      ],
+      "default": "accent-1",
+      "label": "Color scheme"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Announcement bar"
+    }
+  ]
+}
+{% endschema %}
+

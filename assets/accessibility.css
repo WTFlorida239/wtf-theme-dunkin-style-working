@@ -1,0 +1,337 @@
+/* Accessibility improvements for WTF theme */
+
+/* Focus states for interactive elements */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+a:focus,
+[tabindex]:focus {
+  outline: 2px solid rgb(var(--color-base-accent-1));
+  outline-offset: 2px;
+}
+
+/* Enhanced focus for buttons */
+.button:focus {
+  box-shadow: 0 0 0 3px rgba(var(--color-base-accent-1), 0.3);
+}
+
+/* Skip to content link */
+.skip-to-content-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: rgb(var(--color-base-background-1));
+  color: rgb(var(--color-base-text));
+  padding: 8px 16px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 9999;
+  transition: top 0.3s;
+}
+
+.skip-to-content-link:focus {
+  top: 6px;
+}
+
+/* Visually hidden but accessible to screen readers */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Ensure sufficient color contrast */
+.button--secondary {
+  border: 2px solid rgb(var(--color-base-text));
+  background: transparent;
+  color: rgb(var(--color-base-text));
+}
+
+.button--secondary:hover {
+  background: rgb(var(--color-base-text));
+  color: rgb(var(--color-base-background-1));
+}
+
+/* Improve form accessibility */
+.form__label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.form__input {
+  border: 2px solid rgba(var(--color-base-text), 0.2);
+  padding: 1rem;
+  border-radius: 4px;
+  font-size: 1.4rem;
+  width: 100%;
+  transition: border-color 0.2s ease;
+}
+
+.form__input:focus {
+  border-color: rgb(var(--color-base-accent-1));
+}
+
+.form__input:invalid {
+  border-color: #dc3545;
+}
+
+.form__error {
+  color: #dc3545;
+  font-size: 1.2rem;
+  margin-top: 0.5rem;
+}
+
+/* Improve button accessibility */
+.button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px; /* Minimum touch target size */
+  min-width: 44px;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: var(--buttons-radius);
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button--primary {
+  background: rgb(var(--color-base-accent-1));
+  color: rgb(var(--color-base-solid-button-labels));
+}
+
+.button--primary:hover:not(:disabled) {
+  background: rgba(var(--color-base-accent-1), 0.8);
+}
+
+/* Quantity selector accessibility */
+.quantity {
+  display: flex;
+  align-items: center;
+  border: 2px solid rgba(var(--color-base-text), 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.quantity__button {
+  background: none;
+  border: none;
+  padding: 1rem;
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 1.6rem;
+  line-height: 1;
+  transition: background-color 0.2s ease;
+}
+
+.quantity__button:hover {
+  background: rgba(var(--color-base-text), 0.1);
+}
+
+.quantity__button:focus {
+  background: rgba(var(--color-base-accent-1), 0.1);
+}
+
+.quantity__input {
+  border: none;
+  text-align: center;
+  width: 60px;
+  padding: 1rem 0.5rem;
+  font-size: 1.4rem;
+  background: transparent;
+}
+
+/* Variant picker accessibility */
+.product-form__input fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+}
+
+.product-form__input legend {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  padding: 0;
+}
+
+.product-form__input input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.product-form__input label {
+  display: inline-block;
+  padding: 0.8rem 1.5rem;
+  margin: 0.25rem;
+  border: 2px solid rgba(var(--color-base-text), 0.2);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  min-width: 44px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.product-form__input input[type="radio"]:checked + label {
+  background: rgb(var(--color-base-accent-1));
+  color: rgb(var(--color-base-solid-button-labels));
+  border-color: rgb(var(--color-base-accent-1));
+}
+
+.product-form__input input[type="radio"]:focus + label {
+  outline: 2px solid rgb(var(--color-base-accent-1));
+  outline-offset: 2px;
+}
+
+.product-form__input input[type="radio"]:disabled + label {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading states */
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--color-base-background-1), 0.8);
+  z-index: 10;
+}
+
+.loading-overlay__spinner {
+  width: 24px;
+  height: 24px;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .button {
+    border: 2px solid currentColor;
+  }
+  
+  .form__input {
+    border-width: 3px;
+  }
+  
+  .product-form__input label {
+    border-width: 3px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-base-text: 255, 255, 255;
+    --color-base-background-1: 18, 18, 18;
+    --color-base-background-2: 33, 33, 33;
+  }
+}
+
+/* Mobile accessibility improvements */
+@media screen and (max-width: 749px) {
+  .button {
+    min-height: 48px; /* Larger touch targets on mobile */
+    min-width: 48px;
+  }
+  
+  .quantity__button {
+    min-width: 48px;
+    min-height: 48px;
+  }
+  
+  .product-form__input label {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+/* Ensure text is readable */
+body {
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.3;
+}
+
+/* Error states */
+.field--error input,
+.field--error select,
+.field--error textarea {
+  border-color: #dc3545;
+}
+
+.field__error-message {
+  color: #dc3545;
+  font-size: 1.2rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Success states */
+.field--success input,
+.field--success select,
+.field--success textarea {
+  border-color: #28a745;
+}
+
+/* Aria live regions */
+[aria-live] {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+[aria-live].announce {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+}
+
