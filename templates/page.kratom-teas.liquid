@@ -1,263 +1,189 @@
 {% comment %}
-  Kratom Teas — custom builder (Size, Strain, Flavor) with AJAX add-to-cart
-  - Mobile-first, clean grid so the page doesn’t look "scattered"
-  - Uses your flavor system snippets:
-    - 'wtf-flavor-data' defines wtfKratomFlavors
-    - 'wtf-flavor-options' renders buttons with data-option="Flavor"
+Kratom Teas — dynamic options (any names) + Flavor snippet + AJAX ATC
 {% endcomment %}
 
 {% assign product = all_products['custom-kratom-tea'] %}
 
-{% if product == null %}
-  <main id="MainContent" class="page-width wtf-wrap">
-    <div class="wtf-card">
-      <h1 class="wtf-title">Kratom Teas</h1>
-      <p>Product “custom-kratom-tea” not found. Create it in Shopify, then reload this page.</p>
-    </div>
-  </main>
+{% if product == nil %}
+<main id="MainContent" class="page-width" style="max-width:1100px;margin:0 auto;padding:16px;">
+  <h1>Kratom Teas</h1>
+  <p>Product “custom-kratom-tea” not found. Create it in Shopify, then reload.</p>
+</main>
 {% else %}
-  <script>
-    // Expose product for scripts
-    window.WTF_PRODUCT_HANDLE = 'custom-kratom-tea';
-    window.WTF_PRODUCT_JSON = {{ product | json }};
-  </script>
 
-  <main id="MainContent" class="page-width wtf-wrap">
-    <!-- HERO -->
-    <header class="wtf-hero">
-      <img
-        src="{{ 'kratom_teas_150x150.png' | asset_url }}"
-        alt="Kratom Teas"
-        width="150"
-        height="150"
-        loading="eager"
-        class="wtf-hero-img"
-      >
-      <div class="wtf-hero-copy">
-        <h1 class="wtf-title">Kratom Teas</h1>
-        <p class="wtf-sub">Choose your Size, Strain, and Flavor.</p>
-      </div>
-    </header>
+<script>
+  window.WTF_PRODUCT_HANDLE = 'custom-kratom-tea';
+  window.WTF_PRODUCT_JSON = {{ product | json }};
+</script>
 
-    <div class="wtf-grid">
-      <!-- LEFT: Options -->
-      <section class="wtf-column">
-        <!-- SIZE + STRAIN -->
-        <section id="wtf-options" aria-label="Kratom Options" class="wtf-section">
-          {% for opt in product.options_with_values %}
-            {% assign name = opt.name %}
-            {% if name == 'Size' or name == 'Strain' %}
-              <div class="wtf-option-group" data-option-group="{{ name }}" role="group" aria-label="{{ name }}">
-                <div class="wtf-option-label">{{ name }}</div>
-                <div class="wtf-chip-row">
-                  {% for val in opt.values %}
-                    <button
-                      type="button"
-                      class="wtf-chip"
-                      data-option="{{ name }}"
-                      data-value="{{ val | escape }}"
-                      aria-pressed="false"
-                    >
-                      {{ val }}
-                    </button>
-                  {% endfor %}
-                </div>
-              </div>
-            {% endif %}
-          {% endfor %}
-        </section>
+<main id="MainContent" class="page-width" style="max-width:1100px;margin:0 auto;padding:16px;">
+  <header style="display:flex;align-items:center;gap:16px;justify-content:center;margin:8px 0 20px;">
+    <img src="{{ 'kratom_teas_150x150.png' | asset_url }}" alt="Kratom Teas" width="150" height="150" loading="eager" style="border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);">
+    <div style="text-align:center">
+      <h1 style="font-size:28px;line-height:1.2;margin:0;">Kratom Teas</h1>
+      <p style="color:#555;margin-top:6px">Choose your Size, Strain, and Flavor.</p>
+    </div>
+  </header>
 
-        <!-- FLAVORS (your existing UI) -->
-        <section class="wtf-section">
-          {% render 'wtf-flavor-data' %}
-          {% render 'wtf-flavor-options',
+  <div style="display:grid;gap:16px">
+    <section style="display:grid;gap:16px">
+      {%- comment -%}
+        Dynamically render ALL options except the one named exactly "Flavor".
+        This makes “Strain/Strains/Kratom Strain/etc.” always appear.
+      {%- endcomment -%}
+      {% for opt in product.options_with_values %}
+        {% assign opt_name = opt.name %}
+        {% unless opt_name == 'Flavor' %}
+          <div role="group" aria-label="{{ opt_name }}" style="background:#fff;border:1px solid #f0f0f0;border-radius:16px;padding:14px">
+            <div style="font-weight:700;margin-bottom:8px">{{ opt_name }}</div>
+            <div class="wtf-chip-row" style="display:flex;flex-wrap:wrap;gap:8px">
+              {% for val in opt.values %}
+                <button
+                  type="button"
+                  class="wtf-chip"
+                  data-option="{{ opt_name }}"
+                  data-value="{{ val | escape }}"
+                  aria-pressed="false"
+                  style="background:#fff;border:1px solid #ddd;border-radius:999px;padding:10px 14px;min-height:40px;cursor:pointer;font-weight:600;">
+                  {{ val }}
+                </button>
+              {% endfor %}
+            </div>
+          </div>
+        {% endunless %}
+      {% endfor %}
+
+      <!-- FLAVORS: keep your snippet-driven buttons (data-option="Flavor") -->
+      <section style="background:#fff;border:1px solid #f0f0f0;border-radius:16px;padding:14px">
+        <div style="font-weight:700;margin-bottom:8px">Flavor</div>
+        {% render 'wtf-flavor-data' %}
+        {% render 'wtf-flavor-options',
             title: 'Choose Your Flavor',
             flavors: wtfKratomFlavors,
             option_name: 'Flavor',
             product: product
-          %}
-        </section>
-
-        <!-- NOTES -->
-        <section class="wtf-section">
-          <label for="wtf-notes" class="wtf-option-label">Any special requests?</label>
-          <textarea
-            id="wtf-notes"
-            name="properties[Notes]"
-            class="wtf-textarea"
-            placeholder="e.g., extra ice, no sweetener"
-          ></textarea>
-        </section>
+        %}
       </section>
 
-      <!-- RIGHT: Summary / ATC -->
-      <aside class="wtf-column">
-        <form id="wtf-form" method="post" action="/cart/add" data-wtf-ajax class="wtf-card wtf-sticky">
-          <input
-            id="wtf-variant-id"
-            type="hidden"
-            name="id"
-            value="{{ product.selected_or_first_available_variant.id }}"
-          >
+      <!-- Notes (line item property) -->
+      <section style="background:#fff;border:1px solid #f0f0f0;border-radius:16px;padding:14px">
+        <label for="wtf-notes" style="font-weight:700;margin-bottom:8px;display:block;">Any special requests?</label>
+        <textarea id="wtf-notes" name="properties[Notes]" style="width:100%;min-height:84px;border:1px solid #ddd;border-radius:12px;padding:10px;resize:vertical" placeholder="e.g., extra ice, no sweetener"></textarea>
+      </section>
+    </section>
 
-          <div class="wtf-price-row">
-            <div id="wtf-price" data-price class="wtf-price"></div>
-          </div>
+    <!-- Summary / ATC -->
+    <aside>
+      <form id="wtf-form" method="post" action="/cart/add" data-wtf-ajax style="position:sticky;top:16px;background:#fff;border:1px solid #eee;border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.04);display:grid;gap:12px;">
+        <input id="wtf-variant-id" type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+        <div><strong id="wtf-price" data-price style="font-size:18px"></strong></div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label for="wtf-qty">Qty</label>
+          <input id="wtf-qty" name="quantity" type="number" min="1" value="1" style="width:90px;height:44px;padding:6px 10px;border:1px solid #ddd;border-radius:8px">
+        </div>
+        <button id="wtf-add" type="submit" style="width:100%;background:#ff6600;color:#fff;border:none;border-radius:10px;padding:14px 16px;min-height:48px;font-weight:800;cursor:pointer;">Add to cart</button>
+        <div id="wtf-status" aria-live="polite" style="margin-top:6px;color:#555;font-size:14px"></div>
+      </form>
+    </aside>
+  </div>
+</main>
 
-          <div class="wtf-qty-row">
-            <label for="wtf-qty">Qty</label>
-            <input id="wtf-qty" name="quantity" type="number" min="1" value="1" class="wtf-input">
-          </div>
+<script>
+(function(){
+  const product = window.WTF_PRODUCT_JSON;
+  if(!product) return;
 
-          <button id="wtf-add" type="submit" class="wtf-primary-cta">Add to cart</button>
-          <div id="wtf-status" aria-live="polite" class="wtf-status"></div>
-        </form>
-      </aside>
-    </div>
-  </main>
+  // Index variants by "opt1 / opt2 / opt3"
+  const variantByKey = {};
+  (product.variants||[]).forEach(v=>{
+    if(!v) return;
+    const k = [v.option1, v.option2, v.option3].filter(Boolean).join(' / ');
+    variantByKey[k] = v;
+  });
 
-  <style>
-    /* Layout */
-    .wtf-wrap{max-width:1100px;margin:0 auto;padding:16px;}
-    .wtf-hero{display:flex;align-items:center;gap:16px;justify-content:center;margin:8px 0 20px;}
-    .wtf-hero-img{border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);}
-    .wtf-hero-copy{text-align:center}
-    .wtf-title{font-size:28px;line-height:1.2;margin:0}
-    .wtf-sub{color:#555;margin-top:6px}
-    .wtf-grid{display:grid;gap:16px}
-    .wtf-column{display:grid;gap:16px}
-    @media(min-width: 980px){
-      .wtf-grid{grid-template-columns: 1.1fr .9fr}
+  // Use whatever option names the product actually has
+  const optionOrder = (product.options||[]).slice(0,3);
+  const first = product.selected_or_first_available_variant || (product.variants||[])[0] || {};
+  const state = {};
+  optionOrder.forEach((name, i)=>{
+    state[name] = first['option'+(i+1)] || '';
+  });
+
+  const $ = (s,c)=> (c||document).querySelector(s);
+  const $$= (s,c)=> Array.from((c||document).querySelectorAll(s));
+  const idInput = $('#wtf-variant-id');
+  const priceEl = $('#wtf-price');
+  const addBtn  = $('#wtf-add');
+  const form    = $('#wtf-form');
+  const status  = $('#wtf-status');
+
+  function money(cents){
+    try { return new Intl.NumberFormat({{ shop.locale | json }},{style:'currency',currency:{{ shop.currency | json }}}).format(cents/100); }
+    catch(e){ return '$'+(cents/100).toFixed(2); }
+  }
+  function keyFromState(){ return optionOrder.map(n=>state[n]||'').filter(Boolean).join(' / '); }
+  function syncChips(){
+    $$('[data-option][data-value]').forEach(el=>{
+      const opt = el.getAttribute('data-option');
+      const val = el.getAttribute('data-value');
+      el.setAttribute('aria-pressed', state[opt]===val ? 'true':'false');
+    });
+  }
+  function setVariantUI(v){
+    if(v){
+      idInput.value = v.id;
+      priceEl.textContent = 'Price: ' + money(v.price);
+      addBtn.disabled = !v.available;
+      status.textContent = v.available ? '' : 'Selected combination is unavailable.';
+    } else {
+      idInput.value = '';
+      priceEl.textContent = '';
+      addBtn.disabled = true;
+      status.textContent = 'Please complete your selections.';
     }
+  }
+  function recompute(){ setVariantUI(variantByKey[keyFromState()]); }
 
-    /* Cards & sections */
-    .wtf-card{background:#fff;border:1px solid #eee;border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.04);}
-    .wtf-section{background:#fff;border:1px solid #f0f0f0;border-radius:16px;padding:14px}
+  // Init UI from default state
+  syncChips();
+  recompute();
 
-    /* Option chips */
-    .wtf-option-label{font-weight:700;margin-bottom:8px}
-    .wtf-chip-row{display:flex;flex-wrap:wrap;gap:8px}
-    .wtf-chip{
-      background:#fff;border:1px solid #ddd;border-radius:999px;
-      padding:10px 14px;min-height:40px;cursor:pointer;font-weight:600;
-      transition:box-shadow .15s,border-color .15s,transform .02s;
-    }
-    .wtf-chip:active{transform:translateY(1px)}
-    .wtf-chip[aria-pressed="true"]{border-color:#ff6600;box-shadow:0 0 0 2px rgba(255,102,0,.18);}
+  // Click any chip (includes Flavor buttons from snippet)
+  document.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-option][data-value]');
+    if(!btn) return;
+    const opt = btn.getAttribute('data-option');
+    const val = btn.getAttribute('data-value');
+    if(!optionOrder.includes(opt)) return; // ignore non-existent options
+    state[opt] = val;
+    syncChips();
+    recompute();
+  });
 
-    /* Inputs / buttons */
-    .wtf-input{width:90px;height:44px;padding:6px 10px;border:1px solid #ddd;border-radius:8px}
-    .wtf-textarea{width:100%;min-height:84px;border:1px solid #ddd;border-radius:12px;padding:10px;resize:vertical}
-    .wtf-primary-cta{
-      width:100%;background:#ff6600;color:#fff;border:none;border-radius:10px;
-      padding:14px 16px;min-height:48px;font-weight:800;cursor:pointer;
-    }
-    .wtf-primary-cta:disabled{opacity:.6;cursor:not-allowed}
-    .wtf-price-row{display:flex;justify-content:flex-start;margin-bottom:8px}
-    .wtf-price{font-weight:800;font-size:18px}
-    .wtf-qty-row{display:flex;align-items:center;gap:10px;margin:10px 0}
-    .wtf-status{margin-top:10px;color:#555;font-size:14px}
-    .wtf-sticky{position:sticky;top:16px}
-  </style>
-
-  <script>
-    (function(){
-      const product = window.WTF_PRODUCT_JSON;
-      if(!product) return;
-
-      // Build "Size / Strain / Flavor" → variant index
-      const variantByKey = {};
-      (product.variants||[]).forEach(v=>{
-        if(!v) return;
-        const k = [v.option1, v.option2, v.option3].filter(Boolean).join(' / ');
-        variantByKey[k] = v;
-      });
-
-      const optionOrder = (product.options||[]).slice(0,3);
-      const first = product.selected_or_first_available_variant || (product.variants||[])[0];
-
-      const state = {
-        [optionOrder[0]||'Size']:   first?first.option1:'',
-        [optionOrder[1]||'Strain']: first?first.option2:'',
-        [optionOrder[2]||'Flavor']: first?first.option3:''
-      };
-
-      // DOM
-      const $ = (s,c)=> (c||document).querySelector(s);
-      const $$= (s,c)=> Array.from((c||document).querySelectorAll(s));
-      const idInput = $('#wtf-variant-id');
-      const priceEl = $('#wtf-price');
-      const addBtn  = $('#wtf-add');
-      const form    = $('#wtf-form');
-      const status  = $('#wtf-status');
-
-      function money(cents){
-        try { return new Intl.NumberFormat({{ shop.locale | json }},{style:'currency',currency:{{ shop.currency | json }}}).format(cents/100); }
-        catch(e){ return '$'+(cents/100).toFixed(2); }
+  // AJAX ATC
+  if(form && form.hasAttribute('data-wtf-ajax')){
+    form.addEventListener('submit', async (e)=>{
+      if(!idInput.value){ e.preventDefault(); status.textContent='Select all options.'; return; }
+      e.preventDefault();
+      addBtn.disabled = true; status.textContent = 'Adding…';
+      try{
+        const fd = new FormData(form);
+        const res = await fetch('/cart/add.js',{method:'POST',body:fd,headers:{'Accept':'application/json'}});
+        if(!res.ok) throw new Error('Add failed');
+        const cart = await fetch('/cart.js',{headers:{'Accept':'application/json'}}).then(r=>r.json());
+        const countNode = document.querySelector('[data-cart-count], .cart-count-bubble, #cart-icon-bubble');
+        if(countNode) countNode.textContent = cart.item_count;
+        if(typeof window.openCartDrawer==='function') window.openCartDrawer();
+        status.textContent = 'Added to cart.';
+      }catch(err){
+        console.error(err);
+        status.textContent = 'Could not add to cart. Please try again.';
+      }finally{
+        addBtn.disabled = false;
       }
-      function keyFromState(){ return optionOrder.map(n=>state[n]||'').filter(Boolean).join(' / '); }
-      function syncChips(){
-        $$('[data-option][data-value]').forEach(el=>{
-          const opt = el.getAttribute('data-option');
-          const val = el.getAttribute('data-value');
-          el.setAttribute('aria-pressed', state[opt]===val ? 'true':'false');
-        });
-      }
-      function setVariantUI(v){
-        if(v){
-          idInput.value = v.id;
-          priceEl.textContent = 'Price: ' + money(v.price);
-          addBtn.disabled = !v.available;
-          status.textContent = v.available ? '' : 'Selected combination is unavailable.';
-        }else{
-          idInput.value = '';
-          priceEl.textContent = '';
-          addBtn.disabled = true;
-          status.textContent = 'Please complete your selections.';
-        }
-      }
-      function recompute(){ setVariantUI(variantByKey[keyFromState()]); }
+    });
+  }
+})();
+</script>
 
-      // Init
-      syncChips();    // reflects default Size/Strain if present
-      recompute();
-
-      // Delegate clicks for all chips (including Flavor buttons from snippet)
-      document.addEventListener('click', (e)=>{
-        const btn = e.target.closest('[data-option][data-value]');
-        if(!btn) return;
-        const opt = btn.getAttribute('data-option');
-        const val = btn.getAttribute('data-value');
-        if(!optionOrder.includes(opt)) return;
-        state[opt] = val;
-        syncChips();
-        recompute();
-      });
-
-      // AJAX add-to-cart
-      if(form?.hasAttribute('data-wtf-ajax')){
-        form.addEventListener('submit', async (e)=>{
-          if(!idInput.value){ e.preventDefault(); status.textContent='Select Size, Strain, and Flavor.'; return; }
-          e.preventDefault();
-          addBtn.disabled = true;
-          status.textContent = 'Adding…';
-          try{
-            const fd = new FormData(form);
-            const res = await fetch('/cart/add.js',{method:'POST',body:fd,headers:{'Accept':'application/json'}});
-            if(!res.ok) throw new Error('Add to cart failed');
-            const cart = await fetch('/cart.js',{headers:{'Accept':'application/json'}}).then(r=>r.json());
-            const countNode = document.querySelector('[data-cart-count], .cart-count-bubble, #cart-icon-bubble');
-            if(countNode) countNode.textContent = cart.item_count;
-            if(typeof window.openCartDrawer==='function') window.openCartDrawer();
-            status.textContent = 'Added to cart.';
-          }catch(err){
-            console.error(err);
-            status.textContent = 'Could not add to cart. Please try again.';
-          }finally{
-            addBtn.disabled = false;
-          }
-        });
-      }
-    })();
-  </script>
 {% endif %}
