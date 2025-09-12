@@ -1,66 +1,98 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Draft Pours - WTF | Welcome To Florida</title>
+
     <style>
+      /* ——— Base / Layout ——— */
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f9fa; line-height: 1.6; }
-      .header { background: #ff6600; color: white; padding: 15px 0; text-align: center; font-size: 24px; font-weight: bold; }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8f9fa; line-height: 1.6; color:#333; }
+      .header { background: #ff6600; color: #fff; padding: 15px 0; text-align: center; font-size: 24px; font-weight: 700; }
       .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-      .back-link { display: inline-block; color: #ff6600; text-decoration: none; font-weight: bold; font-size: 16px; margin-bottom: 20px; padding: 10px 15px; border: 2px solid #ff6600; border-radius: 5px; transition: all 0.3s ease; }
-      .back-link:hover { background: #ff6600; color: white; }
+      .back-link { display: inline-block; color: #ff6600; text-decoration: none; font-weight: 700; font-size: 16px; margin-bottom: 20px; padding: 10px 15px; border: 2px solid #ff6600; border-radius: 5px; transition: all .2s ease; }
+      .back-link:hover { background: #ff6600; color: #fff; }
       .product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
-      .product-image { width: 100%; max-width: 400px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-      .product-details { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-      .product-title { font-size: 32px; color: #333; margin-bottom: 10px; font-weight: bold; }
-      .product-price { font-size: 24px; color: #ff6600; font-weight: bold; margin-bottom: 15px; }
-      .product-description { color: #666; margin-bottom: 30px; line-height: 1.6; font-size: 16px; }
+      .product-image { width: 100%; max-width: 400px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,.1); height:auto; }
+      .product-details { background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,.1); }
+      .product-title { font-size: 32px; margin-bottom: 10px; font-weight: 800; }
+      .product-price { font-size: 24px; color: #ff6600; font-weight: 800; margin-bottom: 15px; }
+      .product-description { color: #666; margin-bottom: 30px; font-size: 16px; }
       .selection-section { margin: 30px 0; border-bottom: 1px solid #eee; padding-bottom: 20px; }
       .selection-section:last-child { border-bottom: none; }
-      .section-title { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 15px; }
-      .option-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-      .option-button { padding: 15px; border: 3px solid #ddd; border-radius: 8px; text-align: center; background: white; cursor: pointer; transition: all 0.3s ease; color: #333; font-size: 14px; font-family: inherit; min-height: 60px; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-      .option-button:hover { border-color: #ff6600; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(255,102,0,0.2); }
-      .option-button.selected { background: #ff6600; color: white; border-color: #ff6600; font-weight: bold; }
-      .quantity-controls { display: flex; align-items: center; gap: 15px; }
-      .qty-btn { width: 40px; height: 40px; border: 2px solid #ff6600; background: white; color: #ff6600; border-radius: 50%; cursor: pointer; font-size: 18px; font-weight: bold; font-family: inherit; transition: all 0.3s ease; }
-      .qty-btn:hover { background: #ff6600; color: white; transform: scale(1.1); }
-      .qty-input { width: 80px; text-align: center; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; font-family: inherit; }
-      .comments-textarea { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; resize: vertical; font-family: inherit; font-size: 14px; line-height: 1.4; }
-      .comments-textarea:focus { border-color: #ff6600; outline: none; }
-      .add-to-cart-btn { width: 100%; padding: 18px; background: #ff6600; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; font-family: inherit; transition: all 0.3s ease; }
-      .add-to-cart-btn:hover { background: #e55a00; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,102,0,0.3); }
-      .add-to-cart-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
-      .success-message { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #c3e6cb; display: none; font-size: 14px; line-height: 1.4; }
-      .success-message.show { display: block; }
-      .cart-status { position: fixed; top: 20px; right: 20px; background: #ff6600; color: white; padding: 10px 15px; border-radius: 25px; font-weight: bold; z-index: 1000; box-shadow: 0 4px 12px rgba(255,102,0,0.3); }
-      .info-box { background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; color: #333; font-size: 14px; line-height: 1.4; }
+      .section-title { font-size: 18px; font-weight: 800; margin-bottom: 15px; }
+      .info-box { background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; }
 
-      @media (max-width: 768px) {
-        .product-grid { grid-template-columns: 1fr; }
-        .option-grid { grid-template-columns: repeat(2, 1fr); }
+      /* ——— Options ——— */
+      .option-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px; }
+      .option-button { padding: 15px; border: 3px solid #ddd; border-radius: 8px; text-align: center; background: #fff; cursor: pointer; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; color:#333; font-size: 14px; min-height: 60px; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+      .option-button:hover { border-color: #ff6600; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(255,102,0,0.2); }
+      .option-button.selected { background: #ff6600; color: #fff; border-color: #ff6600; font-weight: 800; }
+
+      /* ——— Quantity ——— */
+      .quantity-controls { display:flex; align-items:center; gap: 15px; }
+      .qty-btn { width: 40px; height: 40px; border: 2px solid #ff6600; background:#fff; color:#ff6600; border-radius: 50%; cursor: pointer; font-size: 18px; font-weight: 700; transition: all .12s ease; }
+      .qty-btn:hover { background:#ff6600; color:#fff; transform: scale(1.08); }
+      .qty-input { width: 80px; text-align:center; padding:10px; border:2px solid #ddd; border-radius:5px; font-size:16px; }
+
+      /* ——— Comments ——— */
+      .comments-textarea { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; resize: vertical; font-size: 14px; line-height: 1.4; }
+      .comments-textarea:focus { border-color: #ff6600; outline: none; }
+
+      /* ——— CTA / Status ——— */
+      .add-to-cart-btn { width: 100%; padding: 18px; background: #ff6600; color: #fff; border: none; border-radius: 8px; font-size: 18px; font-weight: 800; cursor: pointer; margin-top: 20px; transition: transform .12s ease, box-shadow .12s ease, background .12s ease; }
+      .add-to-cart-btn:hover { background:#e55a00; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,102,0,0.3); }
+      .add-to-cart-btn:disabled { background:#ccc; cursor:not-allowed; transform:none; box-shadow:none; }
+      .success-message { background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin: 15px 0; border: 1px solid #c3e6cb; display: none; font-size: 14px; }
+      .success-message.show { display: block; }
+      .cart-status { position: fixed; top: 20px; right: 20px; background:#ff6600; color:#fff; padding:10px 15px; border-radius:25px; font-weight:700; z-index:1000; box-shadow:0 4px 12px rgba(255,102,0,0.3); }
+
+      /* ——— Motion preferences ——— */
+      @media (prefers-reduced-motion: reduce){
+        .back-link, .option-button, .qty-btn, .add-to-cart-btn { transition: none !important; }
+      }
+
+      /* ——— Responsive ——— */
+      @media (max-width: 768px){
+        .product-grid { grid-template-columns: 1fr; gap:24px; }
+        .option-grid { grid-template-columns: repeat(2,1fr); }
         .product-details { padding: 20px; }
       }
+
+      /* Focus visible outline */
+      :where(.back-link, .option-button, .qty-btn, .add-to-cart-btn):focus-visible { outline: 3px solid #1a73e8; outline-offset: 2px; border-radius: 8px; }
+      .sr-only { position:absolute!important; width:1px; height:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap; }
     </style>
 
     <!-- Theme settings & per-page overrides -->
     <script>
+      /* Allows page metafield to override theme setting */
       window.DRAFT_POURS_VARIANT_ID = {{ page.metafields.custom.draft_variant_id | default: settings.draft_pours_variant_id | json }};
     </script>
   </head>
+
   <body>
     <div class="header">WTF | Welcome To Florida</div>
-    <div class="cart-status" id="cart-status">Cart: <span id="cart-count">0</span> items</div>
+    <div class="cart-status" id="cart-status" aria-live="polite">
+      Cart: <span id="cart-count">{{ cart.item_count }}</span> items
+    </div>
 
     <div class="container">
       <a href="/" class="back-link">← Back to Menu</a>
 
       <div class="product-grid">
         <div class="product-image-section">
-          <img src="{{ 'wtf_drafts_150x150.png' | asset_url }}" alt="Draft Pours" class="product-image">
-          <img src="{{ 'draft-pours_150x150.png' | asset_url }}" alt="Draft Pours" class="product-image">
+          <!-- Use requested asset; eager for LCP, intrinsic sizing for stability -->
+          <img
+            src="{{ 'wtf_drafts_150x150.png' | asset_url }}"
+            alt="Draft Pours"
+            class="product-image"
+            width="400"
+            height="400"
+            loading="eager"
+            fetchpriority="high"
+          >
         </div>
 
         <div class="product-details">
@@ -76,7 +108,9 @@
             <div class="info-box">
               <strong>Rotating Taps:</strong> Our selection changes regularly. Current offerings below.
             </div>
-            <div class="option-grid" id="draft-options">
+
+            <div class="option-grid" id="draft-options" role="group" aria-label="Draft options">
+              <!-- Keep your labels/prices; fix minor typos, keep layout -->
               <button type="button" class="option-button" data-draft="Five Flowers Lemonade" data-price="15.00">
                 Five Flowers Lemonade
               </button>
@@ -86,20 +120,20 @@
               <button type="button" class="option-button" data-draft="Mitra9 Dragonfruit" data-price="15.00">
                 Mitra9 Dragonfruit
               </button>
-              <button type="button" class="option-button" data-draft="Tea Time Orange Citrus" data-price="15.00">
+              <button type="button" class="option-button" data-draft="Tea Time Citrus" data-price="15.00">
                 Tea Time Citrus
               </button>
-              <button type="button" class="option-button" data-draft="White Rabbit Rootbeer" data-price="15.00">
-                White Rabbit Rootbeer
+              <button type="button" class="option-button" data-draft="White Rabbit Root Beer" data-price="15.00">
+                White Rabbit Root Beer
               </button>
               <button type="button" class="option-button" data-draft="BBCO Perfect Pear" data-price="15.00">
                 BBCO Perfect Pear
               </button>
-              <button type="button" class="option-button" data-draft="Mitra9 Rasberry Lime" data-price="15.00">
-                Mitra9 Rasberry Lime
+              <button type="button" class="option-button" data-draft="Mitra9 Raspberry Lime" data-price="15.00">
+                Mitra9 Raspberry Lime
               </button>
-              <button type="button" class="option-button" data-draft="BBCO Lemon Poundcake" data-price="15.00">
-                Lemon Poundcake
+              <button type="button" class="option-button" data-draft="BBCO Lemon Pound Cake" data-price="15.00">
+                BBCO Lemon Pound Cake
               </button>
             </div>
           </div>
@@ -107,6 +141,7 @@
           <!-- Comments -->
           <div class="selection-section">
             <h3 class="section-title">💬 Special Requests & Comments</h3>
+            <label for="order-comments" class="sr-only">Order comments</label>
             <textarea
               id="order-comments"
               class="comments-textarea"
@@ -119,35 +154,52 @@
           <div class="selection-section">
             <h3 class="section-title">🔢 Quantity</h3>
             <div class="quantity-controls">
-              <button type="button" class="qty-btn" onclick="changeQuantity(-1)">−</button>
-              <input type="number" id="quantity" value="1" min="1" max="50" class="qty-input">
-              <button type="button" class="qty-btn" onclick="changeQuantity(1)">+</button>
+              <button type="button" class="qty-btn" aria-label="Decrease quantity" onclick="changeQuantity(-1)">
+                −
+              </button>
+              <input
+                type="number"
+                id="quantity"
+                value="1"
+                min="1"
+                max="50"
+                class="qty-input"
+                inputmode="numeric"
+                pattern="[0-9]*"
+              >
+              <button type="button" class="qty-btn" aria-label="Increase quantity" onclick="changeQuantity(1)">
+                +
+              </button>
             </div>
           </div>
 
-          <div id="success-message" class="success-message"></div>
+          <div id="success-message" class="success-message" role="status" aria-live="polite"></div>
 
-          <button type="button" id="add-to-cart-btn" class="add-to-cart-btn" onclick="addToCart()">
-            Add to Cart - $15.00
+          <button type="button" id="add-to-cart-btn" class="add-to-cart-btn" onclick="addToCart()" disabled>
+            Select a Draft
           </button>
         </div>
       </div>
     </div>
 
     <script>
-      // -------- State --------
+      // ——— Currency formatter ———
+      const moneyFmt = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' });
+
+      // ——— State ———
       let selectedDraft = null;
       let basePrice = 15.0;
 
-      // -------- Init --------
+      // ——— Init ———
       document.addEventListener('DOMContentLoaded', () => {
         wireDraftButtons();
-        // Default: select the first draft for good UX
+
+        // Default: select first draft for quick-start UX
         const first = document.querySelector('#draft-options .option-button');
         if (first) first.click();
 
         updateCartCount();
-        updatePrice();
+        updateUI();
       });
 
       function wireDraftButtons() {
@@ -156,31 +208,43 @@
             document.querySelectorAll('#draft-options .option-button').forEach((b) => b.classList.remove('selected'));
             btn.classList.add('selected');
 
-            selectedDraft = btn.dataset.draft || btn.textContent.trim();
-            const p = parseFloat(btn.dataset.price || '0');
-            basePrice = isNaN(p) ? basePrice : p;
+            selectedDraft = (btn.dataset.draft || btn.textContent || '').trim();
+            const p = parseFloat(btn.dataset.price || '');
+            if (Number.isFinite(p)) basePrice = p;
 
-            updatePrice();
+            updateUI();
+          });
+
+          // Keyboard support
+          btn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              btn.click();
+            }
           });
         });
       }
 
-      function getTotalPrice() {
-        const qty = parseInt(document.getElementById('quantity').value || 1);
-        return basePrice * qty;
-      }
+      function updateUI() {
+        document.getElementById('product-price').textContent = `${moneyFmt.format(basePrice)} per 16 oz pour`;
+        const button = document.getElementById('add-to-cart-btn');
+        const qty = Math.max(1, Math.min(50, parseInt(document.getElementById('quantity').value || '1', 10)));
+        const total = basePrice * qty;
 
-      function updatePrice() {
-        const total = getTotalPrice();
-        document.getElementById('product-price').textContent = '$' + basePrice.toFixed(2) + ' per 16 oz pour';
-        document.getElementById('add-to-cart-btn').textContent = 'Add to Cart - $' + total.toFixed(2);
+        if (selectedDraft) {
+          button.textContent = `Add to Cart — ${moneyFmt.format(total)}`;
+          button.disabled = false;
+        } else {
+          button.textContent = 'Select a Draft';
+          button.disabled = true;
+        }
       }
 
       function changeQuantity(delta) {
         const input = document.getElementById('quantity');
-        const newVal = Math.max(1, Math.min(50, (parseInt(input.value) || 1) + delta));
-        input.value = newVal;
-        updatePrice();
+        const next = Math.max(1, Math.min(50, (parseInt(input.value, 10) || 1) + delta));
+        input.value = next;
+        updateUI();
       }
 
       async function updateCartCount() {
@@ -188,17 +252,11 @@
           const res = await fetch('/cart.js', { credentials: 'same-origin' });
           if (res.ok) {
             const cart = await res.json();
-            document.getElementById('cart-count').textContent = cart.item_count || 0;
-            return;
+            const countEl = document.getElementById('cart-count');
+            countEl.textContent = cart.item_count || 0;
+            countEl.parentElement.setAttribute('aria-live', 'polite');
           }
         } catch (e) {}
-        // Fallback to localStorage used by legacy pages
-        try {
-          const local = JSON.parse(localStorage.getItem('wtf-cart') || '[]');
-          document.getElementById('cart-count').textContent = local.length;
-        } catch {
-          document.getElementById('cart-count').textContent = '0';
-        }
       }
 
       function validateSelections() {
@@ -218,26 +276,18 @@
         btn.disabled = true;
 
         const variantId = window.DRAFT_POURS_VARIANT_ID;
-        const quantity = parseInt(document.getElementById('quantity').value || 1);
+        const quantity = Math.max(1, Math.min(50, parseInt(document.getElementById('quantity').value || '1', 10)));
         const comments = (document.getElementById('order-comments').value || '').trim();
 
-        const properties = {
-          Size: '16 oz',
-          Draft: selectedDraft,
-          Comments: comments,
-        };
+        const properties = { Size: '16 oz', Draft: selectedDraft };
+        if (comments) properties.Comments = comments;
 
         try {
           if (variantId) {
             const body = new URLSearchParams();
             body.set('id', String(variantId));
             body.set('quantity', String(quantity));
-            Object.keys(properties).forEach((k) => {
-              const v = properties[k];
-              if (v !== '' && v !== null && v !== undefined) {
-                body.set(`properties[${k}]`, String(v));
-              }
-            });
+            for (const k in properties) body.set(`properties[${k}]`, String(properties[k]));
 
             const res = await fetch('/cart/add.js', {
               method: 'POST',
@@ -258,22 +308,19 @@
               throw new Error(msg);
             }
           } else {
-            // Dev fallback: localStorage cart if no variant configured
+            // Fallback: store cart locally for dev/preview modes
             const order = {
               id: 'draft-' + Date.now() + '-' + Math.random().toString(36).slice(2),
               product: 'Draft Pours',
               ...properties,
               quantity,
-              price: getTotalPrice().toFixed(2),
+              price: (basePrice * quantity).toFixed(2),
               timestamp: new Date().toISOString(),
-              dateAdded: new Date().toLocaleDateString(),
             };
             let cart = [];
             try {
               cart = JSON.parse(localStorage.getItem('wtf-cart') || '[]');
-            } catch {
-              cart = [];
-            }
+            } catch {}
             cart.push(order);
             localStorage.setItem('wtf-cart', JSON.stringify(cart));
           }
@@ -281,12 +328,9 @@
           await updateCartCount();
 
           const success = document.getElementById('success-message');
-          success.innerHTML =
-            `✅ <strong>Added to cart!</strong><br>
-           🍺 Draft Pours<br>
-           📋 Draft: ${properties['Draft']}<br>` +
-            (comments ? `💬 ${comments}<br>` : '') +
-            `🔢 Qty: ${quantity}`;
+          success.innerHTML = `✅ <strong>Added to cart!</strong><br>
+             🍺 Draft Pours — <strong>${properties.Draft}</strong><br>
+             🔢 Qty: ${quantity}${properties.Comments ? `<br>💬 ${properties.Comments}` : ''}`;
           success.classList.add('show');
           success.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
