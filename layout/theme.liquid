@@ -201,9 +201,76 @@
       @media screen and (min-width: 750px) { body { font-size: 1.6rem; } }
     {% endstyle %}
 
-    {{ 'base.css' | asset_url | stylesheet_tag }}
-    {{ 'wtf_flavor_system.css' | asset_url | stylesheet_tag }}
-    {{ 'accessibility.css' | asset_url | stylesheet_tag }}
+    {%- comment -%} Critical CSS for above-the-fold content {%- endcomment -%}
+    <style>
+      /* Critical CSS for immediate rendering */
+      body { 
+        margin: 0; 
+        font-family: var(--font-body-family); 
+        background: #f8f9fa; 
+        line-height: 1.6; 
+        color: #333; 
+      }
+      
+      /* Header critical styles */
+      .wtf-header { 
+        background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); 
+        padding: 15px 0; 
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        position: sticky; 
+        top: 0; 
+        z-index: 1000; 
+      }
+      
+      .wtf-nav-container { 
+        max-width: 1200px; 
+        margin: 0 auto; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding: 0 20px; 
+      }
+      
+      /* Hero section critical styles */
+      .wtf-hero { 
+        text-align: center; 
+        padding: 40px 20px; 
+        background: white; 
+      }
+      
+      /* Prevent layout shift for images */
+      img { 
+        max-width: 100%; 
+        height: auto; 
+        display: block; 
+      }
+      
+      /* Critical button styles */
+      .wtf-add-to-cart-btn {
+        background: #ff6600;
+        color: white;
+        border: none;
+        padding: 16px 24px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 100%;
+      }
+    </style>
+
+    {%- comment -%} Load non-critical CSS with media attribute for better performance {%- endcomment -%}
+    <link rel="stylesheet" href="{{ 'base.css' | asset_url }}" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="{{ 'wtf_flavor_system.css' | asset_url }}" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="{{ 'accessibility.css' | asset_url }}" media="print" onload="this.media='all'">
+    
+    {%- comment -%} Fallback for browsers that don't support onload {%- endcomment -%}
+    <noscript>
+      <link rel="stylesheet" href="{{ 'base.css' | asset_url }}">
+      <link rel="stylesheet" href="{{ 'wtf_flavor_system.css' | asset_url }}">
+      <link rel="stylesheet" href="{{ 'accessibility.css' | asset_url }}">
+    </noscript>
 
     {%- unless settings.type_body_font.system? -%}
       {%- if settings.type_body_font -%}
@@ -327,10 +394,14 @@
       </script>
     {%- endif -%}
 
-    {{ 'wtf-flavor-system.js' | asset_url | script_tag }}
+    {%- comment -%} Comprehensive Analytics & Pixel Tracking {%- endcomment -%}
+    {%- render 'wtf-analytics' -%}
+
+    {%- comment -%} Defer non-critical JavaScript for better performance {%- endcomment -%}
+    <script src="{{ 'wtf-flavor-system.js' | asset_url }}" defer></script>
 
     {%- comment -%} Our AJAX cart core (place after any other custom scripts) {%- endcomment -%}
-    {{ 'wtf_ajax_cart.js' | asset_url | script_tag }}
+    <script src="{{ 'wtf_ajax_cart.js' | asset_url }}" defer></script>
     
     {%- comment -%} AJAX cart functionality {%- endcomment -%}
     {%- render 'wtf-ajax-cart' -%}

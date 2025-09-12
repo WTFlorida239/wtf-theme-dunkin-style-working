@@ -1,0 +1,695 @@
+{%- comment -%}
+WTF Drink Builder Section - Enhanced with Merchant Settings
+Configurable product handles, flavor groups, and dynamic settings
+{%- endcomment -%}
+
+{%- assign product_handle = section.settings.product_handle | default: 'custom-kratom-tea' -%}
+{%- assign product = all_products[product_handle] -%}
+{%- assign default_variant_id = section.settings.default_variant_id -%}
+
+{%- comment -%} Price configuration from settings {%- endcomment -%}
+{%- assign price_medium = section.settings.price_medium | default: 9 -%}
+{%- assign price_large = section.settings.price_large | default: 15 -%}
+{%- assign price_gallon = section.settings.price_gallon | default: 100 -%}
+
+{%- comment -%} Flavor configuration from settings {%- endcomment -%}
+{%- assign flavor_string = section.settings.flavor_list | default: '' -%}
+{%- assign flavors_raw = flavor_string | split: ',' -%}
+{%- assign flavors = '' | split: ',' -%}
+{%- for f in flavors_raw -%}
+  {%- assign _t = f | strip -%}
+  {%- if _t != '' -%}{%- assign flavors = flavors | push: _t -%}{%- endif -%}
+{%- endfor -%}
+
+{%- comment -%} Strain configuration from settings {%- endcomment -%}
+{%- assign strain_string = section.settings.strain_list | default: 'Green,Red,White,Yellow' -%}
+{%- assign strains = strain_string | split: ',' -%}
+
+<section class="wtf-drink-builder page-width" id="drink-builder-{{ section.id }}">
+  <div class="drink-builder-container">
+    
+    {%- comment -%} Header with product image and title {%- endcomment -%}
+    <header class="builder-header">
+      {%- if section.settings.product_image -%}
+        <img
+          src="{{ section.settings.product_image | image_url: width: 150 }}"
+          alt="{{ section.settings.title | escape }}"
+          width="150"
+          height="150"
+          loading="eager"
+          class="product-image"
+        >
+      {%- endif -%}
+      <div class="header-content">
+        <h1>{{ section.settings.title | default: 'Build Your Drink' }}</h1>
+        {%- if section.settings.description -%}
+          <p class="description">{{ section.settings.description }}</p>
+        {%- endif -%}
+      </div>
+    </header>
+
+    {%- comment -%} Product availability check {%- endcomment -%}
+    {%- if product == blank and default_variant_id == blank -%}
+      <div class="message message-warning" role="alert">
+        Product not found. Please configure the product handle in section settings.
+      </div>
+    {%- endif -%}
+
+    {%- comment -%} Product form {%- endcomment -%}
+    <form action="/cart/add" method="post" enctype="multipart/form-data" 
+          id="drink-builder-form-{{ section.id }}" 
+          class="drink-builder-form" 
+          data-wtf-ajax>
+      
+      {%- comment -%} Hidden inputs for cart submission {%- endcomment -%}
+      <input type="hidden" name="id" value="{%- if product -%}{{ product.selected_or_first_available_variant.id }}{%- else -%}{{ default_variant_id }}{%- endif -%}">
+      <input type="number" name="quantity" min="1" value="1" style="display:none;">
+      
+      {%- comment -%} Line Item Properties {%- endcomment -%}
+      <input type="hidden" name="properties[Strain]" value="">
+      <input type="hidden" name="properties[Mix]" value="No">
+      <input type="hidden" name="properties[Strain A]" value="">
+      <input type="hidden" name="properties[Strain B]" value="">
+      <input type="hidden" name="properties[Flavors & Pumps]" value="">
+      <input type="hidden" name="properties[Notes]" value="">
+
+      {%- comment -%} Size Selection {%- endcomment -%}
+      {%- if section.settings.show_size_selection -%}
+        <section class="size-selection" aria-labelledby="size-title">
+          <h3 id="size-title">{{ section.settings.size_title | default: 'Choose a size' }}</h3>
+          <div class="size-options" role="radiogroup" aria-label="Select size">
+            {%- for s in 'Medium,Large,Gallon' | split: ',' -%}
+              <button type="button"
+                      class="size-selector{% if s == 'Medium' %} active{% endif %}"
+                      data-option="Size"
+                      data-value="{{ s }}"
+                      data-size="{{ s }}"
+                      role="radio"
+                      aria-checked="{% if s == 'Medium' %}true{% else %}false{% endif %}">
+                <span class="size-letter">{{ s | slice: 0,1 }}</span>
+                <span class="size-name">{{ s }}</span>
+                <span class="size-price">
+                  {%- case s -%}
+                    {%- when 'Medium' -%}${{ price_medium }}
+                    {%- when 'Large' -%}${{ price_large }}
+                    {%- when 'Gallon' -%}${{ price_gallon }}
+                  {%- endcase -%}
+                </span>
+              </button>
+            {%- endfor -%}
+          </div>
+        </section>
+      {%- endif -%}
+
+      {%- comment -%} Strain Selection {%- endcomment -%}
+      {%- if section.settings.show_strain_selection -%}
+        <section class="strain-selection" aria-labelledby="strain-title">
+          <h3 id="strain-title">{{ section.settings.strain_title | default: 'Choose your strain' }}</h3>
+          <div class="strain-options" role="radiogroup" aria-label="Select strain">
+            {%- for strain in strains -%}
+              {%- assign clean_strain = strain | strip -%}
+              <button type="button"
+                      class="strain-selector"
+                      data-strain="{{ clean_strain }}"
+                      role="radio"
+                      aria-checked="false">
+                {{ clean_strain }}
+              </button>
+            {%- endfor -%}
+            {%- if section.settings.show_mix_option -%}
+              <button type="button"
+                      class="strain-selector mix-selector"
+                      data-strain="Mix"
+                      role="radio"
+                      aria-checked="false">
+                {{ section.settings.mix_label | default: 'Mix (½+½)' }}
+              </button>
+            {%- endif -%}
+          </div>
+          
+          {%- comment -%} Mix strain pickers {%- endcomment -%}
+          {%- if section.settings.show_mix_option -%}
+            <div id="mix-strains" class="mix-strains" style="display:none;">
+              <div class="mix-strain-group">
+                <label for="strain-a-{{ section.id }}">Strain A:</label>
+                <select id="strain-a-{{ section.id }}" name="strain-a">
+                  <option value="">Select...</option>
+                  {%- for strain in strains -%}
+                    {%- assign clean_strain = strain | strip -%}
+                    <option value="{{ clean_strain }}">{{ clean_strain }}</option>
+                  {%- endfor -%}
+                </select>
+              </div>
+              <div class="mix-strain-group">
+                <label for="strain-b-{{ section.id }}">Strain B:</label>
+                <select id="strain-b-{{ section.id }}" name="strain-b">
+                  <option value="">Select...</option>
+                  {%- for strain in strains -%}
+                    {%- assign clean_strain = strain | strip -%}
+                    <option value="{{ clean_strain }}">{{ clean_strain }}</option>
+                  {%- endfor -%}
+                </select>
+              </div>
+            </div>
+          {%- endif -%}
+        </section>
+      {%- endif -%}
+
+      {%- comment -%} Pricing Display {%- endcomment -%}
+      {%- if section.settings.show_pricing -%}
+        <section class="pricing-section" aria-live="polite" aria-atomic="true">
+          <div id="pump-counter" class="pump-counter"></div>
+          <div id="price-display" class="price-display">
+            <span class="current-price">${{ price_medium }}</span>
+          </div>
+        </section>
+      {%- endif -%}
+
+      {%- comment -%} Flavor Selection {%- endcomment -%}
+      {%- if section.settings.show_flavor_selection and flavors.size > 0 -%}
+        <section class="flavor-selection" aria-labelledby="flavor-title">
+          <h3 id="flavor-title">{{ section.settings.flavor_title | default: 'Pick your flavors' }}</h3>
+          <div class="flavor-grid" role="list">
+            {%- for flavor in flavors -%}
+              <button type="button"
+                      class="flavor-option"
+                      data-flavor="{{ flavor | escape }}"
+                      role="listitem"
+                      aria-pressed="false">
+                {{ flavor }}
+              </button>
+            {%- endfor -%}
+          </div>
+          <div id="selected-flavors" class="selected-flavors" aria-live="polite" aria-atomic="true"></div>
+        </section>
+      {%- endif -%}
+
+      {%- comment -%} Notes Section {%- endcomment -%}
+      {%- if section.settings.show_notes -%}
+        <section class="notes-section">
+          <label for="wtf-notes-{{ section.id }}" class="notes-label">
+            {{ section.settings.notes_title | default: 'Order notes' }}
+          </label>
+          <textarea 
+            id="wtf-notes-{{ section.id }}" 
+            rows="2" 
+            class="notes-textarea"
+            placeholder="{{ section.settings.notes_placeholder | default: 'Any special instructions?' }}">
+          </textarea>
+        </section>
+      {%- endif -%}
+
+      {%- comment -%} Add to Cart Button {%- endcomment -%}
+      <section class="cart-actions">
+        <button id="wtf-add-to-cart-{{ section.id }}" 
+                class="wtf-add-to-cart-btn" 
+                type="button">
+          {{ section.settings.button_text | default: 'Add to Cart' }}
+        </button>
+      </section>
+    </form>
+
+    <div id="system-messages-{{ section.id }}" class="system-messages" aria-live="polite" aria-atomic="true"></div>
+  </div>
+</section>
+
+{%- comment -%} Enhanced JavaScript with variant mapping {%- endcomment -%}
+<script>
+(function(){
+  const sectionId = '{{ section.id }}';
+  const form = document.getElementById(`drink-builder-form-${sectionId}`);
+  if (!form) return;
+
+  // Set up variant mapping if product is available
+  {%- if product -%}
+  window.WTF_VARIANT_MAP = window.WTF_VARIANT_MAP || {};
+  window.WTF_VARIANT_MAP[sectionId] = {
+    "Medium": {{ product.variants | where: "option1","Medium" | first | default: nil | map: "id" | first | default: "null" }},
+    "Large":  {{ product.variants | where: "option1","Large"  | first | default: nil | map: "id" | first | default: "null" }},
+    "Gallon": {{ product.variants | where: "option1","Gallon" | first | default: nil | map: "id" | first | default: "null" }}
+  };
+  {%- endif -%}
+
+  // Price mapping
+  const priceMap = {
+    "Medium": {{ price_medium }},
+    "Large": {{ price_large }},
+    "Gallon": {{ price_gallon }}
+  };
+
+  // Initialize the flavor system for this section
+  if (window.WTFFlavorSystem) {
+    window.WTFFlavorSystem.init(sectionId, {
+      variantMap: window.WTF_VARIANT_MAP ? window.WTF_VARIANT_MAP[sectionId] : null,
+      priceMap: priceMap,
+      pumpLimits: {
+        "Medium": {{ section.settings.pump_limit_medium | default: 4 }},
+        "Large": {{ section.settings.pump_limit_large | default: 6 }},
+        "Gallon": {{ section.settings.pump_limit_gallon | default: 12 }}
+      }
+    });
+  }
+})();
+</script>
+
+<style>
+.wtf-drink-builder {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.builder-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.product-image {
+  border-radius: 50%;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+}
+
+.header-content h1 {
+  margin: 0 0 6px 0;
+  font-size: clamp(24px, 3.5vw, 34px);
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: #2E2E2E;
+}
+
+.description {
+  margin: 0;
+  color: #666;
+}
+
+.drink-builder-form {
+  display: grid;
+  gap: 24px;
+}
+
+.size-selection,
+.strain-selection,
+.flavor-selection,
+.notes-section {
+  margin: 16px 0;
+}
+
+.size-selection h3,
+.strain-selection h3,
+.flavor-selection h3 {
+  margin: 0 0 12px 0;
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: #333;
+}
+
+.size-options,
+.strain-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.size-selector,
+.strain-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 16px;
+  border: 2px solid #E0E0E0;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  font-size: 14px;
+  min-width: 80px;
+}
+
+.size-selector:hover,
+.strain-selector:hover {
+  border-color: #ff6600;
+  box-shadow: 0 4px 12px rgba(255, 102, 0, 0.15);
+}
+
+.size-selector:focus-visible,
+.strain-selector:focus-visible {
+  outline: 2px solid #ff6600;
+  outline-offset: 2px;
+}
+
+.size-selector.active,
+.strain-selector.active {
+  border-color: #ff6600;
+  background: #ff6600;
+  color: white;
+  box-shadow: 0 4px 16px rgba(255, 102, 0, 0.3);
+}
+
+.flavor-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.flavor-option {
+  padding: 8px 16px;
+  border: 2px solid #E0E0E0;
+  border-radius: 20px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.flavor-option:hover {
+  border-color: #ff6600;
+  box-shadow: 0 2px 8px rgba(255, 102, 0, 0.15);
+}
+
+.flavor-option:focus-visible {
+  outline: 2px solid #ff6600;
+  outline-offset: 2px;
+}
+
+.flavor-option.selected {
+  border-color: #ff6600;
+  background: #ff6600;
+  color: white;
+}
+
+.notes-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #E0E0E0;
+  border-radius: 8px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.wtf-add-to-cart-btn {
+  width: 100%;
+  padding: 16px 24px;
+  background: #ff6600;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.wtf-add-to-cart-btn:hover {
+  background: #e55a00;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(255, 102, 0, 0.3);
+}
+
+.wtf-add-to-cart-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.mix-strains {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+}
+
+.mix-strain-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mix-strain-group label {
+  font-weight: 600;
+  min-width: 80px;
+}
+
+.mix-strain-group select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #E0E0E0;
+  border-radius: 6px;
+  font-family: inherit;
+}
+
+.pricing-section {
+  text-align: center;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.current-price {
+  font-size: 24px;
+  font-weight: 800;
+  color: #ff6600;
+}
+
+.system-messages {
+  margin-top: 16px;
+}
+
+.message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+.message-warning {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+}
+
+@media (max-width: 768px) {
+  .builder-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .size-options,
+  .strain-options {
+    justify-content: center;
+  }
+}
+</style>
+
+{% schema %}
+{
+  "name": "WTF Drink Builder",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Product Configuration"
+    },
+    {
+      "type": "text",
+      "id": "product_handle",
+      "label": "Product Handle",
+      "default": "custom-kratom-tea",
+      "info": "The Shopify product handle (e.g., 'custom-kratom-tea', 'custom-kava-drink')"
+    },
+    {
+      "type": "text",
+      "id": "default_variant_id",
+      "label": "Default Variant ID",
+      "info": "Fallback variant ID if product is not found"
+    },
+    {
+      "type": "header",
+      "content": "Display Settings"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Page Title",
+      "default": "Build Your Drink"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "Description",
+      "default": "Pick a size, choose flavors, and we'll handle the pumps."
+    },
+    {
+      "type": "image_picker",
+      "id": "product_image",
+      "label": "Product Image"
+    },
+    {
+      "type": "header",
+      "content": "Pricing Configuration"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_pricing",
+      "label": "Show pricing display",
+      "default": true
+    },
+    {
+      "type": "number",
+      "id": "price_medium",
+      "label": "Medium Price ($)",
+      "default": 9
+    },
+    {
+      "type": "number",
+      "id": "price_large",
+      "label": "Large Price ($)",
+      "default": 15
+    },
+    {
+      "type": "number",
+      "id": "price_gallon",
+      "label": "Gallon Price ($)",
+      "default": 100
+    },
+    {
+      "type": "header",
+      "content": "Size Selection"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_size_selection",
+      "label": "Show size selection",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "size_title",
+      "label": "Size Section Title",
+      "default": "Choose a size"
+    },
+    {
+      "type": "header",
+      "content": "Strain Selection"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_strain_selection",
+      "label": "Show strain selection",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "strain_title",
+      "label": "Strain Section Title",
+      "default": "Choose your strain"
+    },
+    {
+      "type": "textarea",
+      "id": "strain_list",
+      "label": "Available Strains",
+      "default": "Green,Red,White,Yellow",
+      "info": "Comma-separated list of strain names"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_mix_option",
+      "label": "Show mix option",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "mix_label",
+      "label": "Mix Option Label",
+      "default": "Mix (½+½)"
+    },
+    {
+      "type": "header",
+      "content": "Flavor Selection"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_flavor_selection",
+      "label": "Show flavor selection",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "flavor_title",
+      "label": "Flavor Section Title",
+      "default": "Pick your flavors"
+    },
+    {
+      "type": "textarea",
+      "id": "flavor_list",
+      "label": "Available Flavors",
+      "default": "Vanilla,Caramel,Hazelnut,Coconut,Mango,Peach,Strawberry,Blueberry,Raspberry,Cherry,Lime,Lemon,Orange,Pineapple,Passion Fruit,Watermelon,Green Apple,Banana,Chocolate,Mocha,Cinnamon,Pumpkin Spice,Mint,Lavender,Rose",
+      "info": "Comma-separated list of flavor names"
+    },
+    {
+      "type": "header",
+      "content": "Pump Limits"
+    },
+    {
+      "type": "number",
+      "id": "pump_limit_medium",
+      "label": "Medium Pump Limit",
+      "default": 4
+    },
+    {
+      "type": "number",
+      "id": "pump_limit_large",
+      "label": "Large Pump Limit",
+      "default": 6
+    },
+    {
+      "type": "number",
+      "id": "pump_limit_gallon",
+      "label": "Gallon Pump Limit",
+      "default": 12
+    },
+    {
+      "type": "header",
+      "content": "Notes Section"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_notes",
+      "label": "Show notes section",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "notes_title",
+      "label": "Notes Section Title",
+      "default": "Order notes"
+    },
+    {
+      "type": "text",
+      "id": "notes_placeholder",
+      "label": "Notes Placeholder",
+      "default": "Any special instructions?"
+    },
+    {
+      "type": "header",
+      "content": "Button Configuration"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Add to Cart Button Text",
+      "default": "Add to Cart"
+    }
+  ],
+  "presets": [
+    {
+      "name": "WTF Drink Builder"
+    }
+  ]
+}
+{% endschema %}
+

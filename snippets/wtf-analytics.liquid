@@ -1,0 +1,395 @@
+{%- comment -%}
+WTF Analytics & Pixel Tracking
+Comprehensive tracking for Meta, Google, TikTok, Snapchat, and more
+{%- endcomment -%}
+
+{%- comment -%} Google Analytics 4 {%- endcomment -%}
+{%- if settings.google_analytics_id != blank -%}
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ settings.google_analytics_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ settings.google_analytics_id }}', {
+      'send_page_view': true,
+      'enhanced_ecommerce': true,
+      'custom_map': {
+        'custom_parameter_1': 'strain',
+        'custom_parameter_2': 'flavors',
+        'custom_parameter_3': 'mix'
+      }
+    });
+  </script>
+{%- endif -%}
+
+{%- comment -%} Google Ads Conversion Tracking {%- endcomment -%}
+{%- if settings.google_ads_id != blank -%}
+  <script async src="https://www.googletagmanager.com/gtag/js?id={{ settings.google_ads_id }}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ settings.google_ads_id }}');
+  </script>
+{%- endif -%}
+
+{%- comment -%} Meta Pixel (Facebook/Instagram) {%- endcomment -%}
+{%- if settings.facebook_pixel_id != blank -%}
+  <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    
+    fbq('init', '{{ settings.facebook_pixel_id }}');
+    fbq('track', 'PageView');
+  </script>
+  <noscript>
+    <img height="1" width="1" style="display:none" 
+         src="https://www.facebook.com/tr?id={{ settings.facebook_pixel_id }}&ev=PageView&noscript=1"/>
+  </noscript>
+{%- endif -%}
+
+{%- comment -%} TikTok Pixel {%- endcomment -%}
+{%- if settings.tiktok_pixel_id != blank -%}
+  <script>
+    !function (w, d, t) {
+      w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
+      ttq.load('{{ settings.tiktok_pixel_id }}');
+      ttq.page();
+    }(window, document, 'ttq');
+  </script>
+{%- endif -%}
+
+{%- comment -%} Snapchat Pixel {%- endcomment -%}
+{%- if settings.snapchat_pixel_id != blank -%}
+  <script type='text/javascript'>
+    (function(e,t,n){if(e.snaptr)return;var a=e.snaptr=function()
+    {a.handleRequest?a.handleRequest.apply(a,arguments):a.queue.push(arguments)};
+    a.queue=[];var s='script';r=t.createElement(s);r.async=!0;
+    r.src=n;var u=t.getElementsByTagName(s)[0];
+    u.parentNode.insertBefore(r,u);})(window,document,
+    'https://sc-static.net/scevent.min.js');
+    
+    snaptr('init', '{{ settings.snapchat_pixel_id }}', {
+      'user_email': '__INSERT_USER_EMAIL__'
+    });
+    snaptr('track', 'PAGE_VIEW');
+  </script>
+{%- endif -%}
+
+{%- comment -%} Pinterest Tag {%- endcomment -%}
+{%- if settings.pinterest_tag_id != blank -%}
+  <script>
+    !function(e){if(!window.pintrk){window.pintrk = function () {
+    window.pintrk.queue.push(Array.prototype.slice.call(arguments))};var
+      n=window.pintrk;n.queue=[],n.version="3.0";var
+      t=document.createElement("script");t.async=!0,t.src=e;var
+      r=document.getElementsByTagName("script")[0];
+      r.parentNode.insertBefore(t,r)}}("https://s.pinimg.com/ct/core.js");
+    pintrk('load', '{{ settings.pinterest_tag_id }}', {em: '<user_email_address>'});
+    pintrk('page');
+  </script>
+  <noscript>
+    <img height="1" width="1" style="display:none;" alt=""
+         src="https://ct.pinterest.com/v3/?event=init&tid={{ settings.pinterest_tag_id }}&pd[em]=<hashed_email_address>&noscript=1" />
+  </noscript>
+{%- endif -%}
+
+{%- comment -%} Microsoft Clarity {%- endcomment -%}
+{%- if settings.clarity_project_id != blank -%}
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "{{ settings.clarity_project_id }}");
+  </script>
+{%- endif -%}
+
+{%- comment -%} Hotjar Tracking {%- endcomment -%}
+{%- if settings.hotjar_site_id != blank -%}
+  <script>
+    (function(h,o,t,j,a,r){
+        h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
+        h._hjSettings={hjid:{{ settings.hotjar_site_id }},hjsv:6};
+        a=o.getElementsByTagName('head')[0];
+        r=o.createElement('script');r.async=1;
+        r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
+        a.appendChild(r);
+    })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
+  </script>
+{%- endif -%}
+
+{%- comment -%} Enhanced Ecommerce Events {%- endcomment -%}
+<script>
+  // WTF Analytics Event Tracking
+  window.WTFAnalytics = window.WTFAnalytics || {
+    // Track product view events
+    trackViewItem: function(productData) {
+      const eventData = {
+        event: 'view_item',
+        ecommerce: {
+          currency: '{{ cart.currency.iso_code }}',
+          value: productData.price || 0,
+          items: [{
+            item_id: productData.id || productData.handle,
+            item_name: productData.title,
+            item_category: productData.type || 'Custom Drink',
+            item_variant: productData.variant_title || 'Default',
+            price: productData.price || 0,
+            quantity: 1,
+            custom_parameters: {
+              strain: productData.strain || '',
+              flavors: productData.flavors || '',
+              mix: productData.mix || 'No'
+            }
+          }]
+        }
+      };
+
+      // Send to Google Analytics
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'view_item', eventData.ecommerce);
+      }
+
+      // Send to Facebook Pixel
+      if (typeof fbq !== 'undefined') {
+        fbq('track', 'ViewContent', {
+          content_ids: [productData.id || productData.handle],
+          content_type: 'product',
+          value: productData.price || 0,
+          currency: '{{ cart.currency.iso_code }}'
+        });
+      }
+
+      // Send to TikTok Pixel
+      if (typeof ttq !== 'undefined') {
+        ttq.track('ViewContent', {
+          content_id: productData.id || productData.handle,
+          content_type: 'product',
+          value: productData.price || 0,
+          currency: '{{ cart.currency.iso_code }}'
+        });
+      }
+
+      // Send to Snapchat Pixel
+      if (typeof snaptr !== 'undefined') {
+        snaptr('track', 'VIEW_CONTENT', {
+          'item_ids': [productData.id || productData.handle],
+          'item_category': productData.type || 'Custom Drink',
+          'currency': '{{ cart.currency.iso_code }}',
+          'price': productData.price || 0
+        });
+      }
+
+      // Send to Pinterest
+      if (typeof pintrk !== 'undefined') {
+        pintrk('track', 'pagevisit', {
+          property: 'product_view',
+          product_id: productData.id || productData.handle
+        });
+      }
+
+      console.log('WTF Analytics: View Item tracked', eventData);
+    },
+
+    // Track add to cart events
+    trackAddToCart: function(cartData) {
+      const eventData = {
+        event: 'add_to_cart',
+        ecommerce: {
+          currency: '{{ cart.currency.iso_code }}',
+          value: cartData.total_price || 0,
+          items: cartData.items.map(item => ({
+            item_id: item.variant_id,
+            item_name: item.product_title,
+            item_category: item.product_type || 'Custom Drink',
+            item_variant: item.variant_title,
+            price: item.price,
+            quantity: item.quantity,
+            custom_parameters: {
+              strain: item.properties?.Strain || '',
+              flavors: item.properties?.['Flavors & Pumps'] || '',
+              mix: item.properties?.Mix || 'No',
+              notes: item.properties?.Notes || ''
+            }
+          }))
+        }
+      };
+
+      // Send to Google Analytics
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'add_to_cart', eventData.ecommerce);
+      }
+
+      // Send to Facebook Pixel
+      if (typeof fbq !== 'undefined') {
+        fbq('track', 'AddToCart', {
+          content_ids: cartData.items.map(item => item.variant_id),
+          content_type: 'product',
+          value: cartData.total_price || 0,
+          currency: '{{ cart.currency.iso_code }}'
+        });
+      }
+
+      // Send to TikTok Pixel
+      if (typeof ttq !== 'undefined') {
+        ttq.track('AddToCart', {
+          content_id: cartData.items.map(item => item.variant_id).join(','),
+          content_type: 'product',
+          value: cartData.total_price || 0,
+          currency: '{{ cart.currency.iso_code }}'
+        });
+      }
+
+      // Send to Snapchat Pixel
+      if (typeof snaptr !== 'undefined') {
+        snaptr('track', 'ADD_CART', {
+          'item_ids': cartData.items.map(item => item.variant_id),
+          'item_category': 'Custom Drink',
+          'currency': '{{ cart.currency.iso_code }}',
+          'price': cartData.total_price || 0
+        });
+      }
+
+      // Send to Pinterest
+      if (typeof pintrk !== 'undefined') {
+        pintrk('track', 'addtocart', {
+          value: cartData.total_price || 0,
+          order_quantity: cartData.items.reduce((sum, item) => sum + item.quantity, 0),
+          currency: '{{ cart.currency.iso_code }}'
+        });
+      }
+
+      console.log('WTF Analytics: Add to Cart tracked', eventData);
+    },
+
+    // Track purchase events
+    trackPurchase: function(orderData) {
+      const eventData = {
+        event: 'purchase',
+        ecommerce: {
+          transaction_id: orderData.order_number,
+          value: orderData.total_price,
+          currency: '{{ cart.currency.iso_code }}',
+          items: orderData.line_items.map(item => ({
+            item_id: item.variant_id,
+            item_name: item.title,
+            item_category: item.product_type || 'Custom Drink',
+            item_variant: item.variant_title,
+            price: item.price,
+            quantity: item.quantity
+          }))
+        }
+      };
+
+      // Send to all platforms
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'purchase', eventData.ecommerce);
+      }
+
+      if (typeof fbq !== 'undefined') {
+        fbq('track', 'Purchase', {
+          value: orderData.total_price,
+          currency: '{{ cart.currency.iso_code }}'
+        });
+      }
+
+      if (typeof ttq !== 'undefined') {
+        ttq.track('CompletePayment', {
+          value: orderData.total_price,
+          currency: '{{ cart.currency.iso_code }}'
+        });
+      }
+
+      if (typeof snaptr !== 'undefined') {
+        snaptr('track', 'PURCHASE', {
+          'currency': '{{ cart.currency.iso_code }}',
+          'price': orderData.total_price
+        });
+      }
+
+      if (typeof pintrk !== 'undefined') {
+        pintrk('track', 'checkout', {
+          value: orderData.total_price,
+          currency: '{{ cart.currency.iso_code }}'
+        });
+      }
+
+      console.log('WTF Analytics: Purchase tracked', eventData);
+    },
+
+    // Track custom events
+    trackCustomEvent: function(eventName, eventData) {
+      if (typeof gtag !== 'undefined') {
+        gtag('event', eventName, eventData);
+      }
+
+      if (typeof fbq !== 'undefined') {
+        fbq('trackCustom', eventName, eventData);
+      }
+
+      console.log('WTF Analytics: Custom event tracked', eventName, eventData);
+    }
+  };
+
+  // Auto-track page views for builder pages
+  document.addEventListener('DOMContentLoaded', function() {
+    // Check if we're on a product builder page
+    const isBuilderPage = window.location.pathname.includes('/kratom-teas') || 
+                         window.location.pathname.includes('/kava-drinks');
+    
+    if (isBuilderPage) {
+      // Extract product data from page context
+      const productData = {
+        handle: window.WTF_PRODUCT_HANDLE || 'custom-drink',
+        title: document.querySelector('h1')?.textContent || 'Custom Drink',
+        type: 'Custom Drink',
+        price: 9.00 // Default price, will be updated by size selection
+      };
+
+      // Track view_item event
+      WTFAnalytics.trackViewItem(productData);
+    }
+  });
+
+  // Listen for add to cart events
+  document.addEventListener('wtf:cart:added', function(event) {
+    if (event.detail && event.detail.items) {
+      WTFAnalytics.trackAddToCart(event.detail);
+    }
+  });
+</script>
+
+{%- comment -%} Geo-targeting and Competitor Analysis {%- endcomment -%}
+<script>
+  // Enhanced geo-targeting for competitor displacement
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      
+      // Send location data to analytics for geo-targeting
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'user_location', {
+          'custom_parameter_latitude': lat,
+          'custom_parameter_longitude': lng
+        });
+      }
+
+      if (typeof fbq !== 'undefined') {
+        fbq('trackCustom', 'UserLocation', {
+          latitude: lat,
+          longitude: lng
+        });
+      }
+    });
+  }
+</script>
+
