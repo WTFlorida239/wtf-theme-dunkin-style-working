@@ -1,13 +1,10 @@
 {% comment %}
-  Kava Drinks page — Dunkin-style parity with Kratom Teas.
-  Only one image on the page: /assets/kava_drinks_150x150.png
-  Uses the shared renderer and the Kava flavor list. Cart/price logic mirrors Kratom.
-
-  If this page is NOT a product template, ensure one of the following is set before your
-  variant/cart initializer runs:
+  Kava Drinks — parity UX with Kratom; single hero image.
+  If this is not a product template, set ONE of:
     window.WTF_PRODUCT_HANDLE = 'your-kava-product-handle'
     OR
-    window.WTF_PRODUCT_JSON = { ...product json... }
+    window.WTF_PRODUCT_JSON   = { ...product json... }
+  before the ajax cart script runs (see theme.liquid include below).
 {% endcomment %}
 
 {% section 'header' %}
@@ -22,24 +19,21 @@
       loading="eager"
       style="max-width:150px; height:auto;"
     >
-    <h1 style="margin-top: 10px;">Kava Drinks</h1>
+    <h1 style="margin-top:10px;">Kava Drinks</h1>
     <p style="color:#555; margin-top: 6px;">Choose your flavor, then add to cart.</p>
   </header>
 
   {% render 'wtf-flavor-data' %}
   {% render 'wtf-flavor-options', title: 'Choose your flavor', flavors: wtfKavaFlavors, option_name: 'Flavor' %}
 
-  {%- comment -%}
-    Expected form wrapper (example). Ensure your theme has a single form wrapping options + submit.
-    If you already have a form elsewhere on the page, remove this and use your existing one.
-  {%- endcomment -%}
   <form method="post" action="/cart/add" data-wtf-ajax style="margin-top:16px;">
     <input type="hidden" name="id" value="">
-    <div style="display:flex; gap: 8px; align-items:center; margin-top: 10px;">
+    <div style="display:flex; gap:8px; align-items:center; margin-top:10px;">
       <label for="wtf-qty-kava" style="min-width:56px;">Qty</label>
       <input id="wtf-qty-kava" name="quantity" type="number" min="1" value="1" style="width:80px;">
       <button type="submit" class="wtf-primary-cta" style="margin-left:auto;">Add to cart</button>
     </div>
+    <div id="wtf-price" data-price style="margin-top:8px; font-weight:600;"></div>
   </form>
 </main>
 
