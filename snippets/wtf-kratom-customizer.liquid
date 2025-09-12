@@ -1,732 +1,250 @@
 {% comment %}
-  Kratom Tea Customizer - Size variants only, everything else as Line Item Properties
-  Params:
-    - product (Object) - Shopify product object
-    - flavors (Array) - Available flavors
+  Renders Size chips (from product), Strain chips (+Mix 1/2+1/2), Flavor chips, and an AJAX form.
+  Requires globals from the page:
+    - variantIdBySize, priceBySize, pumpLimitBySize
+  Also requires 'flavors' array (from wtf-flavor-data).
 {% endcomment %}
 
-<div class="wtf-kratom-customizer">
-  <!-- Product Header -->
-  <div class="wtf-product-header">
-    <div class="wtf-product-image">
-      <img src="{{ 'kratom_tea_drink.png' | asset_url }}" alt="Custom Kratom Tea" width="200" height="200" loading="eager">
-    </div>
-    <div class="wtf-product-info">
-      <h1 class="wtf-product-title">Custom Kratom Tea</h1>
-      <div class="wtf-product-price" id="wtf-price">$9.00</div>
-      <p class="wtf-product-description">Choose your size, strain, and flavors. Pump limits vary by size.</p>
+{% assign size_values = product.options_with_values | first | default: null %}
+{% assign sizes = size_values.values | default: 'Medium,Large,Gallon' | split: ',' %}
+
+<section id="wtf-customizer" style="display:grid;gap:16px">
+  <!-- SIZE -->
+  <div class="wtf-card">
+    <div class="wtf-label">Size</div>
+    <div class="wtf-row">
+      {% for s in sizes %}
+        <button type="button" class="wtf-chip" data-option="Size" data-value="{{ s | strip }}" aria-pressed="false">
+          {{ s | strip }}
+        </button>
+      {% endfor %}
     </div>
   </div>
 
-  <!-- Ordering Form -->
-  <form method="post" action="/cart/add" data-wtf-kratom-form class="wtf-order-form">
-    
-    <!-- Hidden Inputs for Line Item Properties -->
-    <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+  <!-- STRAIN + MIX -->
+  <div class="wtf-card">
+    <div class="wtf-label">Strain</div>
+    <div class="wtf-row">
+      {% assign strains = 'Green,Red,White,Yellow' | split: ',' %}
+      {% for st in strains %}
+        <button type="button" class="wtf-chip" data-option="Strain" data-value="{{ st }}" aria-pressed="false">
+          {{ st }}
+        </button>
+      {% endfor %}
+      <button type="button" class="wtf-chip wtf-mix" data-option="Mix" data-value="Yes" aria-pressed="false">
+        Mix ½ + ½
+      </button>
+    </div>
+    <div id="wtf-mix-picker" style="display:none;margin-top:10px">
+      <div class="wtf-sub">Choose two strains</div>
+      <div class="wtf-row">
+        {% for st in strains %}
+          <button type="button" class="wtf-chip" data-option="Strain A" data-value="{{ st }}" aria-pressed="false">
+            {{ st }}
+          </button>
+        {% endfor %}
+      </div>
+      <div class="wtf-row" style="margin-top:8px">
+        {% for st in strains %}
+          <button type="button" class="wtf-chip" data-option="Strain B" data-value="{{ st }}" aria-pressed="false">
+            {{ st }}
+          </button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- FLAVORS -->
+  <div class="wtf-card">
+    <div class="wtf-label">Flavors</div>
+    {% render 'wtf-flavor-options', title: 'Choose Your Flavor(s)', flavors: flavors, option_name: 'Flavor' %}
+    <div id="wtf-pump-hint" class="wtf-sub" style="margin-top:8px;"></div>
+  </div>
+
+  <!-- NOTES + ATC -->
+  <form id="wtf-form" method="post" action="/cart/add" data-wtf-ajax class="wtf-card" style="display:grid;gap:12px;">
+    <input id="wtf-variant-id" type="hidden" name="id" value="">
     <input type="hidden" name="properties[Strain]" value="">
     <input type="hidden" name="properties[Mix]" value="No">
     <input type="hidden" name="properties[Strain A]" value="">
     <input type="hidden" name="properties[Strain B]" value="">
     <input type="hidden" name="properties[Flavors & Pumps]" value="">
-    <input type="hidden" name="properties[Notes]" value="">
+    <label for="wtf-notes" class="wtf-label">Any special requests?</label>
+    <textarea
+      id="wtf-notes"
+      name="properties[Notes]"
+      class="wtf-input"
+      placeholder="e.g., extra ice, no sweetener"
+    ></textarea>
 
-    <!-- Size Selection -->
-    <div class="wtf-option-section">
-      <h3 class="wtf-section-title">☕ Choose Your Size</h3>
-      <div class="wtf-size-grid">
-        <button type="button" class="wtf-option-chip wtf-size-chip" data-size="Medium" aria-pressed="false">
-          <div class="wtf-size-info">
-            <span class="wtf-size-name">Medium</span>
-            <span class="wtf-size-details">12 oz – $9.00</span>
-            <span class="wtf-pump-limit">Up to 4 pumps</span>
-          </div>
-        </button>
-        <button type="button" class="wtf-option-chip wtf-size-chip" data-size="Large" aria-pressed="false">
-          <div class="wtf-size-info">
-            <span class="wtf-size-name">Large</span>
-            <span class="wtf-size-details">16 oz – $15.00</span>
-            <span class="wtf-pump-limit">Up to 6 pumps</span>
-          </div>
-        </button>
-        <button type="button" class="wtf-option-chip wtf-size-chip" data-size="Gallon" aria-pressed="false">
-          <div class="wtf-size-info">
-            <span class="wtf-size-name">Gallon</span>
-            <span class="wtf-size-details">128 oz – $100.00</span>
-            <span class="wtf-pump-limit">Up to 12 pumps</span>
-          </div>
-        </button>
-      </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <label for="wtf-qty">Qty</label>
+      <input id="wtf-qty" name="quantity" type="number" min="1" value="1" class="wtf-input" style="width:90px">
+      <div id="wtf-price" class="wtf-price" style="margin-left:auto;"></div>
     </div>
 
-    <!-- Strain Selection -->
-    <div class="wtf-option-section">
-      <h3 class="wtf-section-title">🌿 Choose Your Strain</h3>
-      <div class="wtf-strain-grid">
-        <button type="button" class="wtf-option-chip wtf-strain-chip" data-strain="Green" aria-pressed="false">Green</button>
-        <button type="button" class="wtf-option-chip wtf-strain-chip" data-strain="Red" aria-pressed="false">Red</button>
-        <button type="button" class="wtf-option-chip wtf-strain-chip" data-strain="White" aria-pressed="false">White</button>
-        <button type="button" class="wtf-option-chip wtf-strain-chip" data-strain="Yellow" aria-pressed="false">Yellow</button>
-        <button type="button" class="wtf-option-chip wtf-mix-chip" data-strain="Mix" aria-pressed="false">Mix (½ & ½)</button>
-      </div>
-      
-      <!-- Mix Strain Selection (Hidden by default) -->
-      <div class="wtf-mix-selection" style="display: none;">
-        <div class="wtf-mix-strains">
-          <div class="wtf-strain-half">
-            <label>Strain A (½):</label>
-            <select class="wtf-strain-select" data-strain-position="A">
-              <option value="">Choose...</option>
-              <option value="Green">Green</option>
-              <option value="Red">Red</option>
-              <option value="White">White</option>
-              <option value="Yellow">Yellow</option>
-            </select>
-          </div>
-          <div class="wtf-strain-half">
-            <label>Strain B (½):</label>
-            <select class="wtf-strain-select" data-strain-position="B">
-              <option value="">Choose...</option>
-              <option value="Green">Green</option>
-              <option value="Red">Red</option>
-              <option value="White">White</option>
-              <option value="Yellow">Yellow</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Flavor Selection -->
-    <div class="wtf-option-section">
-      <h3 class="wtf-section-title">🍋 Flavors & Pumps</h3>
-      <p class="wtf-pump-info">Select flavors and adjust pump counts. <span class="wtf-pump-counter">Total: <strong>0</strong> pumps</span></p>
-      
-      <div class="wtf-flavor-grid">
-        {% for flavor in flavors %}
-          <div class="wtf-flavor-item" data-flavor="{{ flavor | strip }}">
-            <button type="button" class="wtf-flavor-chip">{{ flavor }}</button>
-            <div class="wtf-pump-controls" style="display: none;">
-              <button type="button" class="wtf-pump-btn wtf-pump-decrease">−</button>
-              <span class="wtf-pump-count">0</span>
-              <button type="button" class="wtf-pump-btn wtf-pump-increase">+</button>
-            </div>
-          </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <!-- Special Requests -->
-    <div class="wtf-option-section">
-      <h3 class="wtf-section-title">💬 Special Requests</h3>
-      <textarea class="wtf-notes-input" placeholder="Any special requests or notes?" rows="3"></textarea>
-    </div>
-
-    <!-- Quantity and Submit -->
-    <div class="wtf-submit-section">
-      <div class="wtf-quantity-control">
-        <label for="wtf-quantity">Quantity:</label>
-        <div class="wtf-qty-controls">
-          <button type="button" class="wtf-qty-btn wtf-qty-decrease">−</button>
-          <input type="number" id="wtf-quantity" name="quantity" value="1" min="1" max="10" class="wtf-qty-input">
-          <button type="button" class="wtf-qty-btn wtf-qty-increase">+</button>
-        </div>
-      </div>
-      
-      <button type="submit" class="wtf-add-to-cart-btn" disabled>
-        <span class="wtf-btn-text">Add to Cart</span>
-        <span class="wtf-btn-loading" style="display: none;">Adding...</span>
-      </button>
-    </div>
-
-    <!-- Validation Messages -->
-    <div class="wtf-validation-messages" style="display: none;"></div>
+    <button id="wtf-add" type="submit" class="wtf-cta">Add to cart</button>
+    <div id="wtf-status" aria-live="polite" class="wtf-sub"></div>
   </form>
-</div>
-
-
+</section>
 
 <style>
-  /* Kratom Customizer Styles */
-  .wtf-kratom-customizer { max-width: 900px; margin: 0 auto; padding: 20px; }
-  
-  .wtf-product-header { 
-    display: flex; gap: 30px; margin-bottom: 40px; align-items: center;
-    padding: 20px; background: #f8f9fa; border-radius: 12px;
-  }
-  .wtf-product-image img { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-  .wtf-product-info { flex: 1; }
-  .wtf-product-title { font-size: 2.5rem; font-weight: 700; margin: 0 0 15px; color: #333; }
-  .wtf-product-price { font-size: 2rem; font-weight: 600; color: #ff6600; margin-bottom: 15px; }
-  .wtf-product-description { color: #666; line-height: 1.6; font-size: 1.1rem; }
-
-  .wtf-option-section { margin-bottom: 35px; }
-  .wtf-section-title { 
-    font-size: 1.4rem; font-weight: 600; margin: 0 0 15px; color: #333;
-    border-bottom: 2px solid #ff6600; padding-bottom: 8px;
-  }
-
-  /* Size Grid */
-  .wtf-size-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-  .wtf-size-chip { padding: 20px; text-align: center; }
-  .wtf-size-info { display: flex; flex-direction: column; gap: 6px; }
-  .wtf-size-name { font-weight: 700; font-size: 1.2rem; }
-  .wtf-size-details { font-size: 1rem; color: #666; font-weight: 600; }
-  .wtf-pump-limit { font-size: 0.9rem; color: #888; }
-
-  /* Strain Grid */
-  .wtf-strain-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
-
-  /* Mix Selection */
-  .wtf-mix-selection { 
-    margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px;
-    border: 2px solid #ff6600;
-  }
-  .wtf-mix-strains { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .wtf-strain-half label { display: block; margin-bottom: 8px; font-weight: 600; }
-  .wtf-strain-select { 
-    width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px;
-    font-size: 1rem; background: white;
-  }
-  .wtf-strain-select:focus { border-color: #ff6600; outline: none; }
-
-  /* Option Chips */
-  .wtf-option-chip {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-height: 50px; padding: 12px 16px; width: 100%;
-    border: 2px solid #ddd; border-radius: 25px; background: #fff; color: #333;
-    font: inherit; font-weight: 600; cursor: pointer; 
-    transition: all 0.2s ease;
-  }
-  .wtf-option-chip:hover { 
-    border-color: #ff6600; transform: translateY(-2px); 
-    box-shadow: 0 4px 12px rgba(255,102,0,0.2);
-  }
-  .wtf-option-chip:focus { outline: 2px solid #ff6600; outline-offset: 2px; }
-  .wtf-option-chip[aria-pressed="true"] { 
-    border-color: #ff6600; background: #ff6600; color: white;
-    box-shadow: 0 4px 12px rgba(255,102,0,0.3);
-  }
-
-  /* Flavor Grid */
-  .wtf-flavor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-  .wtf-flavor-item { display: flex; flex-direction: column; gap: 8px; }
-  .wtf-flavor-chip { 
-    padding: 12px; border-radius: 20px; min-height: 44px;
-    border: 2px solid #ddd; background: white; cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  .wtf-flavor-chip:hover { border-color: #ff6600; }
-  .wtf-flavor-chip.active { border-color: #ff6600; background: #fff5f0; }
-
-  /* Pump Controls */
-  .wtf-pump-controls { 
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 8px; background: #f8f9fa; border-radius: 15px;
-  }
-  .wtf-pump-btn { 
-    width: 30px; height: 30px; border: 2px solid #ddd; border-radius: 50%;
-    background: white; font-size: 1.1rem; font-weight: 700; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.2s ease;
-  }
-  .wtf-pump-btn:hover { border-color: #ff6600; background: #ff6600; color: white; }
-  .wtf-pump-count { 
-    font-weight: 700; font-size: 1.1rem; min-width: 20px; text-align: center;
-  }
-
-  /* Pump Info */
-  .wtf-pump-info { 
-    margin-bottom: 20px; padding: 12px; background: #e8f4fd; border-radius: 8px;
-    border-left: 4px solid #0066cc;
-  }
-  .wtf-pump-counter { float: right; color: #0066cc; font-weight: 600; }
-
-  /* Notes */
-  .wtf-notes-input { 
-    width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px;
-    font-family: inherit; resize: vertical; font-size: 1rem;
-  }
-  .wtf-notes-input:focus { border-color: #ff6600; outline: none; }
-
-  /* Submit Section */
-  .wtf-submit-section { 
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 25px; background: #f8f9fa; border-radius: 12px; margin-top: 30px;
-  }
-  .wtf-quantity-control { display: flex; align-items: center; gap: 15px; }
-  .wtf-qty-controls { display: flex; align-items: center; gap: 8px; }
-  .wtf-qty-btn { 
-    width: 40px; height: 40px; border: 2px solid #ddd; border-radius: 50%;
-    background: white; font-size: 1.2rem; font-weight: 700; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .wtf-qty-btn:hover { border-color: #ff6600; background: #ff6600; color: white; }
-  .wtf-qty-input { 
-    width: 60px; height: 40px; text-align: center; border: 2px solid #ddd;
-    border-radius: 8px; font-size: 1.1rem; font-weight: 600;
-  }
-
-  /* Add to Cart Button */
-  .wtf-add-to-cart-btn { 
-    background: #ff6600; color: white; border: none; border-radius: 25px;
-    padding: 15px 30px; font-size: 1.2rem; font-weight: 700; cursor: pointer;
-    transition: all 0.2s ease; min-width: 160px;
-  }
-  .wtf-add-to-cart-btn:hover:not(:disabled) { 
-    background: #e55a00; transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255,102,0,0.3);
-  }
-  .wtf-add-to-cart-btn:disabled { 
-    background: #ccc; cursor: not-allowed; transform: none; box-shadow: none;
-  }
-
-  /* Validation Messages */
-  .wtf-validation-messages { 
-    margin-top: 15px; padding: 12px; background: #fee; border: 1px solid #fcc;
-    border-radius: 6px; color: #c33;
-  }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    .wtf-product-header { flex-direction: column; text-align: center; }
-    .wtf-size-grid { grid-template-columns: 1fr; }
-    .wtf-strain-grid { grid-template-columns: repeat(2, 1fr); }
-    .wtf-flavor-grid { grid-template-columns: repeat(2, 1fr); }
-    .wtf-submit-section { flex-direction: column; gap: 20px; }
-    .wtf-mix-strains { grid-template-columns: 1fr; }
-  }
+  .wtf-card{background:#fff;border:1px solid #eee;border-radius:16px;padding:14px}
+  .wtf-label{font-weight:800;margin-bottom:8px}
+  .wtf-sub{color:#555;font-size:14px}
+  .wtf-row{display:flex;flex-wrap:wrap;gap:8px}
+  .wtf-chip{background:#fff;border:1px solid #ddd;border-radius:999px;padding:10px 14px;min-height:40px;cursor:pointer;font-weight:600}
+  .wtf-chip[aria-pressed="true"]{border-color:#ff6600;box-shadow:0 0 0 2px rgba(255,102,0,.18)}
+  .wtf-input{border:1px solid #ddd;border-radius:10px;padding:10px;min-height:44px;width:100%}
+  .wtf-cta{background:#ff6600;color:#fff;border:none;border-radius:10px;padding:14px 16px;min-height:48px;font-weight:800;cursor:pointer}
+  .wtf-price{font-weight:800}
 </style>
 
 <script>
-(function() {
-  'use strict';
-
-  let selectedSize = null;
-  let selectedStrain = null;
-  let isMix = false;
-  let strainA = null;
-  let strainB = null;
-  let flavorPumps = {}; // { "Mango": 2, "Peach": 1 }
-  let currentPumpLimit = 4;
-
-  // Initialize
-  document.addEventListener('DOMContentLoaded', function() {
-    setupEventListeners();
-    updateValidation();
-  });
-
-  function setupEventListeners() {
-    const form = document.querySelector('[data-wtf-kratom-form]');
-    if (!form) return;
-
-    // Size selection
-    form.addEventListener('click', function(e) {
-      if (e.target.closest('.wtf-size-chip')) {
-        handleSizeSelection(e.target.closest('.wtf-size-chip'));
-      }
-    });
-
-    // Strain selection
-    form.addEventListener('click', function(e) {
-      if (e.target.closest('.wtf-strain-chip')) {
-        handleStrainSelection(e.target.closest('.wtf-strain-chip'));
-      } else if (e.target.closest('.wtf-mix-chip')) {
-        handleMixSelection(e.target.closest('.wtf-mix-chip'));
-      }
-    });
-
-    // Mix strain dropdowns
-    form.addEventListener('change', function(e) {
-      if (e.target.matches('.wtf-strain-select')) {
-        handleMixStrainChange(e.target);
-      }
-    });
-
-    // Flavor selection
-    form.addEventListener('click', function(e) {
-      if (e.target.closest('.wtf-flavor-chip')) {
-        handleFlavorSelection(e.target.closest('.wtf-flavor-chip'));
-      }
-    });
-
-    // Pump controls
-    form.addEventListener('click', function(e) {
-      if (e.target.closest('.wtf-pump-increase')) {
-        handlePumpChange(e.target.closest('.wtf-flavor-item'), 1);
-      } else if (e.target.closest('.wtf-pump-decrease')) {
-        handlePumpChange(e.target.closest('.wtf-flavor-item'), -1);
-      }
-    });
-
-    // Quantity controls
-    form.addEventListener('click', function(e) {
-      if (e.target.closest('.wtf-qty-increase')) {
-        adjustQuantity(1);
-      } else if (e.target.closest('.wtf-qty-decrease')) {
-        adjustQuantity(-1);
-      }
-    });
-
-    // Notes input
-    const notesInput = form.querySelector('.wtf-notes-input');
-    if (notesInput) {
-      notesInput.addEventListener('input', updateNotesProperty);
-    }
-
-    // Form submission
-    form.addEventListener('submit', handleFormSubmit);
-  }
-
-  function handleSizeSelection(chip) {
-    // Clear previous selection
-    document.querySelectorAll('.wtf-size-chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
-    
-    // Set new selection
-    chip.setAttribute('aria-pressed', 'true');
-    selectedSize = chip.dataset.size;
-    currentPumpLimit = pumpLimitBySize[selectedSize];
-    
-    // Update variant ID and price
-    updateVariantId();
-    updatePrice();
-    updatePumpLimit();
-    updateValidation();
-  }
-
-  function handleStrainSelection(chip) {
-    // Clear mix selection
-    isMix = false;
-    document.querySelector('.wtf-mix-chip').setAttribute('aria-pressed', 'false');
-    document.querySelector('.wtf-mix-selection').style.display = 'none';
-    
-    // Clear previous strain selection
-    document.querySelectorAll('.wtf-strain-chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
-    
-    // Set new selection
-    chip.setAttribute('aria-pressed', 'true');
-    selectedStrain = chip.dataset.strain;
-    
-    updateStrainProperties();
-    updateValidation();
-  }
-
-  function handleMixSelection(chip) {
-    // Clear single strain selection
-    selectedStrain = null;
-    document.querySelectorAll('.wtf-strain-chip').forEach(c => c.setAttribute('aria-pressed', 'false'));
-    
-    // Toggle mix
-    isMix = !isMix;
-    chip.setAttribute('aria-pressed', isMix.toString());
-    
-    const mixSelection = document.querySelector('.wtf-mix-selection');
-    mixSelection.style.display = isMix ? 'block' : 'none';
-    
-    if (!isMix) {
-      strainA = null;
-      strainB = null;
-      document.querySelectorAll('.wtf-strain-select').forEach(s => s.value = '');
-    }
-    
-    updateStrainProperties();
-    updateValidation();
-  }
-
-  function handleMixStrainChange(select) {
-    const position = select.dataset.strainPosition;
-    const value = select.value;
-    
-    if (position === 'A') {
-      strainA = value;
-    } else if (position === 'B') {
-      strainB = value;
-    }
-    
-    // Prevent same strain in both positions
-    if (strainA && strainB && strainA === strainB) {
-      alert('Please choose different strains for A and B.');
-      select.value = '';
-      if (position === 'A') strainA = null;
-      if (position === 'B') strainB = null;
-    }
-    
-    updateStrainProperties();
-    updateValidation();
-  }
-
-  function handleFlavorSelection(chip) {
-    const flavorItem = chip.closest('.wtf-flavor-item');
-    const flavor = flavorItem.dataset.flavor;
-    const controls = flavorItem.querySelector('.wtf-pump-controls');
-    
-    if (flavorPumps[flavor]) {
-      // Remove flavor
-      delete flavorPumps[flavor];
-      chip.classList.remove('active');
-      controls.style.display = 'none';
-    } else {
-      // Add flavor with 1 pump
-      flavorPumps[flavor] = 1;
-      chip.classList.add('active');
-      controls.style.display = 'flex';
-      updateFlavorPumpDisplay(flavorItem);
-    }
-    
-    updateFlavorProperties();
-    updatePumpCounter();
-    updateValidation();
-  }
-
-  function handlePumpChange(flavorItem, delta) {
-    const flavor = flavorItem.dataset.flavor;
-    if (!flavorPumps[flavor]) return;
-    
-    const newCount = flavorPumps[flavor] + delta;
-    if (newCount < 1) {
-      // Remove flavor entirely
-      delete flavorPumps[flavor];
-      flavorItem.querySelector('.wtf-flavor-chip').classList.remove('active');
-      flavorItem.querySelector('.wtf-pump-controls').style.display = 'none';
-    } else {
-      flavorPumps[flavor] = newCount;
-      updateFlavorPumpDisplay(flavorItem);
-    }
-    
-    updateFlavorProperties();
-    updatePumpCounter();
-    updateValidation();
-  }
-
-  function updateFlavorPumpDisplay(flavorItem) {
-    const flavor = flavorItem.dataset.flavor;
-    const countSpan = flavorItem.querySelector('.wtf-pump-count');
-    if (countSpan) {
-      countSpan.textContent = flavorPumps[flavor] || 0;
-    }
-  }
-
-  function adjustQuantity(delta) {
-    const input = document.querySelector('.wtf-qty-input');
-    const current = parseInt(input.value) || 1;
-    const newValue = Math.max(1, Math.min(10, current + delta));
-    input.value = newValue;
-  }
-
-  function updateVariantId() {
-    if (!selectedSize) return;
-    
-    const variantId = variantIdBySize[selectedSize];
-    const input = document.querySelector('input[name="id"]');
-    if (input && variantId) {
-      input.value = variantId;
-    }
-  }
-
-  function updatePrice() {
-    if (!selectedSize) return;
-    
-    const price = priceBySize[selectedSize];
-    const priceElement = document.querySelector('#wtf-price');
-    if (priceElement && price) {
-      priceElement.textContent = '$' + (price / 100).toFixed(2);
-    }
-  }
-
-  function updatePumpLimit() {
-    const pumpInfo = document.querySelector('.wtf-pump-info');
-    if (pumpInfo && selectedSize) {
-      const counter = pumpInfo.querySelector('.wtf-pump-counter strong');
-      if (counter) {
-        const totalPumps = Object.values(flavorPumps).reduce((sum, count) => sum + count, 0);
-        counter.textContent = totalPumps + '/' + currentPumpLimit;
-      }
-    }
-  }
-
-  function updatePumpCounter() {
-    const counter = document.querySelector('.wtf-pump-counter strong');
-    if (counter) {
-      const totalPumps = Object.values(flavorPumps).reduce((sum, count) => sum + count, 0);
-      counter.textContent = totalPumps + (selectedSize ? '/' + currentPumpLimit : '');
-    }
-  }
-
-  function updateStrainProperties() {
-    const strainInput = document.querySelector('input[name="properties[Strain]"]');
-    const mixInput = document.querySelector('input[name="properties[Mix]"]');
-    const strainAInput = document.querySelector('input[name="properties[Strain A]"]');
-    const strainBInput = document.querySelector('input[name="properties[Strain B]"]');
-    
-    if (isMix) {
-      mixInput.value = 'Yes';
-      strainInput.value = '';
-      strainAInput.value = strainA || '';
-      strainBInput.value = strainB || '';
-    } else {
-      mixInput.value = 'No';
-      strainInput.value = selectedStrain || '';
-      strainAInput.value = '';
-      strainBInput.value = '';
-    }
-  }
-
-  function updateFlavorProperties() {
-    const input = document.querySelector('input[name="properties[Flavors & Pumps]"]');
-    if (!input) return;
-    
-    const flavorString = Object.entries(flavorPumps)
-      .map(([flavor, pumps]) => `${flavor}:${pumps}`)
-      .join(' | ');
-    
-    input.value = flavorString;
-  }
-
-  function updateNotesProperty() {
-    const notesInput = document.querySelector('.wtf-notes-input');
-    const propertyInput = document.querySelector('input[name="properties[Notes]"]');
-    if (notesInput && propertyInput) {
-      propertyInput.value = notesInput.value;
-    }
-  }
-
-  function updateValidation() {
-    const submitBtn = document.querySelector('.wtf-add-to-cart-btn');
-    const messages = document.querySelector('.wtf-validation-messages');
-    
-    const errors = [];
-    
-    // Check size selection
-    if (!selectedSize) {
-      errors.push('Please select a size.');
-    }
-    
-    // Check strain selection
-    if (!selectedStrain && !isMix) {
-      errors.push('Please select a strain.');
-    }
-    
-    if (isMix && (!strainA || !strainB)) {
-      errors.push('Please select both strains for the mix.');
-    }
-    
-    // Check pump limits
-    const totalPumps = Object.values(flavorPumps).reduce((sum, count) => sum + count, 0);
-    if (totalPumps > currentPumpLimit) {
-      errors.push(`Too many pumps! Maximum ${currentPumpLimit} for ${selectedSize || 'selected size'}.`);
-    }
-    
-    // Update UI
-    if (errors.length > 0) {
-      submitBtn.disabled = true;
-      messages.innerHTML = errors.map(err => `<div>${err}</div>`).join('');
-      messages.style.display = 'block';
-    } else {
-      submitBtn.disabled = false;
-      messages.style.display = 'none';
-    }
-  }
-
-  function handleFormSubmit(e) {
-    e.preventDefault();
-    
-    // Final validation
-    updateValidation();
-    if (document.querySelector('.wtf-add-to-cart-btn').disabled) {
+  (function () {
+    // ----- guards -----
+    if (typeof variantIdBySize !== 'object' || typeof priceBySize !== 'object' || typeof pumpLimitBySize !== 'object') {
       return;
     }
-    
-    // Update all properties before submit
-    updateStrainProperties();
-    updateFlavorProperties();
-    updateNotesProperty();
-    
-    // Submit via AJAX
-    const formData = new FormData(e.target);
-    const submitBtn = document.querySelector('.wtf-add-to-cart-btn');
-    const btnText = submitBtn.querySelector('.wtf-btn-text');
-    const btnLoading = submitBtn.querySelector('.wtf-btn-loading');
-    
-    // Show loading state
-    submitBtn.disabled = true;
-    btnText.style.display = 'none';
-    btnLoading.style.display = 'inline';
-    
-    fetch('/cart/add.js', {
-      method: 'POST',
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Added to cart:', data);
-      
-      // Update cart count
-      return fetch('/cart.js').then(r => r.json());
-    })
-    .then(cart => {
-      // Update cart count in header
-      document.querySelectorAll('[data-cart-count], .cart-count').forEach(el => {
-        el.textContent = cart.item_count;
-      });
-      
-      // Show success message
-      showSuccessMessage();
-      
-      // Reset form
-      resetForm();
-    })
-    .catch(error => {
-      console.error('Error adding to cart:', error);
-      alert('Error adding to cart. Please try again.');
-    })
-    .finally(() => {
-      // Reset button
-      submitBtn.disabled = false;
-      btnText.style.display = 'inline';
-      btnLoading.style.display = 'none';
-    });
-  }
 
-  function showSuccessMessage() {
-    const message = document.createElement('div');
-    message.textContent = 'Added to cart!';
-    message.style.cssText = `
-      position: fixed; top: 20px; right: 20px; z-index: 1000;
-      background: #4CAF50; color: white; padding: 15px 25px;
-      border-radius: 8px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    `;
-    document.body.appendChild(message);
-    setTimeout(() => message.remove(), 3000);
-  }
+    const $ = (s, c) => (c || document).querySelector(s);
+    const $$ = (s, c) => Array.from((c || document).querySelectorAll(s));
 
-  function resetForm() {
-    // Reset selections
-    selectedSize = null;
-    selectedStrain = null;
-    isMix = false;
-    strainA = null;
-    strainB = null;
-    flavorPumps = {};
-    
-    // Reset UI
-    document.querySelectorAll('.wtf-option-chip').forEach(chip => {
-      chip.setAttribute('aria-pressed', 'false');
-    });
-    document.querySelectorAll('.wtf-flavor-chip').forEach(chip => {
-      chip.classList.remove('active');
-    });
-    document.querySelectorAll('.wtf-pump-controls').forEach(controls => {
-      controls.style.display = 'none';
-    });
-    document.querySelector('.wtf-mix-selection').style.display = 'none';
-    document.querySelectorAll('.wtf-strain-select').forEach(select => {
-      select.value = '';
-    });
-    document.querySelector('.wtf-notes-input').value = '';
-    document.querySelector('.wtf-qty-input').value = '1';
-    
-    updateValidation();
-  }
+    const form = $('#wtf-form');
+    const idInp = $('#wtf-variant-id');
+    const price = $('#wtf-price');
+    const status = $('#wtf-status');
+    const pumpHint = $('#wtf-pump-hint');
 
-})();
+    // UI state
+    const state = { Size: '', Strain: '', Mix: 'No', 'Strain A': '', 'Strain B': '' };
+
+    // Initial size = first available
+    state.Size =
+      Object.keys(variantIdBySize).find((k) => variantIdBySize[k] && variantIdBySize[k] !== 'null') || 'Medium';
+    selectChip('Size', state.Size);
+    syncSize();
+
+    // Pump hint
+    function syncPumpHint() {
+      pumpHint.textContent = 'Pump limit: ' + (pumpLimitBySize[state.Size] || 0) + ' total.';
+    }
+    syncPumpHint();
+
+    // Chip interactions
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-option][data-value]');
+      if (!btn) return;
+      const opt = btn.getAttribute('data-option');
+      const val = btn.getAttribute('data-value');
+
+      if (opt === 'Mix') {
+        state.Mix = btn.getAttribute('aria-pressed') === 'true' ? 'No' : 'Yes';
+        // toggle UI
+        $('#wtf-mix-picker').style.display = state.Mix === 'Yes' ? 'block' : 'none';
+        if (state.Mix === 'Yes') {
+          state.Strain = '';
+        } else {
+          state['Strain A'] = '';
+          state['Strain B'] = '';
+        }
+        toggleChip(btn, state.Mix === 'Yes');
+        syncProps();
+        return;
+      }
+
+      // single-select groups
+      if (['Size', 'Strain', 'Strain A', 'Strain B'].includes(opt)) {
+        state[opt] = btn.getAttribute('aria-pressed') === 'true' ? '' : val;
+        setSingleSelect(opt, state[opt]);
+        if (opt === 'Size') {
+          syncSize();
+          syncPumpHint();
+        }
+        syncProps();
+      }
+    });
+
+    function setSingleSelect(opt, val) {
+      $$(`[data-option="${css(opt)}"]`).forEach((el) => toggleChip(el, el.getAttribute('data-value') === val));
+    }
+    function selectChip(opt, val) {
+      setSingleSelect(opt, val);
+    }
+    function toggleChip(el, on) {
+      el.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    function css(s) {
+      return s.replace(/"/g, '\\"');
+    }
+
+    function syncSize() {
+      const id = variantIdBySize[state.Size];
+      idInp.value = id || '';
+      const cents = priceBySize[state.Size] || 0;
+      try {
+        price.textContent = new Intl.NumberFormat('{{ shop.locale }}', {
+          style: 'currency',
+          currency: '{{ shop.currency }}',
+        }).format(cents / 100);
+      } catch (_) {
+        price.textContent = '$' + (cents / 100).toFixed(2);
+      }
+    }
+
+    function syncProps() {
+      form.querySelector('[name="properties[Mix]"]').value = state.Mix;
+      form.querySelector('[name="properties[Strain]"]').value = state.Mix === 'Yes' ? '' : state.Strain || '';
+      form.querySelector('[name="properties[Strain A]"]').value = state.Mix === 'Yes' ? state['Strain A'] || '' : '';
+      form.querySelector('[name="properties[Strain B]"]').value = state.Mix === 'Yes' ? state['Strain B'] || '' : '';
+    }
+
+    // You already render flavor UI; capture its pump string if your flavor JS populates it.
+    // Expect a global builder to expose pumps string into window.WTF_FLAVORS_STRING; otherwise keep empty.
+    function getFlavorString() {
+      return window.WTF_FLAVORS_STRING || '';
+    }
+
+    // Submit (AJAX)
+    form.addEventListener('submit', async (e) => {
+      if (!idInp.value) {
+        e.preventDefault();
+        status.textContent = 'Pick a Size.';
+        return;
+      }
+      if (state.Mix === 'Yes') {
+        if (!state['Strain A'] || !state['Strain B']) {
+          e.preventDefault();
+          status.textContent = 'Pick two strains for Mix.';
+          return;
+        }
+      } else {
+        if (!state.Strain) {
+          e.preventDefault();
+          status.textContent = 'Pick a Strain or choose Mix.';
+          return;
+        }
+      }
+      form.querySelector('[name="properties[Flavors & Pumps]"]').value = getFlavorString();
+
+      e.preventDefault();
+      status.textContent = 'Adding…';
+      try {
+        const res = await fetch('/cart/add.js', {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { Accept: 'application/json' },
+        });
+        if (!res.ok) throw new Error('Add to cart failed');
+        const cart = await fetch('/cart.js', { headers: { Accept: 'application/json' } }).then((r) => r.json());
+        const countNode = document.querySelector('[data-cart-count], .cart-count-bubble, #cart-icon-bubble');
+        if (countNode) countNode.textContent = cart.item_count;
+        if (typeof window.openCartDrawer === 'function') window.openCartDrawer();
+        status.textContent = 'Added to cart.';
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Could not add to cart. Please try again.';
+      }
+    });
+  })();
 </script>
-
