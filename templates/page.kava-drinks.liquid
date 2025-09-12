@@ -1,393 +1,54 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Kava Drinks - WTF | Welcome To Florida</title>
+{% comment %}
+  Kava Drinks page — Dunkin-style parity with Kratom Teas.
+  Only one image on the page: /assets/kava_drinks_150x150.png
+  Uses the shared renderer and the Kava flavor list. Cart/price logic mirrors Kratom.
 
-    <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:#f8f9fa; line-height:1.6; color:#333; }
-      .header { background:#ff6600; color:#fff; padding:15px 0; text-align:center; font-size:24px; font-weight:800; }
-      .container { max-width:1200px; margin:0 auto; padding:20px; }
-      .back-link { display:inline-block; color:#ff6600; text-decoration:none; font-weight:700; font-size:16px; margin-bottom:20px; padding:10px 15px; border:2px solid #ff6600; border-radius:5px; transition:all .2s ease; }
-      .back-link:hover { background:#ff6600; color:#fff; }
+  If this page is NOT a product template, ensure one of the following is set before your
+  variant/cart initializer runs:
+    window.WTF_PRODUCT_HANDLE = 'your-kava-product-handle'
+    OR
+    window.WTF_PRODUCT_JSON = { ...product json... }
+{% endcomment %}
 
-      .product-grid { display:grid; grid-template-columns: 1fr 1fr; gap:40px; align-items:flex-start; }
-      .product-image { width:100%; max-width:400px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,.1); height:auto; }
-      .product-details { background:#fff; padding:30px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,.1); }
+{% section 'header' %}
 
-      .product-title { font-size:32px; font-weight:800; margin-bottom:8px; }
-      .product-sub { color:#666; margin-bottom:8px; }
-      .product-price { font-size:20px; color:#ff6600; font-weight:800; margin-bottom:14px; }
+<main id="MainContent" class="page-width">
+  <header class="wtf-page-hero" style="text-align:center; margin: 16px 0 20px;">
+    <img
+      src="{{ 'kava_drinks_150x150.png' | asset_url }}"
+      alt="Kava Drinks"
+      width="150"
+      height="150"
+      loading="eager"
+      style="max-width:150px; height:auto;"
+    >
+    <h1 style="margin-top: 10px;">Kava Drinks</h1>
+    <p style="color:#555; margin-top: 6px;">Choose your flavor, then add to cart.</p>
+  </header>
 
-      .selection-section { margin:26px 0; border-bottom:1px solid #eee; padding-bottom:18px; }
-      .selection-section:last-child { border-bottom:none; }
-      .section-title { font-size:18px; font-weight:800; margin-bottom:12px; }
-      .info-box { background:#e7f3ff; padding:12px; border-radius:8px; margin-bottom:12px; font-size:14px; }
+  {% render 'wtf-flavor-data' %}
+  {% render 'wtf-flavor-options', title: 'Choose your flavor', flavors: wtfKavaFlavors, option_name: 'Flavor' %}
 
-      .chip-row { display:flex; flex-wrap:wrap; gap:8px; }
-      .chip { appearance:none; border:2px solid #ddd; background:#fff; border-radius:999px; padding:8px 12px; font-weight:700; cursor:pointer; transition:border-color .12s ease, box-shadow .12s ease, transform .12s ease; }
-      .chip:hover { border-color:#ff6600; transform:translateY(-1px); box-shadow:0 2px 6px rgba(255,102,0,.18); }
-      .chip.is-selected { border-color:#ff6600; box-shadow:0 0 0 2px color-mix(in srgb, #ff6600 25%, transparent); }
-
-      .flavor-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:8px; }
-      .flavor { border:2px solid #ddd; background:#fff; border-radius:8px; padding:12px 10px; font-weight:600; cursor:pointer; text-align:center; transition:border-color .12s ease, box-shadow .12s ease, transform .12s ease; }
-      .flavor:hover { border-color:#28a745; transform:translateY(-1px); }
-      .flavor.is-selected { background:#28a745; color:#fff; border-color:#28a745; }
-
-      .quantity-controls { display:flex; align-items:center; gap:12px; }
-      .qty-btn { width:40px; height:40px; border:2px solid #ff6600; background:#fff; color:#ff6600; border-radius:50%; cursor:pointer; font-size:18px; font-weight:800; transition:all .12s ease; }
-      .qty-btn:hover { background:#ff6600; color:#fff; transform:scale(1.08); }
-      .qty-input { width:80px; text-align:center; padding:10px; border:2px solid #ddd; border-radius:5px; font-size:16px; }
-
-      .comments-textarea { width:100%; padding:12px; border:2px solid #ddd; border-radius:5px; resize:vertical; font-size:14px; line-height:1.4; }
-      .comments-textarea:focus { border-color:#ff6600; outline:none; }
-
-      .add-to-cart-btn { width:100%; padding:18px; background:#ff6600; color:#fff; border:none; border-radius:8px; font-size:18px; font-weight:800; cursor:pointer; margin-top:18px; transition:transform .12s ease, box-shadow .12s ease, background .12s ease; }
-      .add-to-cart-btn:hover { background:#e55a00; transform: translateY(-2px); box-shadow:0 4px 12px rgba(255,102,0,0.3); }
-      .add-to-cart-btn:disabled { background:#ccc; cursor:not-allowed; transform:none; box-shadow:none; }
-
-      .success-message { background:#d4edda; color:#155724; padding:14px; border-radius:6px; margin:14px 0; border:1px solid #c3e6cb; display:none; font-size:14px; }
-      .success-message.show { display:block; }
-
-      .cart-status { position:fixed; top:20px; right:20px; background:#ff6600; color:#fff; padding:10px 15px; border-radius:25px; font-weight:700; z-index:1000; box-shadow:0 4px 12px rgba(255,102,0,0.3); }
-
-      @media (max-width: 768px) {
-        .product-grid { grid-template-columns:1fr; gap:24px; }
-        .product-details { padding:20px; }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .back-link, .chip, .flavor, .qty-btn, .add-to-cart-btn { transition:none !important; }
-      }
-      .sr-only { position:absolute!important; width:1px; height:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap; }
-    </style>
-
-    <!-- ======= CART VARIANT SOURCE ======= -->
-    <script>
-      window.KAVA_DRINK_VARIANT_ID = {{ page.metafields.custom.kava_variant_id | default: settings.kava_drink_variant_id | json }};
-    </script>
-
-    <!--
-      ======= EDITABLE PRICES (DISPLAY ONLY) =======
-      1) Edit SIZE_PRICES to set price for "Large 16 oz" vs "Gallon".
-      2) (Optional) Add per-flavor overrides in FLAVOR_PRICES (exact label match).
-      CTA + headline update live, but checkout still charges the product's variant price.
-      If you want checkout to match, we can wire variants/discounts later.
-    -->
-    <script>
-      const SIZE_PRICES = {
-        'Large 16 oz': 12.0,
-        Gallon: 45.0,
-      };
-
-      // Optional flavor overrides (leave empty if all flavors use the size price)
-      // Example: 'Pumpkin Spice': 13.50
-      const FLAVOR_PRICES = {};
-
-      const moneyFmt = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' });
-
-      function unitPriceFor(selection) {
-        // flavor overrides take precedence; else size price
-        if (selection.flavor && Object.prototype.hasOwnProperty.call(FLAVOR_PRICES, selection.flavor)) {
-          return Number(FLAVOR_PRICES[selection.flavor]) || SIZE_PRICES[selection.size] || 0;
-        }
-        return SIZE_PRICES[selection.size] || 0;
-      }
-    </script>
-  </head>
-
-  <body>
-    <div class="header">WTF | Welcome To Florida</div>
-    <div class="cart-status" id="cart-status" aria-live="polite">
-      Cart: <span id="cart-count">{{ cart.item_count }}</span> items
+  {%- comment -%}
+    Expected form wrapper (example). Ensure your theme has a single form wrapping options + submit.
+    If you already have a form elsewhere on the page, remove this and use your existing one.
+  {%- endcomment -%}
+  <form method="post" action="/cart/add" data-wtf-ajax style="margin-top:16px;">
+    <input type="hidden" name="id" value="">
+    <div style="display:flex; gap: 8px; align-items:center; margin-top: 10px;">
+      <label for="wtf-qty-kava" style="min-width:56px;">Qty</label>
+      <input id="wtf-qty-kava" name="quantity" type="number" min="1" value="1" style="width:80px;">
+      <button type="submit" class="wtf-primary-cta" style="margin-left:auto;">Add to cart</button>
     </div>
+  </form>
+</main>
 
-    <div class="container">
-      <a href="/" class="back-link">← Back to Menu</a>
+<style>
+  .wtf-primary-cta {
+    background:#ff6600; color:#fff; border:none; border-radius:8px;
+    padding:12px 16px; min-height:44px; font-weight:700; cursor:pointer;
+  }
+  .wtf-primary-cta:disabled { opacity:.6; cursor:not-allowed; }
+</style>
 
-      <div class="product-grid">
-        <div class="product-image-section">
-          <img
-            src="{{ 'kava_drinks_150x150.png' | asset_url }}"
-            alt="Kava Drinks"
-            class="product-image"
-            width="400"
-            height="400"
-            loading="eager"
-            fetchpriority="high"
-          >
-        </div>
-
-        <div class="product-details">
-          <h1 class="product-title">Kava Drinks</h1>
-          <p class="product-sub">Pick a flavor, choose your size, add to cart.</p>
-          <div class="product-price" id="product-price"></div>
-
-          <!-- Size chips -->
-          <div class="selection-section">
-            <h3 class="section-title">🥤 Size</h3>
-            <div class="chip-row" role="group" aria-label="Size">
-              <button type="button" class="chip is-selected" data-size="Large 16 oz">Large 16 oz</button>
-              <button type="button" class="chip" data-size="Gallon">Gallon</button>
-            </div>
-          </div>
-
-          <!-- Flavors -->
-          <div class="selection-section">
-            <h3 class="section-title">🌺 Flavor</h3>
-            <div class="flavor-grid" id="kava-flavor-grid" role="group" aria-label="Kava flavors">
-              <button type="button" class="flavor" data-flavor="Lemon">Lemon</button>
-              <button type="button" class="flavor" data-flavor="Lime">Lime</button>
-              <button type="button" class="flavor" data-flavor="Orange">Orange</button>
-              <button type="button" class="flavor" data-flavor="Blood Orange">Blood Orange</button>
-              <button type="button" class="flavor" data-flavor="Strawberry">Strawberry</button>
-              <button type="button" class="flavor" data-flavor="Rasberry">Rasberry</button>
-              <button type="button" class="flavor" data-flavor="Blueberry">Blueberry</button>
-              <button type="button" class="flavor" data-flavor="Coconut">Coconut</button>
-              <button type="button" class="flavor" data-flavor="Mango">Mango</button>
-              <button type="button" class="flavor" data-flavor="Watermelon">Watermelon</button>
-              <button type="button" class="flavor" data-flavor="Simple Syrup">Simple Syrup</button>
-              <button type="button" class="flavor" data-flavor="Sour Apple">Sour Apple</button>
-              <button type="button" class="flavor" data-flavor="Dragon Fruit">Dragon Fruit</button>
-              <button type="button" class="flavor" data-flavor="Blackberry">Blackberry</button>
-              <button type="button" class="flavor" data-flavor="Smores">Smores</button>
-              <button type="button" class="flavor" data-flavor="Pumpkin Spice">Pumpkin Spice</button>
-              <button type="button" class="flavor" data-flavor="Cranberry">Cranberry</button>
-              <button type="button" class="flavor" data-flavor="Grenadine">Grenadine</button>
-              <button type="button" class="flavor" data-flavor="Lavender">Lavender</button>
-              <button type="button" class="flavor" data-flavor="Chocolate">Chocolate</button>
-              <button type="button" class="flavor" data-flavor="Caramel">Caramel</button>
-              <button type="button" class="flavor" data-flavor="Maple">Maple</button>
-              <button type="button" class="flavor" data-flavor="Agave">Agave</button>
-              <button type="button" class="flavor" data-flavor="Hazelnut">Hazelnut</button>
-              <button type="button" class="flavor" data-flavor="Rose">Rose</button>
-              <button type="button" class="flavor" data-flavor="Passion Fruit">Passion Fruit</button>
-              <button type="button" class="flavor" data-flavor="Hibiscus">Hibiscus</button>
-              <button type="button" class="flavor" data-flavor="Creamer">Creamer</button>
-              <button type="button" class="flavor" data-flavor="Oat Milk">Oat Milk</button>
-            </div>
-          </div>
-
-          <!-- Comments -->
-          <div class="selection-section">
-            <h3 class="section-title">💬 Special Requests & Comments</h3>
-            <label for="order-comments" class="sr-only">Order comments</label>
-            <textarea
-              id="order-comments"
-              class="comments-textarea"
-              placeholder="Any special requests or modifications? We'll try to accommodate!"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <!-- Quantity -->
-          <div class="selection-section">
-            <h3 class="section-title">🔢 Quantity</h3>
-            <div class="quantity-controls">
-              <button type="button" class="qty-btn" aria-label="Decrease quantity" onclick="changeQty(-1)">−</button>
-              <input
-                type="number"
-                id="quantity"
-                value="1"
-                min="1"
-                max="50"
-                class="qty-input"
-                inputmode="numeric"
-                pattern="[0-9]*"
-              >
-              <button type="button" class="qty-btn" aria-label="Increase quantity" onclick="changeQty(1)">+</button>
-            </div>
-          </div>
-
-          <div id="success-message" class="success-message" role="status" aria-live="polite"></div>
-
-          <button type="button" id="add-to-cart-btn" class="add-to-cart-btn" onclick="addToCart()" disabled>
-            Select a Flavor
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <script>
-      let selectedSize = 'Large 16 oz';
-      let selectedFlavor = null;
-
-      document.addEventListener('DOMContentLoaded', () => {
-        // init headline price
-        updatePriceHeadline();
-
-        // Size chips
-        document.querySelectorAll('.chip[data-size]').forEach((chip) => {
-          chip.addEventListener('click', () => {
-            document.querySelectorAll('.chip[data-size]').forEach((c) => c.classList.remove('is-selected'));
-            chip.classList.add('is-selected');
-            selectedSize = chip.getAttribute('data-size');
-            updateCTA();
-            updatePriceHeadline();
-          });
-        });
-
-        // Flavor buttons
-        document.querySelectorAll('.flavor').forEach((btn) => {
-          btn.addEventListener('click', () => {
-            document.querySelectorAll('.flavor').forEach((b) => b.classList.remove('is-selected'));
-            btn.classList.add('is-selected');
-            selectedFlavor = btn.getAttribute('data-flavor');
-            sessionStorage.setItem('kava_flavor', selectedFlavor);
-            updateCTA();
-            updatePriceHeadline();
-          });
-          btn.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              btn.click();
-            }
-          });
-        });
-
-        // Restore last flavor if any
-        const savedFlavor = sessionStorage.getItem('kava_flavor');
-        if (savedFlavor) {
-          const el = [...document.querySelectorAll('.flavor')].find(
-            (b) => b.getAttribute('data-flavor') === savedFlavor
-          );
-          if (el) el.click();
-        }
-
-        updateCartCount();
-      });
-
-      function currentUnitPrice() {
-        return unitPriceFor({ size: selectedSize, flavor: selectedFlavor });
-      }
-
-      function updatePriceHeadline() {
-        const priceEl = document.getElementById('product-price');
-        const unit = currentUnitPrice();
-        priceEl.textContent = unit > 0 ? `${moneyFmt.format(unit)} per ${selectedSize}` : '';
-      }
-
-      function changeQty(delta) {
-        const input = document.getElementById('quantity');
-        const next = Math.max(1, Math.min(50, (parseInt(input.value, 10) || 1) + delta));
-        input.value = next;
-        updateCTA();
-      }
-
-      function updateCTA() {
-        const btn = document.getElementById('add-to-cart-btn');
-        const qty = Math.max(1, Math.min(50, parseInt(document.getElementById('quantity').value || '1', 10)));
-        const unit = currentUnitPrice();
-        const total = unit * qty;
-
-        if (selectedFlavor) {
-          btn.textContent =
-            unit > 0
-              ? `Add to Cart — ${selectedSize} × ${qty} (${moneyFmt.format(total)})`
-              : `Add to Cart — ${selectedSize} × ${qty}`;
-          btn.disabled = false;
-        } else {
-          btn.textContent = 'Select a Flavor';
-          btn.disabled = true;
-        }
-      }
-
-      async function updateCartCount() {
-        try {
-          const res = await fetch('/cart.js', { credentials: 'same-origin' });
-          if (res.ok) {
-            const cart = await res.json();
-            document.getElementById('cart-count').textContent = cart.item_count || 0;
-          }
-        } catch (e) {}
-      }
-
-      async function addToCart() {
-        if (!selectedFlavor) {
-          alert('Please select a flavor.');
-          return;
-        }
-
-        const btn = document.getElementById('add-to-cart-btn');
-        const original = btn.textContent;
-        btn.textContent = '⏳ Adding...';
-        btn.disabled = true;
-
-        const variantId = window.KAVA_DRINK_VARIANT_ID;
-        const quantity = Math.max(1, Math.min(50, parseInt(document.getElementById('quantity').value || '1', 10)));
-        const comments = (document.getElementById('order-comments').value || '').trim();
-
-        const properties = { Flavor: selectedFlavor, Size: selectedSize };
-        if (comments) properties.Comments = comments;
-
-        try {
-          if (variantId) {
-            const body = new URLSearchParams();
-            body.set('id', String(variantId));
-            body.set('quantity', String(quantity));
-            for (const k in properties) body.set(`properties[${k}]`, String(properties[k]));
-            const res = await fetch('/cart/add.js', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                Accept: 'application/json',
-              },
-              credentials: 'same-origin',
-              body,
-            });
-            if (!res.ok) {
-              let msg = 'Add to cart failed';
-              try {
-                const data = await res.json();
-                msg = data.description || data.message || msg;
-              } catch {}
-              throw new Error(msg);
-            }
-          } else {
-            // Fallback for preview/dev
-            const order = {
-              id: 'kava-' + Date.now() + '-' + Math.random().toString(36).slice(2),
-              product: 'Kava Drink',
-              ...properties,
-              quantity,
-              unitPrice: currentUnitPrice(),
-              timestamp: new Date().toISOString(),
-            };
-            let cart = [];
-            try {
-              cart = JSON.parse(localStorage.getItem('wtf-cart') || '[]');
-            } catch {}
-            cart.push(order);
-            localStorage.setItem('wtf-cart', JSON.stringify(cart));
-          }
-
-          await updateCartCount();
-
-          const success = document.getElementById('success-message');
-          const total = currentUnitPrice() * quantity;
-          success.innerHTML =
-            `✅ <strong>Added to cart!</strong><br>
-             🌺 Flavor: <strong>${properties.Flavor}</strong><br>
-             🥤 Size: ${properties.Size}<br>
-             🔢 Qty: ${quantity}` +
-            (Number.isFinite(total) && total > 0 ? `<br>💵 Est. Total: ${moneyFmt.format(total)}` : '') +
-            (properties.Comments ? `<br>💬 ${properties.Comments}` : '');
-          success.classList.add('show');
-          success.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-          document.dispatchEvent(new CustomEvent('kava:added', { detail: { variantId, ...properties, quantity } }));
-        } catch (err) {
-          console.error('Add to cart error:', err);
-          alert('❌ ' + (err && err.message ? err.message : 'Error adding to cart. Please try again.'));
-        } finally {
-          setTimeout(() => {
-            btn.textContent = original;
-            btn.disabled = false;
-            document.getElementById('success-message').classList.remove('show');
-          }, 4000);
-        }
-      }
-    </script>
-  </body>
-</html>
+{% section 'footer' %}
