@@ -1,30 +1,20 @@
-{% comment %}
-  Expose source-of-truth flavor arrays for Kratom Teas and Kava Drinks.
+{%- comment -%}
+  Single source of truth for flavor names.
+  👉 To update flavors, edit the comma-separated list below.
+  This snippet provides:
+    - Liquid array:  wtfKratomFlavors
+    - JS mirror:     window.WTF_FLAVORS
+{%- endcomment -%}
 
-  Usage:
-    {% render 'wtf-flavor-data' %}
-    {% render 'wtf-flavor-options', title: 'Choose your flavor', flavors: wtfKratomFlavors, option_name: 'Flavor' %}
-    OR
-    {% render 'wtf-flavor-options', title: 'Choose your flavor', flavors: wtfKavaFlavors, option_name: 'Flavor' %}
+{%- assign _flavors_csv = '
+Almond, Banana, Blackberry, Blue Coconut, Blue Raspberry, Blueberry,
+Caramel, Cherry, Coconut, Cotton Candy, Dragon Fruit, Grape, Green Apple,
+Guava, Honey, Kiwi, Lemon, Lime, Lychee, Mango, Orange, Passion Fruit,
+Peach, Pineapple, Pomegranate, Raspberry, Strawberry, Tangerine, Vanilla, Watermelon
+' -%}
 
-  Notes:
-  - Also defines window.wtfFlavorData for client-side enhancements (analytics, quick reorder, etc).
-  - Keep this snippet as the single place to update lists.
-{% endcomment %}
-
-{%- assign wtfKratomFlavors = 'lemon|lime|orange|blood orange|strawberry|rasberry|blueberry|coconut|mango|watermelon|simple syrup|sour apple|dragon fruit|blackberry|smores|pumpkin spice|cranberry|grenadine|lavender|chocolate|caramel|maple|agave|hazelnut|rose|passion fruit|hibiscus'
-  | split: '|'
--%}
-
-{%- assign wtfKavaFlavors = 'lemon|lime|orange|blood orange|strawberry|rasberry|blueberry|coconut|mango|watermelon|simple syrup|sour apple|dragon fruit|blackberry|smores|pumpkin spice|cranberry|grenadine|lavender|chocolate|caramel|maple|agave|hazelnut|rose|passion fruit|hibiscus|Creamer (seasonal)|oat milk'
-  | split: '|'
--%}
+{%- assign wtfKratomFlavors = _flavors_csv | split: ',' | map: 'strip' | uniq -%}
 
 <script>
-  (function(){
-    window.wtfFlavorData = {
-      kratom: {{ wtfKratomFlavors | json }},
-      kava: {{ wtfKavaFlavors | json }}
-    };
-  })();
+  window.WTF_FLAVORS = {{ wtfKratomFlavors | json }};
 </script>
