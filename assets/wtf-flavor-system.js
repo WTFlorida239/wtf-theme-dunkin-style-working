@@ -1,8 +1,10 @@
 /*!
- * WTF Flavor System (Dunkin-style)
+ * WTF Flavor System (Dunkin-style) - Enhanced with Product Wiring
  * - Size chips + multi-flavor selection with pump rules
+ * - Strain selection with Mix support
  * - Real-time price UI (for transparency)
  * - Shopify AJAX add-to-cart using VARIANT ID (no price override)
+ * - Proper form submission with Line Item Properties
  *
  * Usage:
  *  - Put a wrapper on each custom drink page, e.g.:
@@ -13,6 +15,7 @@
  *           data-inc-pumps-default="{{ settings.included_pumps_default }}"
  *           ></div>
  *  - Render size chips with `.size-selector[data-size]`
+ *  - Render strain chips with `.strain-selector[data-strain]`
  *  - Render flavor chips with `.flavor-option[data-flavor]`
  *  - Optional: <input id="wtf-notes"> for comments
  *  - Add UI targets with ids: pump-counter, price-display, selected-flavors, cart-count
@@ -34,7 +37,8 @@
       this.pumpRules = {
         Small:  { included: 4, max: 6 },
         Medium: { included: 4, max: 6 },
-        Large:  { included: 6, max: 10 }
+        Large:  { included: 6, max: 10 },
+        Gallon: { included: 12, max: 20 }
       };
 
       // Pricing knobs (UI only — Shopify will charge variant price unless you add an add-on item)
@@ -45,10 +49,15 @@
       this.sizeBasePrices = {
         Small:  Number(root?.dataset?.priceSmall  || 0),
         Medium: Number(root?.dataset?.priceMedium || 0),
-        Large:  Number(root?.dataset?.priceLarge  || 0)
+        Large:  Number(root?.dataset?.priceLarge  || 0),
+        Gallon: Number(root?.dataset?.priceGallon || 0)
       };
 
       this.size = 'Medium';
+      this.strain = '';
+      this.isMix = false;
+      this.strainA = '';
+      this.strainB = '';
       this.selected = [];
 
       this.bind();
@@ -61,9 +70,51 @@
         btn.addEventListener('click', () => {
           this.size = btn.dataset.size;
           this.capSelection();
+          this.updateVariantId();
           this.updateAll();
         });
       });
+
+      // Strain chips
+      $$('.strain-selector').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const strain = btn.dataset.strain;
+          if (strain === 'Mix') {
+            this.isMix = !this.isMix;
+            this.strain = '';
+            if (this.isMix) {
+              $('#mix-strains').style.display = 'block';
+            } else {
+              $('#mix-strains').style.display = 'none';
+              this.strainA = '';
+              this.strainB = '';
+            }
+          } else {
+            this.strain = this.strain === strain ? '' : strain;
+            this.isMix = false;
+            $('#mix-strains').style.display = 'none';
+            this.strainA = '';
+            this.strainB = '';
+          }
+          this.updateAll();
+        });
+      });
+
+      // Mix strain selectors
+      const strainASelect = $('#strain-a');
+      const strainBSelect = $('#strain-b');
+      if (strainASelect) {
+        strainASelect.addEventListener('change', () => {
+          this.strainA = strainASelect.value;
+          this.updateAll();
+        });
+      }
+      if (strainBSelect) {
+        strainBSelect.addEventListener('change', () => {
+          this.strainB = strainBSelect.value;
+          this.updateAll();
+        });
+      }
 
       // Flavor chips
       $$('.flavor-option').forEach(btn => {
@@ -91,6 +142,17 @@
       }
     }
 
+    updateVariantId() {
+      // Update variant ID based on size selection if variant map is available
+      if (window.WTF_VARIANT_MAP && window.WTF_VARIANT_MAP[this.size]) {
+        this.variantId = window.WTF_VARIANT_MAP[this.size];
+        const idInput = $('input[name="id"]');
+        if (idInput) {
+          idInput.value = this.variantId;
+        }
+      }
+    }
+
     capSelection() {
       const max = this.pumpRules[this.size].max;
       if (this.selected.length > max) {
@@ -109,13 +171,28 @@
     }
 
     updateAll() {
-      // button states
+      // Size button states
       $$('.size-selector').forEach(b => b.classList.toggle('active', b.dataset.size === this.size));
+      
+      // Strain button states
+      $$('.strain-selector').forEach(b => {
+        const strain = b.dataset.strain;
+        if (strain === 'Mix') {
+          b.classList.toggle('active', this.isMix);
+          b.setAttribute('aria-pressed', this.isMix);
+        } else {
+          b.classList.toggle('active', this.strain === strain);
+          b.setAttribute('aria-pressed', this.strain === strain);
+        }
+      });
+
+      // Flavor button states
       const max = this.pumpRules[this.size].max;
       $$('.flavor-option').forEach(b => {
         const sel = this.selected.includes(b.dataset.flavor);
         b.classList.toggle('selected', sel);
         b.disabled = !sel && this.selected.length >= max;
+        b.setAttribute('aria-pressed', sel);
       });
 
       // pump counter
@@ -145,6 +222,39 @@
       if (selEl) {
         selEl.innerHTML = this.selected.length ? `<div class="selected-list">${this.selected.join(', ')}</div>` : '<div class="no-selection">No flavors selected</div>';
       }
+
+      // Update hidden form inputs
+      this.updateFormInputs();
+    }
+
+    updateFormInputs() {
+      // Update Line Item Properties
+      const strainInput = $('input[name="properties[Strain]"]');
+      const mixInput = $('input[name="properties[Mix]"]');
+      const strainAInput = $('input[name="properties[Strain A]"]');
+      const strainBInput = $('input[name="properties[Strain B]"]');
+      const flavorsInput = $('input[name="properties[Flavors & Pumps]"]');
+      const notesInput = $('input[name="properties[Notes]"]');
+
+      if (strainInput) {
+        strainInput.value = this.isMix ? '' : this.strain;
+      }
+      if (mixInput) {
+        mixInput.value = this.isMix ? 'Yes' : 'No';
+      }
+      if (strainAInput) {
+        strainAInput.value = this.isMix ? this.strainA : '';
+      }
+      if (strainBInput) {
+        strainBInput.value = this.isMix ? this.strainB : '';
+      }
+      if (flavorsInput) {
+        flavorsInput.value = this.selected.join(', ');
+      }
+      if (notesInput) {
+        const notesTextarea = $('#wtf-notes');
+        notesInput.value = notesTextarea ? notesTextarea.value : '';
+      }
     }
 
     addToCart() {
@@ -152,21 +262,45 @@
         this.toast('Missing variant ID — set it in Theme settings.', 'error');
         return;
       }
+      
+      // Validate strain selection
+      if (!this.strain && !this.isMix) {
+        this.toast('Please select a strain.', 'warning');
+        return;
+      }
+      
+      if (this.isMix && (!this.strainA || !this.strainB)) {
+        this.toast('Please select both strains for the mix.', 'warning');
+        return;
+      }
+      
+      if (this.isMix && this.strainA === this.strainB) {
+        this.toast('Please select different strains for the mix.', 'warning');
+        return;
+      }
+      
       if (this.selected.length === 0) {
         this.toast('Pick at least one flavor.', 'warning');
         return;
       }
+
+      // Update form inputs one more time before submission
+      this.updateFormInputs();
 
       const comp = this.compute();
       const notes = ($('#wtf-notes')?.value || '').trim();
 
       const properties = {
         'Size': this.size,
-        'Flavors': this.selected.join(', '),
+        'Strain': this.isMix ? '' : this.strain,
+        'Mix': this.isMix ? 'Yes' : 'No',
+        'Strain A': this.isMix ? this.strainA : '',
+        'Strain B': this.isMix ? this.strainB : '',
+        'Flavors & Pumps': this.selected.join(', '),
         'Pump Count': String(comp.total),
         'Extra Pumps': String(comp.extra),
         'Extra Pump Cost': money(comp.extraCost),
-        'Comments': notes
+        'Notes': notes
       };
 
       const addBtn = $('#wtf-add-to-cart');
@@ -186,6 +320,8 @@
         .then(() => {
           this.toast('Added to cart!', 'success');
           this.bumpCartCount();
+          // Dispatch cart:added event for cart drawer
+          document.dispatchEvent(new CustomEvent('cart:added', { detail: { properties } }));
         })
         .catch(err => {
           console.error(err);
@@ -231,3 +367,4 @@
     window.wtfFlavorSystem = new WTFFlavorSystem(root);
   });
 })();
+

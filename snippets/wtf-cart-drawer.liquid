@@ -1,9 +1,10 @@
 {%- comment -%}
-  WTF Cart Drawer (snippet)
+  WTF Cart Drawer (snippet) - Fixed Version
   - Drop-in drawer that renders the live cart using /cart.js (no Section IDs required).
   - Opens automatically after add-to-cart if you dispatch `cart:added` or call `window.WTF_CART.open()`.
   - Quantity steppers and remove use /cart/change.js, then re-render from server truth.
   - Lightweight CSS + vanilla JS, mobile-first, branded buttons.
+  - Fixed: Money formatting, list bullets, line item properties, canonical routes
 
   How to include:
   1) Include the snippet in your theme layout (ideally at the bottom, before </body>):
@@ -32,19 +33,19 @@
         <a class="btn btn--primary" href="{{ routes.all_products_collection_url }}">Shop products</a>
       </div>
 
-      <ul class="wtf-cart-drawer__items" role="list"></ul>
+      <div class="wtf-cart-drawer__items"></div>
     </div>
 
     <footer class="wtf-cart-drawer__footer">
       <div class="wtf-subtotal-row">
         <span>Subtotal</span>
-        <strong class="wtf-subtotal-amount">—</strong>
+        <strong class="wtf-subtotal-amount">{{ cart.total_price | money_with_currency }}</strong>
       </div>
       <p class="wtf-fineprint">Taxes & shipping calculated at checkout.</p>
 
       <div class="wtf-actions">
         <a class="btn btn--secondary" href="{{ routes.cart_url }}">View cart</a>
-        <a class="btn btn--primary" href="{{ routes.checkout_url }}">Checkout</a>
+        <a class="btn btn--primary" href="{{ routes.root_url }}checkout">Checkout</a>
       </div>
     </footer>
   </aside>
@@ -68,24 +69,30 @@
   .wtf-cart-drawer__body{padding:12px 16px;overflow:auto;flex:1}
   .wtf-cart-drawer__empty{text-align:center;padding:28px 0}
   .wtf-cart-drawer__items{list-style:none;margin:0;padding:0;display:grid;gap:12px}
-  .wtf-line{display:grid;grid-template-columns:76px 1fr auto;gap:10px;align-items:center}
+  .wtf-line{display:grid;grid-template-columns:76px 1fr auto;gap:10px;align-items:start;padding:12px 0;border-bottom:1px solid #f0f0f0}
+  .wtf-line:last-child{border-bottom:none}
   .wtf-line__media img{width:76px;height:auto;border-radius:10px;background:#f4f4f4;display:block}
   .wtf-line__title{display:block;font-weight:700;color:#111;text-decoration:none;margin-bottom:4px}
-  .wtf-badge{font-size:12px;padding:3px 8px;border-radius:999px;background:#f1f1f1;margin-right:6px}
-  .wtf-qty{display:inline-flex;align-items:center;border:1px solid #e1e1e1;border-radius:10px;overflow:hidden}
+  .wtf-line__options{margin-bottom:8px}
+  .wtf-line__properties{margin-bottom:8px}
+  .wtf-badge{font-size:12px;padding:3px 8px;border-radius:999px;background:#f1f1f1;margin-right:6px;margin-bottom:4px;display:inline-block}
+  .wtf-property{font-size:12px;padding:2px 6px;border-radius:6px;background:#e8f4fd;color:#0066cc;margin-right:4px;margin-bottom:2px;display:inline-block}
+  .wtf-qty{display:inline-flex;align-items:center;border:1px solid #e1e1e1;border-radius:10px;overflow:hidden;margin-bottom:6px}
   .wtf-qty__btn{width:32px;height:32px;border:0;background:#fafafa;cursor:pointer;font-size:16px;line-height:0}
   .wtf-qty__input{width:44px;height:32px;border:0;text-align:center;font-weight:700}
   .wtf-line__price{text-align:right}
-  .wtf-price__current{font-weight:800}
-  .wtf-price__compare{color:#888;margin-left:6px}
-  .wtf-remove{display:block;margin-top:6px;background:none;border:0;color:#888;text-decoration:underline;cursor:pointer}
-  .wtf-cart-drawer__footer{padding:14px 16px;border-top:1px solid #eee}
-  .wtf-subtotal-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .wtf-fineprint{font-size:12px;color:#666;margin:0 0 12px}
+  .wtf-price__current{font-weight:800;color:#111}
+  .wtf-price__compare{color:#888;margin-left:6px;text-decoration:line-through}
+  .wtf-remove{display:block;margin-top:6px;background:none;border:0;color:#888;text-decoration:underline;cursor:pointer;font-size:12px}
+  .wtf-cart-drawer__footer{padding:16px;border-top:1px solid #eee;background:#fafafa}
+  .wtf-subtotal-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:16px}
+  .wtf-subtotal-amount{color:#111;font-weight:800}
+  .wtf-fineprint{font-size:12px;color:#666;margin:0 0 16px;text-align:center}
   .wtf-actions{display:flex;gap:8px}
-  .btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 14px;border-radius:12px;border:0;cursor:pointer;font-weight:800}
+  .btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:12px;border:0;cursor:pointer;font-weight:800;text-decoration:none;flex:1;text-align:center}
   .btn--primary{background:#ff6600;color:#fff}
   .btn--secondary{background:#f1f1f1;color:#111}
+  .btn:hover{opacity:0.9;transform:translateY(-1px)}
   @media (max-width: 420px){ .wtf-line{grid-template-columns:64px 1fr auto} .wtf-line__media img{width:64px} }
 </style>
 
@@ -95,7 +102,7 @@
     var el = document.getElementById('wtf-cart-drawer');
     if(!el) return;
 
-    var itemsUL = el.querySelector('.wtf-cart-drawer__items');
+    var itemsContainer = el.querySelector('.wtf-cart-drawer__items');
     var emptyBox = el.querySelector('.wtf-cart-drawer__empty');
     var subtotalEl = el.querySelector('.wtf-subtotal-amount');
 
@@ -117,7 +124,7 @@
       // header badge fallback
       document.dispatchEvent(new CustomEvent('cart:updated', { detail: cart }));
 
-      itemsUL.innerHTML = '';
+      itemsContainer.innerHTML = '';
       if(cart.item_count === 0){
         emptyBox.hidden = false;
         subtotalEl.textContent = formatMoney(0);
@@ -126,10 +133,11 @@
       emptyBox.hidden = true;
 
       cart.items.forEach(function(item, idx){
-        var li = document.createElement('li');
-        li.className = 'wtf-line';
-        li.setAttribute('data-line', (idx+1));
+        var lineDiv = document.createElement('div');
+        lineDiv.className = 'wtf-line';
+        lineDiv.setAttribute('data-line', (idx+1));
 
+        // Build options display (variant options)
         var options = '';
         if (item.options_with_values && item.options_with_values.length) {
           options = '<div class="wtf-line__options">' +
@@ -138,13 +146,26 @@
             }).join('') + '</div>';
         }
 
-        li.innerHTML =
+        // Build properties display (line item properties)
+        var properties = '';
+        if (item.properties && Object.keys(item.properties).length > 0) {
+          properties = '<div class="wtf-line__properties">';
+          for (var prop in item.properties) {
+            if (item.properties[prop] && item.properties[prop] !== '') {
+              properties += '<span class="wtf-property"><strong>'+escapeHtml(prop)+':</strong> '+escapeHtml(item.properties[prop])+'</span>';
+            }
+          }
+          properties += '</div>';
+        }
+
+        lineDiv.innerHTML =
           '<a class="wtf-line__media" href="'+ item.url +'">' +
-            (item.image ? '<img src="'+ item.image +'&width=200" alt="'+ escapeHtml(item.title) +'">' : '<div class="wtf-placeholder"></div>') +
+            (item.image ? '<img src="'+ item.image +'&width=200" alt="'+ escapeHtml(item.title) +'">' : '<div class="wtf-placeholder" style="width:76px;height:76px;background:#f4f4f4;border-radius:10px;"></div>') +
           '</a>' +
           '<div class="wtf-line__main">' +
             '<a class="wtf-line__title" href="'+ item.url +'">'+ escapeHtml(item.product_title || item.title) +'</a>' +
             options +
+            properties +
             '<div class="wtf-line__controls">' +
               '<div class="wtf-qty">' +
                 '<button class="wtf-qty__btn" data-dec aria-label="Decrease">−</button>' +
@@ -161,7 +182,7 @@
               : '<div class="wtf-price"><span class="wtf-price__current">'+ formatMoney(item.final_price) +'</span></div>') +
           '</div>';
 
-        itemsUL.appendChild(li);
+        itemsContainer.appendChild(lineDiv);
       });
 
       subtotalEl.textContent = formatMoney(cart.total_price);
@@ -225,7 +246,8 @@
       open, close, refresh: async function(){ renderCart(await getCart()); }
     });
 
-    // Hydrate on first paint (so it’s ready if user opens manually)
+    // Hydrate on first paint (so it's ready if user opens manually)
     getCart().then(renderCart);
   })();
 </script>
+
