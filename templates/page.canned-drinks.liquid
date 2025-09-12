@@ -53,6 +53,42 @@
       // Optional: override via metafield on this page if you prefer:
       // window.CANNED_VARIANT_ID = {{ page.metafields.custom.canned_variant_id | json }};
     </script>
+
+    <!--
+      ===================== EDITABLE BRAND PRICES =====================
+           Change numbers here to control the display price per brand (per can).
+           Syntax: 'Exact Brand Name': priceNumber
+           These names should match your brand buttons exactly.
+           If a brand is missing here, the page falls back to DEFAULT_BASE_PRICE.
+      ====================================================================
+    -->
+    <script>
+      const DEFAULT_BASE_PRICE = 10.0;
+
+      // 👇 EDIT THIS MAP ONLY 👇
+      const BRAND_PRICES = {
+        'White Rabbit Energy': 6.49,
+        Rapture: 5.99,
+        Drippy: 4.99,
+        'Uncle Skunk': 3.99,
+        'Chronic Harvest Lemonade': 5.49,
+        Crank: 4.49,
+        'Tea Time': 3.49,
+        'Much Love': 4.79,
+        Mitra: 4.29,
+        Imba: 4.59,
+        Torch: 5.29,
+        'Two Scoops': 5.19,
+      };
+      // 👆 EDIT THIS MAP ONLY 👆
+
+      // Helper to format as currency (uses store locale if available)
+      const fmt = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' });
+      function priceForBrand(brand) {
+        const n = BRAND_PRICES.hasOwnProperty(brand) ? BRAND_PRICES[brand] : DEFAULT_BASE_PRICE;
+        return Number.isFinite(n) ? n : DEFAULT_BASE_PRICE;
+      }
+    </script>
   </head>
   <body>
     <div class="header">WTF | Welcome To Florida</div>
@@ -68,8 +104,14 @@
 
         <div class="product-details">
           <h1 class="product-title">Canned Drinks</h1>
-          <div class="product-price" id="product-price">$10.00 each</div>
-          <div class="price-placeholder">💰 Price Placeholder - Update manually in admin</div>
+
+          <!-- Dynamically updated by selected brand -->
+          <div class="product-price" id="product-price">Select a brand to see price</div>
+
+          <div class="price-placeholder">
+            💰 Display price is controlled by the “Brand Prices” map at the top of this file.
+          </div>
+
           <p class="product-description">
             Premium ready-to-drink beverages from top brands. Perfect for on-the-go enjoyment.
           </p>
@@ -99,7 +141,7 @@
             </div>
           </div>
 
-          <!-- FLAVOR SECTIONS (spell-corrected) -->
+          <!-- FLAVOR SECTIONS (spell-corrected; unchanged) -->
           <div class="flavor-section" id="flavors-white-rabbit-energy">
             <h4 class="section-title">🍋 Choose Your White Rabbit Energy Flavor</h4>
             <div class="flavor-grid">
@@ -331,7 +373,6 @@
     <script>
       let selectedBrand = '';
       let selectedFlavor = '';
-      let basePrice = 10.0; // aligned with shown price
 
       document.addEventListener('DOMContentLoaded', function () {
         console.log('🚀 Enhanced Canned Drinks page loaded');
@@ -344,7 +385,6 @@
         const brandButtons = Array.from(document.querySelectorAll('.brand-button'));
         if (savedBrand) {
           selectBrand(savedBrand);
-          // If a saved flavor exists for this brand, select it
           if (savedFlavor) selectFlavor(savedFlavor);
         } else if (brandButtons.length) {
           selectBrand(brandButtons[0].textContent.trim());
@@ -354,36 +394,36 @@
         updateAddToCartButton();
       });
 
+      function setDisplayedUnitPrice(price) {
+        const priceEl = document.getElementById('product-price');
+        priceEl.textContent = `${fmt.format(price)} each`;
+      }
+
       function selectBrand(brand) {
         console.log('Brand selected:', brand);
         selectedBrand = brand;
         sessionStorage.setItem('canned_brand', brand);
-        // Reset flavor when changing brand unless the saved flavor matches this brand section
-        selectedFlavor = '';
-        sessionStorage.removeItem('canned_flavor');
 
         // Update visual selection
         document.querySelectorAll('.brand-button').forEach((btn) => {
           btn.classList.remove('selected');
-          if (btn.textContent.trim() === brand) {
-            btn.classList.add('selected');
-          }
-        });
-
-        // Hide all flavor sections
-        document.querySelectorAll('.flavor-section').forEach((section) => {
-          section.classList.remove('show');
+          if (btn.textContent.trim() === brand) btn.classList.add('selected');
         });
 
         // Show selected brand's flavors
+        document.querySelectorAll('.flavor-section').forEach((section) => section.classList.remove('show'));
         const brandId = brand.toLowerCase().replace(/[^a-z0-9]/g, '-');
         const flavorSection = document.getElementById('flavors-' + brandId);
-        if (flavorSection) {
-          flavorSection.classList.add('show');
-        }
+        if (flavorSection) flavorSection.classList.add('show');
 
-        // Clear flavor selection
+        // Reset flavor selection when brand changes
+        selectedFlavor = '';
+        sessionStorage.removeItem('canned_flavor');
         document.querySelectorAll('.flavor-button').forEach((btn) => btn.classList.remove('selected'));
+
+        // Set price for this brand
+        setDisplayedUnitPrice(priceForBrand(brand));
+
         updateAddToCartButton();
       }
 
@@ -397,9 +437,7 @@
         if (currentSection) {
           currentSection.querySelectorAll('.flavor-button').forEach((btn) => {
             btn.classList.remove('selected');
-            if (btn.textContent.trim() === flavor) {
-              btn.classList.add('selected');
-            }
+            if (btn.textContent.trim() === flavor) btn.classList.add('selected');
           });
         }
 
@@ -408,12 +446,13 @@
 
       function updateAddToCartButton() {
         const button = document.getElementById('add-to-cart-btn');
-        const quantity = parseInt(document.getElementById('quantity').value || 1);
-        const totalPrice = basePrice * quantity;
+        const quantity = parseInt(document.getElementById('quantity').value || 1, 10);
+        const unit = selectedBrand ? priceForBrand(selectedBrand) : DEFAULT_BASE_PRICE;
+        const totalPrice = unit * quantity;
 
         if (selectedBrand && selectedFlavor) {
-          button.textContent = `Add to Cart — ${selectedBrand} / ${selectedFlavor} × ${quantity} ($${totalPrice.toFixed(
-            2
+          button.textContent = `Add to Cart — ${selectedBrand} / ${selectedFlavor} × ${quantity} (${fmt.format(
+            totalPrice
           )})`;
           button.disabled = false;
           button.style.background = '#ff6600';
@@ -426,13 +465,12 @@
 
       function changeQuantity(change) {
         const input = document.getElementById('quantity');
-        const newValue = Math.max(1, Math.min(50, parseInt(input.value || 1) + change));
+        const newValue = Math.max(1, Math.min(50, parseInt(input.value || 1, 10) + change));
         input.value = newValue;
         updateAddToCartButton();
       }
 
       async function updateCartCount() {
-        // Prefer Shopify cart count, fall back to localStorage cart length
         try {
           const res = await fetch('/cart.js', { credentials: 'same-origin' });
           if (res.ok) {
@@ -462,9 +500,8 @@
         button.textContent = '⏳ Adding...';
         button.disabled = true;
 
-        const quantity = parseInt(document.getElementById('quantity').value || 1);
+        const quantity = parseInt(document.getElementById('quantity').value || 1, 10);
         const comments = document.getElementById('order-comments').value.trim();
-        const totalPrice = basePrice * quantity;
 
         const order = {
           id: 'canned-drinks-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
@@ -473,17 +510,16 @@
           flavor: selectedFlavor,
           quantity: quantity,
           comments: comments,
-          price: totalPrice.toFixed(2),
+          unitPrice: priceForBrand(selectedBrand),
           timestamp: new Date().toISOString(),
           dateAdded: new Date().toLocaleDateString(),
         };
 
-        // Try Shopify AJAX cart first if variant ID is configured
         const variantId = typeof window.CANNED_VARIANT_ID === 'number' ? window.CANNED_VARIANT_ID : null;
 
         try {
           if (variantId) {
-            // Build form-encoded body with line item properties
+            // Send line item properties (Brand/Flavor) to Shopify
             const body = new URLSearchParams();
             body.set('id', String(variantId));
             body.set('quantity', String(quantity));
@@ -506,7 +542,7 @@
               throw new Error(err || 'Add to cart failed');
             }
           } else {
-            // Fallback to localStorage cart
+            // Local fallback cart
             let cart = [];
             try {
               cart = JSON.parse(localStorage.getItem('wtf-cart') || '[]');
@@ -517,18 +553,18 @@
             localStorage.setItem('wtf-cart', JSON.stringify(cart));
           }
 
-          // Success UI
           await updateCartCount();
+
           const successMsg = document.getElementById('success-message');
+          const total = order.unitPrice * order.quantity;
           successMsg.innerHTML =
             `✅ <strong>Added to cart!</strong><br>
-                     <strong>${order.brand}</strong> — ${order.flavor}<br>
-                     Qty: ${order.quantity} • Est. Total: $${order.price}` +
-            (order.comments ? `<br><em>Note:</em> ${order.comments}` : '');
+             <strong>${order.brand}</strong> — ${order.flavor}<br>
+             Qty: ${order.quantity} • Est. Total: ${fmt.format(total)}` +
+            (comments ? `<br><em>Note:</em> ${comments}` : '');
           successMsg.classList.add('show');
           successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-          // Event hook for other scripts
           document.dispatchEvent(
             new CustomEvent('canned:added', {
               detail: { brand: selectedBrand, flavor: selectedFlavor, quantity, comments, variantId },
@@ -539,7 +575,6 @@
           alert('❌ Error adding to cart. Please try again.');
         }
 
-        // Reset button after 5 seconds
         setTimeout(() => {
           button.textContent = originalText;
           button.disabled = false;
