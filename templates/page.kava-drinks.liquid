@@ -1,49 +1,130 @@
-{% comment %}
-  Kava Drinks — parity UX with Kratom; single hero image.
-  If this is not a product template, set ONE of:
-    window.WTF_PRODUCT_HANDLE = 'your-kava-product-handle'
-    OR
-    window.WTF_PRODUCT_JSON   = { ...product json... }
-  before the ajax cart script runs (see theme.liquid include below).
-{% endcomment %}
+{%- comment -%}
+WTF • Kava Drinks (production)
+- Reads Variant ID + Flavors from Theme Settings.
+- Loads assets/wtf_flavor_system.css and assets/wtf-flavor-system.js (guarded).
+- Hydrates size/flavor chips and AJAX add-to-cart via /cart/add.js.
+{%- endcomment -%}
 
-<script>
-  // Set product handle for AJAX cart functionality
-  window.WTF_PRODUCT_HANDLE = 'custom-kava-drink';
-</script>
+{%- assign kava_variant_id = settings.kava_drink_variant_id | default: 0 -%}
+{%- assign price_medium = settings.kava_price_medium | default: 0 -%}
+{%- assign price_large  = settings.kava_price_large  | default: 0 -%}
+{%- assign price_gallon = settings.kava_price_gallon | default: 0 -%}
+{%- assign extra_pump_price = settings.kava_extra_pump_price | default: settings.extra_pump_price_default | default: 0.50 -%}
 
-<main id="MainContent" class="page-width">
-  <header class="wtf-page-hero" style="text-align:center; margin: 16px 0 20px;">
+{%- assign kava_flavor_string = settings.kava_flavors | default: '' -%}
+{%- assign kava_flavors_raw = kava_flavor_string | split: ',' -%}
+{%- assign kava_flavors = '' | split: ',' -%}
+{%- for f in kava_flavors_raw -%}
+  {%- assign _t = f | strip -%}
+  {%- if _t != '' -%}{%- assign kava_flavors = kava_flavors | push: _t -%}{%- endif -%}
+{%- endfor -%}
+
+{%- capture _css -%}wtf_flavor_system.css{%- endcapture -%}
+<link rel="stylesheet" href="{{ _css | asset_url }}" media="all">
+
+<main id="MainContent" class="page-width" style="max-width:1100px;margin:0 auto;padding:16px;">
+  <header style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
     <img
       src="{{ 'kava_drinks_150x150.png' | asset_url }}"
-      alt="Kava Drinks"
-      width="150"
-      height="150"
-      loading="eager"
-      style="max-width:150px; height:auto;"
+      alt="Kava drinks"
+      width="150" height="150" loading="eager"
+      style="border-radius:50%;box-shadow:0 6px 16px rgba(0,0,0,.15)"
     >
-    <h1 style="margin-top:10px;">Kava Drinks</h1>
-    <p style="color:#555; margin-top: 6px;">Choose your flavor, then add to cart.</p>
+    <div>
+      <h1 style="margin:0 0 6px 0;font-size:clamp(24px,3.5vw,34px);font-weight:800;letter-spacing:.2px;color:#2E2E2E;">
+        Build Your Kava Drink
+      </h1>
+      <p style="margin:0;color:#666;">Pick a size, choose flavors, we’ll handle the pumps.</p>
+    </div>
   </header>
 
-  {% render 'wtf-flavor-data' %}
-  {% render 'wtf-flavor-options', title: 'Choose your flavor', flavors: wtfKavaFlavors, option_name: 'Flavor' %}
-
-  <form method="post" action="/cart/add" data-wtf-ajax style="margin-top:16px;">
-    <input type="hidden" name="id" value="">
-    <div style="display:flex; gap:8px; align-items:center; margin-top:10px;">
-      <label for="wtf-qty-kava" style="min-width:56px;">Qty</label>
-      <input id="wtf-qty-kava" name="quantity" type="number" min="1" value="1" style="width:80px;">
-      <button type="submit" class="wtf-primary-cta" style="margin-left:auto;">Add to cart</button>
+  {%- if kava_variant_id == 0 -%}
+    <div class="message message-warning" role="alert" style="margin:12px 0;">
+      Missing Variant ID. Set <strong>Kava Drink — Variant ID</strong> in <em>Customize → Theme settings → Kava Drinks</em>.
     </div>
-    <div id="wtf-price" data-price style="margin-top:8px; font-weight:600;"></div>
-  </form>
+  {%- endif -%}
+
+  <!-- Builder root (consumed by JS) -->
+  <div id="wtf-builder"
+       data-variant-id="{{ kava_variant_id }}"
+       data-drink="Kava Drink"
+       data-extra-pump-price="{{ extra_pump_price }}"
+       data-price-small="0"
+       data-price-medium="{{ price_medium }}"
+       data-price-large="{{ price_large }}"
+       data-price-gallon="{{ price_gallon }}">
+  </div>
+
+  <!-- Sizes -->
+  <section class="size-selection" aria-labelledby="size-title">
+    <h3 id="size-title">Choose a size</h3>
+    <div class="size-options" role="group" aria-label="Select size">
+      {%- for s in 'Small,Medium,Large' | split: ',' -%}
+        <button type="button"
+                class="size-selector{% if s == 'Medium' %} active{% endif %}"
+                data-size="{{ s }}"
+                aria-pressed="{% if s == 'Medium' %}true{% else %}false{% endif %}">
+          <span class="size-letter">{{ s | slice: 0,1 }}</span>
+          <span class="size-name">{{ s }}</span>
+        </button>
+      {%- endfor -%}
+    </div>
+  </section>
+
+  <!-- Price & pumps -->
+  <section class="pricing-section" aria-live="polite" aria-atomic="true">
+    <div id="pump-counter" class="pump-counter"></div>
+    <div id="price-display" class="price-display"></div>
+  </section>
+
+  <!-- Flavors -->
+  <section class="flavor-selection" aria-labelledby="flavor-title">
+    <h3 id="flavor-title">Pick your flavors</h3>
+
+    {%- if kava_flavors.size > 0 -%}
+      <div class="flavor-grid" role="list">
+        {%- for flavor in kava_flavors -%}
+          <button type="button"
+                  class="flavor-option"
+                  data-flavor="{{ flavor | escape }}"
+                  role="listitem"
+                  aria-pressed="false">
+            {{ flavor }}
+          </button>
+        {%- endfor -%}
+      </div>
+    {%- else -%}
+      <p>No flavors configured. Add items to <strong>Kava Drink Flavors</strong> in Theme settings.</p>
+    {%- endif -%}
+
+    <div id="selected-flavors" class="selected-flavors" aria-live="polite" aria-atomic="true"></div>
+  </section>
+
+  <!-- Notes -->
+  <section style="margin-top:12px;">
+    <label for="wtf-notes" class="happy-hour-toggle"><span style="margin-right:8px;">Order notes</span></label>
+    <textarea id="wtf-notes" rows="2" style="width:100%;padding:10px;border-radius:8px;border:1px solid #E0E0E0;" placeholder="Any special instructions?"></textarea>
+  </section>
+
+  <!-- Add to cart -->
+  <section class="cart-actions">
+    <button id="wtf-add-to-cart" class="wtf-add-to-cart-btn" type="button">Add to Cart</button>
+  </section>
+
+  <div id="system-messages" class="system-messages" aria-live="polite" aria-atomic="true"></div>
+
+  <noscript><p>Please enable JavaScript to customize your drink.</p></noscript>
 </main>
 
-<style>
-  .wtf-primary-cta {
-    background:#ff6600; color:#fff; border:none; border-radius:8px;
-    padding:12px 16px; min-height:44px; font-weight:700; cursor:pointer;
+{%- comment -%}
+  Ensure the JS is available (safe even if already included in theme.liquid).
+{%- endcomment -%}
+<script>
+(function(){
+  function loadOnce(src, onload){
+    if ([...document.scripts].some(s => s.src.includes(src))) { onload && onload(); return; }
+    var el = document.createElement('script'); el.src = src; el.defer = true; el.onload = onload; document.body.appendChild(el);
   }
-  .wtf-primary-cta:disabled { opacity:.6; cursor:not-allowed; }
-</style>
+  loadOnce("{{ 'wtf-flavor-system.js' | asset_url }}");
+})();
+</script>
