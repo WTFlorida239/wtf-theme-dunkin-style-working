@@ -2,7 +2,10 @@
   Kratom Teas — matched UX with Kava Drinks.
 {% endcomment %}
 
-{% section 'header' %}
+<script>
+  // Set product handle for AJAX cart functionality
+  window.WTF_PRODUCT_HANDLE = 'custom-kratom-tea';
+</script>
 
 <main id="MainContent" class="page-width">
   <header class="wtf-page-hero" style="text-align:center; margin: 16px 0 20px;">
@@ -31,5 +34,3 @@
   }
   .wtf-primary-cta:disabled { opacity:.6; cursor:not-allowed; }
 </style>
-
-{% section 'footer' %}

@@ -58,13 +58,38 @@
     }
     if (window.WTF_PRODUCT_HANDLE) {
       return fetch('/products/' + encodeURIComponent(window.WTF_PRODUCT_HANDLE) + '.js', { credentials: 'same-origin' })
-        .then(function(r){ return r.json(); });
+        .then(function(r){ 
+          if (!r.ok) {
+            throw new Error('Product not found: ' + window.WTF_PRODUCT_HANDLE);
+          }
+          return r.json(); 
+        })
+        .catch(function(err){
+          console.warn('Product fetch failed:', err.message);
+          // Return a fallback product structure for custom products
+          return createFallbackProduct();
+        });
     }
     // Try to sniff product JSON if Liquid embedded it:
     try {
       if (window.__PRODUCT_JSON__) return Promise.resolve(window.__PRODUCT_JSON__);
     } catch(e){}
     return Promise.reject(new Error('No product data available'));
+  }
+
+  function createFallbackProduct(){
+    // Create a basic product structure for custom drinks
+    return {
+      id: 'custom-product',
+      title: 'Custom Drink',
+      handle: window.WTF_PRODUCT_HANDLE || 'custom-drink',
+      options: ['Size', 'Flavor'],
+      variants: [
+        { id: 'custom-medium', option1: 'Medium', option2: '', price: 900, available: true },
+        { id: 'custom-large', option1: 'Large', option2: '', price: 1500, available: true },
+        { id: 'custom-gallon', option1: 'Gallon', option2: '', price: 10000, available: true }
+      ]
+    };
   }
 
   function pickVariant(product, optionState){
@@ -100,13 +125,24 @@
     return fetch('/cart.js', { credentials: 'same-origin' })
       .then(function(r){ return r.json(); })
       .then(function(cart){
-        $all('[data-cart-count], .cart-count, #CartCount').forEach(function(el){
+        // Update all cart count elements
+        $all('[data-cart-count], .cart-count, #cart-count, #CartCount').forEach(function(el){
           el.textContent = cart.item_count;
         });
+        
+        // Update cart link text if it exists
+        var cartLink = document.querySelector('.header-cart-link__label');
+        if (cartLink) {
+          cartLink.textContent = cart.item_count > 0 ? 'Cart (' + cart.item_count + ')' : 'Cart';
+        }
+        
         document.dispatchEvent(new CustomEvent('wtf:cartUpdated', { detail: cart }));
         return cart;
       })
-      .catch(function(){ /* ignore */ });
+      .catch(function(err){ 
+        console.warn('Failed to update cart count:', err);
+        return null;
+      });
   }
 
   function attachFormHandler(){
