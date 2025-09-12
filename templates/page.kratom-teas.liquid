@@ -1,23 +1,26 @@
 {% comment %}
-  Kratom Teas — matched UX with Kava Drinks.
+  Kratom Teas — Custom ordering page with proper variant handling
 {% endcomment %}
 
+{% assign product = all_products['custom-kratom-tea'] %}
+
 <script>
-  // Set product handle for AJAX cart functionality
+  // Set product data for AJAX cart functionality
   window.WTF_PRODUCT_HANDLE = 'custom-kratom-tea';
+  window.WTF_PRODUCT_JSON = {{ product | json }};
 </script>
 
 <main id="MainContent" class="page-width">
   <header class="wtf-page-hero" style="text-align:center; margin: 16px 0 20px;">
     <h1>Kratom Teas</h1>
-    <p style="color:#555; margin-top:6px;">Choose your flavor, then add to cart.</p>
+    <p style="color:#555; margin-top:6px;">Choose your size, strain, and flavors.</p>
   </header>
 
   {% render 'wtf-flavor-data' %}
-  {% render 'wtf-flavor-options', title: 'Choose your flavor', flavors: wtfKratomFlavors, option_name: 'Flavor' %}
+  {% render 'wtf-flavor-options', title: 'Custom Kratom Tea', flavors: wtfKratomFlavors, option_name: 'Flavor', product: product %}
 
   <form method="post" action="/cart/add" data-wtf-ajax style="margin-top:16px;">
-    <input type="hidden" name="id" value="">
+    <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
     <div style="display:flex; gap:8px; align-items:center; margin-top:10px;">
       <label for="wtf-qty-kratom" style="min-width:56px;">Qty</label>
       <input id="wtf-qty-kratom" name="quantity" type="number" min="1" value="1" style="width:80px;">

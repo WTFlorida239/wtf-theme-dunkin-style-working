@@ -1,15 +1,13 @@
 {% comment %}
-  Kava Drinks — parity UX with Kratom; single hero image.
-  If this is not a product template, set ONE of:
-    window.WTF_PRODUCT_HANDLE = 'your-kava-product-handle'
-    OR
-    window.WTF_PRODUCT_JSON   = { ...product json... }
-  before the ajax cart script runs (see theme.liquid include below).
+  Kava Drinks — Custom ordering page with proper variant handling
 {% endcomment %}
 
+{% assign product = all_products['custom-kava-drink'] %}
+
 <script>
-  // Set product handle for AJAX cart functionality
+  // Set product data for AJAX cart functionality
   window.WTF_PRODUCT_HANDLE = 'custom-kava-drink';
+  window.WTF_PRODUCT_JSON = {{ product | json }};
 </script>
 
 <main id="MainContent" class="page-width">
@@ -23,14 +21,14 @@
       style="max-width:150px; height:auto;"
     >
     <h1 style="margin-top:10px;">Kava Drinks</h1>
-    <p style="color:#555; margin-top: 6px;">Choose your flavor, then add to cart.</p>
+    <p style="color:#555; margin-top: 6px;">Choose your size, strain, and flavors.</p>
   </header>
 
   {% render 'wtf-flavor-data' %}
-  {% render 'wtf-flavor-options', title: 'Choose your flavor', flavors: wtfKavaFlavors, option_name: 'Flavor' %}
+  {% render 'wtf-flavor-options', title: 'Custom Kava Drink', flavors: wtfKavaFlavors, option_name: 'Flavor', product: product %}
 
   <form method="post" action="/cart/add" data-wtf-ajax style="margin-top:16px;">
-    <input type="hidden" name="id" value="">
+    <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
     <div style="display:flex; gap:8px; align-items:center; margin-top:10px;">
       <label for="wtf-qty-kava" style="min-width:56px;">Qty</label>
       <input id="wtf-qty-kava" name="quantity" type="number" min="1" value="1" style="width:80px;">
