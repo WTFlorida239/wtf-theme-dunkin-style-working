@@ -1,32 +1,32 @@
 {%- comment -%}
-  WTF • Kava Drinks (Dunkin-style customizer)
-  - Reads Variant ID + Flavor list from Theme Settings
-  - Uses assets/wtf_flavor_system.css for styling
-  - Requires assets/wtf-flavor-system.js (included in layout/theme.liquid)
-  - AJAX add-to-cart via Shopify /cart/add.js with line item properties
+  WTF • Kava Drinks (production)
+  - Reads Variant ID + Flavors from Theme Settings.
+  - Loads assets/wtf_flavor_system.css and assets/wtf-flavor-system.js (guarded).
+  - Hydrates size/flavor chips and AJAX add-to-cart via /cart/add.js.
 {%- endcomment -%}
 
 {%- assign kava_variant_id = settings.kava_drink_variant_id | default: 0 -%}
 {%- assign price_medium = settings.kava_price_medium | default: 0 -%}
-{%- assign price_large  = settings.kava_price_large  | default: 0 -%}
+{%- assign price_large = settings.kava_price_large | default: 0 -%}
 {%- assign price_gallon = settings.kava_price_gallon | default: 0 -%}
-{%- assign extra_pump_price = settings.kava_extra_pump_price | default: settings.extra_pump_price_default | default: 0.50 -%}
+{%- assign extra_pump_price = settings.kava_extra_pump_price
+  | default: settings.extra_pump_price_default
+  | default: 0.50
+-%}
 
 {%- assign kava_flavor_string = settings.kava_flavors | default: '' -%}
 {%- assign kava_flavors_raw = kava_flavor_string | split: ',' -%}
 {%- assign kava_flavors = '' | split: ',' -%}
 {%- for f in kava_flavors_raw -%}
   {%- assign _t = f | strip -%}
-  {%- if _t != '' -%}
-    {%- assign kava_flavors = kava_flavors | push: _t -%}
-  {%- endif -%}
+  {%- if _t != '' -%}{%- assign kava_flavors = kava_flavors | push: _t -%}{%- endif -%}
 {%- endfor -%}
 
-{%- capture _asset_css -%}wtf_flavor_system.css{%- endcapture -%}
-<link rel="stylesheet" href="{{ _asset_css | asset_url }}" media="all">
+{%- capture _css -%}wtf_flavor_system.css{%- endcapture -%}
+<link rel="stylesheet" href="{{ _css | asset_url }}" media="all">
 
 <main id="MainContent" class="page-width" style="max-width:1100px;margin:0 auto;padding:16px;">
-  <header class="wtf-page-header" style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
+  <header style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">
     <img
       src="{{ 'kava_drinks_150x150.png' | asset_url }}"
       alt="Kava drinks"
@@ -39,66 +39,67 @@
       <h1 style="margin:0 0 6px 0;font-size:clamp(24px,3.5vw,34px);font-weight:800;letter-spacing:.2px;color:#2E2E2E;">
         Build Your Kava Drink
       </h1>
-      <p style="margin:0;color:#666;">Pick a size, choose flavors, and we’ll handle the pumps.</p>
+      <p style="margin:0;color:#666;">Pick a size, choose flavors, we’ll handle the pumps.</p>
     </div>
   </header>
 
   {%- if kava_variant_id == 0 -%}
     <div class="message message-warning" role="alert" style="margin:12px 0;">
-      Missing Variant ID. Set <strong>Kava Drink — Variant ID</strong> in <em>Customize → Theme settings → Kava Drinks</em>.
+      Missing Variant ID. Set <strong>Kava Drink — Variant ID</strong> in
+      <em>Customize → Theme settings → Kava Drinks</em>.
     </div>
   {%- endif -%}
 
-  <!-- Builder root: JS reads these data-* attributes -->
-  <div id="wtf-builder"
-       data-variant-id="{{ kava_variant_id }}"
-       data-drink="Kava Drink"
-       data-extra-pump-price="{{ extra_pump_price }}"
-       data-price-small="0"
-       data-price-medium="{{ price_medium }}"
-       data-price-large="{{ price_large }}"
-       data-price-gallon="{{ price_gallon }}">
-  </div>
+  <!-- Builder root (consumed by JS) -->
+  <div
+    id="wtf-builder"
+    data-variant-id="{{ kava_variant_id }}"
+    data-drink="Kava Drink"
+    data-extra-pump-price="{{ extra_pump_price }}"
+    data-price-small="0"
+    data-price-medium="{{ price_medium }}"
+    data-price-large="{{ price_large }}"
+    data-price-gallon="{{ price_gallon }}"
+  ></div>
 
-  <!-- Size selection -->
+  <!-- Sizes -->
   <section class="size-selection" aria-labelledby="size-title">
     <h3 id="size-title">Choose a size</h3>
     <div class="size-options" role="group" aria-label="Select size">
-      {%- assign sizes = 'Small,Medium,Large' | split: ',' -%}
-      {%- for s in sizes -%}
-        <button type="button"
-                class="size-selector{% if s == 'Medium' %} active{% endif %}"
-                data-size="{{ s }}"
-                aria-pressed="{% if s == 'Medium' %}true{% else %}false{% endif %}">
-          <span class="size-letter">{{ s | slice: 0,1 }}</span>
+      {%- for s in 'Small,Medium,Large' | split: ',' -%}
+        <button
+          type="button"
+          class="size-selector{% if s == 'Medium' %} active{% endif %}"
+          data-size="{{ s }}"
+          aria-pressed="{% if s == 'Medium' %}true{% else %}false{% endif %}"
+        >
+          <span class="size-letter">{{ s | slice: 0, 1 }}</span>
           <span class="size-name">{{ s }}</span>
         </button>
       {%- endfor -%}
     </div>
   </section>
 
-  <!-- Pump counter + pricing -->
+  <!-- Price & pumps -->
   <section class="pricing-section" aria-live="polite" aria-atomic="true">
-    <div id="pump-counter" class="pump-counter">
-      <!-- JS populates -->
-    </div>
-    <div id="price-display" class="price-display">
-      <!-- JS populates -->
-    </div>
+    <div id="pump-counter" class="pump-counter"></div>
+    <div id="price-display" class="price-display"></div>
   </section>
 
-  <!-- Flavor grid -->
+  <!-- Flavors -->
   <section class="flavor-selection" aria-labelledby="flavor-title">
     <h3 id="flavor-title">Pick your flavors</h3>
 
     {%- if kava_flavors.size > 0 -%}
       <div class="flavor-grid" role="list">
         {%- for flavor in kava_flavors -%}
-          <button type="button"
-                  class="flavor-option"
-                  data-flavor="{{ flavor | escape }}"
-                  role="listitem"
-                  aria-pressed="false">
+          <button
+            type="button"
+            class="flavor-option"
+            data-flavor="{{ flavor | escape }}"
+            role="listitem"
+            aria-pressed="false"
+          >
             {{ flavor }}
           </button>
         {%- endfor -%}
@@ -107,30 +108,46 @@
       <p>No flavors configured. Add items to <strong>Kava Drink Flavors</strong> in Theme settings.</p>
     {%- endif -%}
 
-    <div id="selected-flavors" class="selected-flavors" aria-live="polite" aria-atomic="true">
-      <!-- JS populates -->
-    </div>
+    <div id="selected-flavors" class="selected-flavors" aria-live="polite" aria-atomic="true"></div>
   </section>
 
   <!-- Notes -->
-  <section class="discount-options" style="margin-top:12px;">
-    <label for="wtf-notes" class="happy-hour-toggle">
-      <span style="margin-right:8px;">Order notes</span>
-    </label>
-    <textarea id="wtf-notes" rows="2" style="width:100%;padding:10px;border-radius:8px;border:1px solid #E0E0E0;" placeholder="Any special instructions?"></textarea>
+  <section style="margin-top:12px;">
+    <label for="wtf-notes" class="happy-hour-toggle"><span style="margin-right:8px;">Order notes</span></label>
+    <textarea
+      id="wtf-notes"
+      rows="2"
+      style="width:100%;padding:10px;border-radius:8px;border:1px solid #E0E0E0;"
+      placeholder="Any special instructions?"
+    ></textarea>
   </section>
 
   <!-- Add to cart -->
   <section class="cart-actions">
-    <button id="wtf-add-to-cart" class="wtf-add-to-cart-btn" type="button">
-      Add to Cart
-    </button>
+    <button id="wtf-add-to-cart" class="wtf-add-to-cart-btn" type="button">Add to Cart</button>
   </section>
 
-  <!-- System toasts container (JS will create if missing) -->
   <div id="system-messages" class="system-messages" aria-live="polite" aria-atomic="true"></div>
 
-  <noscript>
-    <p>Please enable JavaScript to customize your Kava drink and add it to cart.</p>
-  </noscript>
+  <noscript><p>Please enable JavaScript to customize your drink.</p></noscript>
 </main>
+
+{%- comment -%}
+  Ensure the JS is available (safe even if already included in theme.liquid).
+{%- endcomment -%}
+<script>
+  (function () {
+    function loadOnce(src, onload) {
+      if ([...document.scripts].some((s) => s.src.includes(src))) {
+        onload && onload();
+        return;
+      }
+      var el = document.createElement('script');
+      el.src = src;
+      el.defer = true;
+      el.onload = onload;
+      document.body.appendChild(el);
+    }
+    loadOnce("{{ 'wtf-flavor-system.js' | asset_url }}");
+  })();
+</script>
