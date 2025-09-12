@@ -4,6 +4,13 @@
 
 {% assign product = all_products['custom-kratom-tea'] %}
 
+{% if product == nil %}
+<main id="MainContent" class="page-width" style="max-width:1100px;margin:0 auto;padding:16px;">
+  <h1>Kratom Teas</h1>
+  <p>Product "custom-kratom-tea" not found. Create it in Shopify, then reload.</p>
+</main>
+{% else %}
+
 <script>
   // Variant mapping for size selection
   const variantIdBySize = {
@@ -30,10 +37,4 @@
   {% render 'wtf-kratom-customizer', product: product, flavors: wtfKratomFlavors %}
 </main>
 
-<style>
-  .wtf-primary-cta {
-    background:#ff6600; color:#fff; border:none; border-radius:8px;
-    padding:12px 16px; min-height:44px; font-weight:700; cursor:pointer;
-  }
-  .wtf-primary-cta:disabled { opacity:.6; cursor:not-allowed; }
-</style>
+{% endif %}
