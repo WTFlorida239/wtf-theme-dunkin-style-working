@@ -18,7 +18,7 @@
       .product-details { background:#fff; padding:30px; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,.1); }
 
       .product-title { font-size:32px; font-weight:800; margin-bottom:8px; }
-      .product-sub { color:#666; margin-bottom:18px; }
+      .product-sub { color:#666; margin-bottom:8px; }
       .product-price { font-size:20px; color:#ff6600; font-weight:800; margin-bottom:14px; }
 
       .selection-section { margin:26px 0; border-bottom:1px solid #eee; padding-bottom:18px; }
@@ -63,9 +63,37 @@
       .sr-only { position:absolute!important; width:1px; height:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap; }
     </style>
 
-    <!-- Settings / per-page override: use a single variant to add to cart and send Flavor/Size as properties -->
+    <!-- ======= CART VARIANT SOURCE ======= -->
     <script>
       window.KAVA_DRINK_VARIANT_ID = {{ page.metafields.custom.kava_variant_id | default: settings.kava_drink_variant_id | json }};
+    </script>
+
+    <!--
+      ======= EDITABLE PRICES (DISPLAY ONLY) =======
+      1) Edit SIZE_PRICES to set price for "Large 16 oz" vs "Gallon".
+      2) (Optional) Add per-flavor overrides in FLAVOR_PRICES (exact label match).
+      CTA + headline update live, but checkout still charges the product's variant price.
+      If you want checkout to match, we can wire variants/discounts later.
+    -->
+    <script>
+      const SIZE_PRICES = {
+        'Large 16 oz': 12.0,
+        Gallon: 45.0,
+      };
+
+      // Optional flavor overrides (leave empty if all flavors use the size price)
+      // Example: 'Pumpkin Spice': 13.50
+      const FLAVOR_PRICES = {};
+
+      const moneyFmt = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' });
+
+      function unitPriceFor(selection) {
+        // flavor overrides take precedence; else size price
+        if (selection.flavor && Object.prototype.hasOwnProperty.call(FLAVOR_PRICES, selection.flavor)) {
+          return Number(FLAVOR_PRICES[selection.flavor]) || SIZE_PRICES[selection.size] || 0;
+        }
+        return SIZE_PRICES[selection.size] || 0;
+      }
     </script>
   </head>
 
@@ -80,7 +108,6 @@
 
       <div class="product-grid">
         <div class="product-image-section">
-          <!-- single required image -->
           <img
             src="{{ 'kava_drinks_150x150.png' | asset_url }}"
             alt="Kava Drinks"
@@ -95,8 +122,9 @@
         <div class="product-details">
           <h1 class="product-title">Kava Drinks</h1>
           <p class="product-sub">Pick a flavor, choose your size, add to cart.</p>
+          <div class="product-price" id="product-price"></div>
 
-          <!-- Size chips: Large 16 oz & Gallon -->
+          <!-- Size chips -->
           <div class="selection-section">
             <h3 class="section-title">🥤 Size</h3>
             <div class="chip-row" role="group" aria-label="Size">
@@ -105,11 +133,10 @@
             </div>
           </div>
 
-          <!-- Flavor grid (from your spreadsheet “Kava Drinks” column) -->
+          <!-- Flavors -->
           <div class="selection-section">
             <h3 class="section-title">🌺 Flavor</h3>
             <div class="flavor-grid" id="kava-flavor-grid" role="group" aria-label="Kava flavors">
-              <!-- generated buttons -->
               <button type="button" class="flavor" data-flavor="Lemon">Lemon</button>
               <button type="button" class="flavor" data-flavor="Lime">Lime</button>
               <button type="button" class="flavor" data-flavor="Orange">Orange</button>
@@ -183,13 +210,13 @@
     </div>
 
     <script>
-      // Currency display (optional; not showing prices by default)
-      const moneyFmt = new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' });
-
       let selectedSize = 'Large 16 oz';
       let selectedFlavor = null;
 
       document.addEventListener('DOMContentLoaded', () => {
+        // init headline price
+        updatePriceHeadline();
+
         // Size chips
         document.querySelectorAll('.chip[data-size]').forEach((chip) => {
           chip.addEventListener('click', () => {
@@ -197,6 +224,7 @@
             chip.classList.add('is-selected');
             selectedSize = chip.getAttribute('data-size');
             updateCTA();
+            updatePriceHeadline();
           });
         });
 
@@ -206,7 +234,9 @@
             document.querySelectorAll('.flavor').forEach((b) => b.classList.remove('is-selected'));
             btn.classList.add('is-selected');
             selectedFlavor = btn.getAttribute('data-flavor');
+            sessionStorage.setItem('kava_flavor', selectedFlavor);
             updateCTA();
+            updatePriceHeadline();
           });
           btn.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -216,7 +246,7 @@
           });
         });
 
-        // Restore last flavor if user returns
+        // Restore last flavor if any
         const savedFlavor = sessionStorage.getItem('kava_flavor');
         if (savedFlavor) {
           const el = [...document.querySelectorAll('.flavor')].find(
@@ -224,7 +254,19 @@
           );
           if (el) el.click();
         }
+
+        updateCartCount();
       });
+
+      function currentUnitPrice() {
+        return unitPriceFor({ size: selectedSize, flavor: selectedFlavor });
+      }
+
+      function updatePriceHeadline() {
+        const priceEl = document.getElementById('product-price');
+        const unit = currentUnitPrice();
+        priceEl.textContent = unit > 0 ? `${moneyFmt.format(unit)} per ${selectedSize}` : '';
+      }
 
       function changeQty(delta) {
         const input = document.getElementById('quantity');
@@ -235,11 +277,16 @@
 
       function updateCTA() {
         const btn = document.getElementById('add-to-cart-btn');
+        const qty = Math.max(1, Math.min(50, parseInt(document.getElementById('quantity').value || '1', 10)));
+        const unit = currentUnitPrice();
+        const total = unit * qty;
+
         if (selectedFlavor) {
-          const qty = Math.max(1, Math.min(50, parseInt(document.getElementById('quantity').value || '1', 10)));
-          btn.textContent = `Add to Cart — ${selectedSize} × ${qty}`;
+          btn.textContent =
+            unit > 0
+              ? `Add to Cart — ${selectedSize} × ${qty} (${moneyFmt.format(total)})`
+              : `Add to Cart — ${selectedSize} × ${qty}`;
           btn.disabled = false;
-          sessionStorage.setItem('kava_flavor', selectedFlavor);
         } else {
           btn.textContent = 'Select a Flavor';
           btn.disabled = true;
@@ -298,12 +345,13 @@
               throw new Error(msg);
             }
           } else {
-            // Dev fallback if no variant configured
+            // Fallback for preview/dev
             const order = {
               id: 'kava-' + Date.now() + '-' + Math.random().toString(36).slice(2),
               product: 'Kava Drink',
               ...properties,
               quantity,
+              unitPrice: currentUnitPrice(),
               timestamp: new Date().toISOString(),
             };
             let cart = [];
@@ -317,11 +365,14 @@
           await updateCartCount();
 
           const success = document.getElementById('success-message');
+          const total = currentUnitPrice() * quantity;
           success.innerHTML =
             `✅ <strong>Added to cart!</strong><br>
              🌺 Flavor: <strong>${properties.Flavor}</strong><br>
              🥤 Size: ${properties.Size}<br>
-             🔢 Qty: ${quantity}` + (comments ? `<br>💬 ${comments}` : '');
+             🔢 Qty: ${quantity}` +
+            (Number.isFinite(total) && total > 0 ? `<br>💵 Est. Total: ${moneyFmt.format(total)}` : '') +
+            (properties.Comments ? `<br>💬 ${properties.Comments}` : '');
           success.classList.add('show');
           success.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
