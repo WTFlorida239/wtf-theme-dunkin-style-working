@@ -1,428 +1,185 @@
 {% comment %}
-  templates/page.kratom-teas.liquid
-  Custom Kratom Tea builder (AJAX cart)
-  - One variant ID for the drink (page metafield or theme setting)
-  - Medium: 4 included pumps, Large: 6 included pumps, Gallon: 0 (custom)
-  - Extra pumps charged at extra_pump_price (default $0.50)
+  WTF Dunkin Style — Kratom Teas (AJAX)
+  Assign to page: /pages/kratom-teas
+  Renders products from 'kratom-teas' collection.
+  If a Size option exists, renders chips for all Size values; otherwise adds first available variant.
 {% endcomment %}
 
-{%- assign tea_variant_id = page.metafields.custom.kratom_variant_id
-  | default: settings.kratom_tea_variant_id
-  | default: 0
--%}
-{%- assign extra_pump_price = page.metafields.custom.extra_pump_price
-  | default: settings.kratom_extra_pump_price
-  | default: 0.5
--%}
-{%- assign price_medium = settings.kratom_price_medium | default: '9.00' -%}
-{%- assign price_large = settings.kratom_price_large | default: '15.00' -%}
-{%- assign price_gallon = settings.kratom_price_gallon | default: '100.00' -%}
+{% assign brand_orange = '#ff6600' %}
+{% assign brand_text = '#333333' %}
 
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Custom Kratom Tea - WTF | Welcome To Florida</title>
+<div id="wtf-kratom-teas" class="wtf-wrap">
+  <header class="wtf-hero" role="banner" aria-label="Kratom Teas">
+    <h1 class="wtf-title">Kratom Teas</h1>
+    <p class="wtf-sub">Tap, choose size (if any), add to cart.</p>
+  </header>
 
-    <style>
-      :root{
-        --primary: {{ settings.color_primary | default: '#ff6600' }};
-        --success: {{ settings.color_success | default: '#28a745' }};
-        --bg: {{ settings.color_background | default: '#f8f9fa' }};
-        --text: {{ settings.color_text | default: '#333333' }};
-      }
-      *{box-sizing:border-box;margin:0;padding:0}
-      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
-      .header{background:var(--primary);color:#fff;padding:15px 0;text-align:center;font-size:24px;font-weight:700}
-      .container{max-width:1100px;margin:0 auto;padding:20px}
-      .back-link{display:inline-block;color:var(--primary);text-decoration:none;font-weight:700;font-size:16px;margin-bottom:20px;padding:10px 15px;border:2px solid var(--primary);border-radius:6px;transition:.2s}
-      .back-link:hover{background:var(--primary);color:#fff}
-      .grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
-      .product-image{width:100%;max-width:420px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
-      .panel{background:#fff;padding:24px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
-      .title{font-size:32px;font-weight:800;margin-bottom:6px}
-      .price-row{font-size:18px;font-weight:700;color:var(--primary);margin-bottom:10px}
-      .desc{color:#666;margin-bottom:18px}
-      .section{margin:22px 0;padding-bottom:16px;border-bottom:1px solid #eee}
-      .section:last-child{border-bottom:none}
-      .section h3{font-size:18px;font-weight:800;margin-bottom:12px}
-      .size-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-      .pill, .flavor{padding:14px;border:2px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;transition:.2s;text-align:center;font-size:14px}
-      .pill:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:0 6px 12px rgba(255,102,0,.2)}
-      .pill.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
-      .strain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
-      .flavor-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
-      .flavor:hover{border-color:var(--success);transform:translateY(-1px)}
-      .flavor.selected{background:var(--success);color:#fff;border-color:var(--success)}
-      .note{background:#e7f3ff;padding:12px;border-radius:8px;margin-bottom:12px;font-size:14px}
-      .warn{background:#fff3cd;color:#856404}
-      .qty{display:flex;align-items:center;gap:12px}
-      .qty .btn{width:40px;height:40px;border:2px solid var(--primary);background:#fff;color:var(--primary);border-radius:50%;font-weight:800;cursor:pointer;transition:.2s}
-      .qty .btn:hover{background:var(--primary);color:#fff;transform:scale(1.05)}
-      .qty input{width:82px;text-align:center;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:16px}
-      textarea{width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;resize:vertical;font-size:14px}
-      .btn-primary{width:100%;padding:16px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:18px;font-weight:800;cursor:pointer;transition:.2s;margin-top:14px}
-      .btn-primary:hover{background:#e55a00;transform:translateY(-2px);box-shadow:0 10px 18px rgba(255,102,0,.25)}
-      .btn-primary[disabled]{background:#bbb;cursor:not-allowed;transform:none;box-shadow:none}
-      .success{display:none;margin-top:12px;background:#d4edda;color:#155724;border:1px solid #c3e6cb;border-radius:8px;padding:12px;font-size:14px}
-      .success.show{display:block}
-      .cart-badge{position:fixed;top:16px;right:16px;background:var(--primary);color:#fff;padding:8px 14px;border-radius:999px;font-weight:800;box-shadow:0 10px 18px rgba(255,102,0,.25);z-index:50}
-      .hidden{display:none}
-      @media(max-width: 820px){.grid{grid-template-columns:1fr}}
-    </style>
-  </head>
-  <body>
-    <div class="header">WTF | Welcome To Florida</div>
-    <div class="cart-badge">Cart: <span id="cart-count">0</span></div>
+  {% assign col = collections['kratom-teas'] %}
+  {% if col and col.products_count > 0 %}
+    <section class="wtf-grid" aria-label="Kratom Teas">
+      {% for product in col.products %}
+        {% assign size_idx = null %}
+        {% for o in product.options_with_values %}
+          {% if o.name | downcase == 'size' %}{% assign size_idx = forloop.index0 %}{% endif %}
+        {% endfor %}
 
-    <div class="container">
-      <a href="/" class="back-link">← Back to Menu</a>
+        {% assign all_sizes = '' | split: ',' %}
+        {% if size_idx != null %}
+          {% for v in product.variants %}
+            {% assign sz = v.options[size_idx] | strip %}
+            {% unless all_sizes contains sz %}{% assign all_sizes = all_sizes | push: sz %}{% endunless %}
+          {% endfor %}
+        {% endif %}
 
-      <div class="grid">
-        <div>
-          <img src="{{ 'kratom_teas_150x150.png' | asset_url }}" alt="Custom Kratom Tea" class="product-image">
-        </div>
+        {% assign first_available = product.variants | where: 'available', true | first %}
 
-        <div class="panel">
-          <h1 class="title">Custom Kratom Tea</h1>
-          <div class="price-row">
-            Price: <span id="live-price">${{ price_medium }}</span>
-          </div>
-          <p class="desc">
-            Medium includes <strong>4</strong> pumps, Large includes <strong>6</strong> pumps. Gallon is custom (talk to
-            staff). Extra pumps are <strong>${{ extra_pump_price }}</strong> each and are the only thing that changes
-            the price.
-          </p>
-
-          <!-- SIZE -->
-          <div class="section">
-            <h3>☕ Choose Your Size</h3>
-            <div class="size-grid" id="size-grid">
-              <button type="button" class="pill" data-size="Medium" data-price="{{ price_medium }}">
-                Medium<br>
-                <small>12 oz — ${{ price_medium }}</small>
-              </button>
-              <button type="button" class="pill" data-size="Large" data-price="{{ price_large }}">
-                Large<br>
-                <small>16 oz — ${{ price_large }}</small>
-              </button>
-              <button type="button" class="pill" data-size="Gallon" data-price="{{ price_gallon }}">
-                Gallon<br>
-                <small>128 oz — ${{ price_gallon }}</small>
-              </button>
+        <article class="wtf-card">
+          <a class="wtf-media-link" href="{{ product.url }}" aria-label="View {{ product.title }}">
+            <div class="wtf-card-media">
+              {% if product.featured_media %}
+                <img
+                  src="{{ product.featured_media | image_url: width: 520 }}"
+                  srcset="{{ product.featured_media | image_url: width: 320 }} 320w, {{ product.featured_media | image_url: width: 520 }} 520w"
+                  sizes="(max-width:640px) 45vw, 220px"
+                  alt="{{ product.featured_media.alt | escape | default: product.title | escape }}"
+                  loading="lazy"
+                  width="{{ product.featured_media.width }}"
+                  height="{{ product.featured_media.height }}"
+                >
+              {% else %}
+                <img
+                  src="{{ 'kava_drinks_150x150.png' | asset_url }}"
+                  alt="{{ product.title | escape }}"
+                  loading="lazy"
+                  width="150"
+                  height="150"
+                >
+              {% endif %}
             </div>
-            <div id="size-note" class="note"></div>
-          </div>
+          </a>
 
-          <!-- STRAIN -->
-          <div class="section">
-            <h3>🌿 Choose Your Strain</h3>
-            <div class="strain-grid" id="strain-grid">
-              <button type="button" class="pill" data-strain="Green">Green</button>
-              <button type="button" class="pill" data-strain="Red">Red</button>
-              <button type="button" class="pill" data-strain="White">White</button>
-              <button type="button" class="pill" data-strain="Yellow">Yellow</button>
-              <button type="button" class="pill" data-strain="Mix">Mix (½ & ½)</button>
+          <div class="wtf-card-body">
+            <h2 class="wtf-card-title">
+              <a href="{{ product.url }}" class="wtf-title-link">{{ product.title }}</a>
+            </h2>
+            <div class="wtf-price">
+              <span class="wtf-price-now">{{ product.price | money }}</span>
             </div>
+
+            {% if size_idx != null and all_sizes.size > 0 %}
+              <div class="wtf-size-row" role="group" aria-label="Choose size">
+                {% for size in all_sizes %}
+                  {% assign v_id = null %}
+                  {% for v in product.variants %}
+                    {% if v.options[size_idx] == size -%}
+                      {%- assign v_id = v.id -%}
+                      {%- break -%}
+                    {%- endif %}
+                  {% endfor %}
+                  <button
+                    type="button"
+                    class="wtf-size-chip {% if forloop.first %}is-selected{% endif %}"
+                    data-variant-id="{{ v_id }}"
+                    {% unless v_id %}
+                      disabled aria-disabled="true"
+                    {% endunless %}
+                  >
+                    {{ size }}
+                  </button>
+                {% endfor %}
+              </div>
+              <form method="post" action="/cart/add" class="wtf-form" data-wtf-ajax>
+                <input type="hidden" name="id" value="{% if first_available %}{{ first_available.id }}{% endif %}">
+                <label for="qty-{{ product.id }}" class="visually-hidden">Quantity</label>
+                <input
+                  id="qty-{{ product.id }}"
+                  class="wtf-qty"
+                  name="quantity"
+                  type="number"
+                  min="1"
+                  value="1"
+                  inputmode="numeric"
+                >
+                <button type="submit" class="wtf-add">Add to cart</button>
+              </form>
+            {% else %}
+              <form method="post" action="/cart/add" class="wtf-form" data-wtf-ajax>
+                <input type="hidden" name="id" value="{% if first_available %}{{ first_available.id }}{% endif %}">
+                <label for="qty-{{ product.id }}" class="visually-hidden">Quantity</label>
+                <input
+                  id="qty-{{ product.id }}"
+                  class="wtf-qty"
+                  name="quantity"
+                  type="number"
+                  min="1"
+                  value="1"
+                  inputmode="numeric"
+                >
+                <button type="submit" class="wtf-add">Add to cart</button>
+              </form>
+            {% endif %}
           </div>
-
-          <!-- FLAVORS -->
-          <div class="section">
-            <h3>🍋 Flavors & Pumps</h3>
-            <div class="note">
-              Select flavors below. We’ll split the included pumps **and** any extra pumps evenly across selected
-              flavors.
-            </div>
-            <div class="flavor-grid" id="flavor-grid">
-              {%- assign flavors = "Lemon,Lime,Orange,Blood Orange,Strawberry,Raspberry,Blueberry,Coconut,Mango,Watermelon,Simple Syrup,Sour Apple,Dragon Fruit,Blackberry,S'mores,Pumpkin Spice,Cranberry,Grenadine,Lavender,Chocolate,Caramel,Maple,Agave,Hazelnut,Rose,Passion Fruit,Hibiscus"
-                | split: ','
-              -%}
-              {%- for f in flavors -%}
-                <button type="button" class="flavor" data-flavor="{{ f | escape }}">{{ f }}</button>
-              {%- endfor -%}
-            </div>
-            <div id="pump-distribution" class="note" style="display:none"></div>
-          </div>
-
-          <!-- EXTRA PUMPS -->
-          <div class="section">
-            <h3>
-              ➕ Additional Pumps (<span id="pump-price">${{ extra_pump_price }}</span> each)
-            </h3>
-            <div class="qty">
-              <button type="button" class="btn" data-extra-delta="-1">−</button>
-              <input id="extra-pumps" type="number" min="0" value="0">
-              <button type="button" class="btn" data-extra-delta="1">+</button>
-              <strong id="extra-pumps-cost" style="margin-left:6px"></strong>
-            </div>
-            <div id="gallon-warning" class="note warn hidden">
-              Gallon has 0 included pumps. Add pumps here if needed and discuss exact distribution with staff.
-            </div>
-          </div>
-
-          <!-- COMMENTS -->
-          <div class="section">
-            <h3>💬 Special Requests & Comments</h3>
-            <textarea id="comments" rows="3" placeholder="Any special requests?"></textarea>
-          </div>
-
-          <!-- QTY -->
-          <div class="section">
-            <h3>🔢 Quantity</h3>
-            <div class="qty">
-              <button type="button" class="btn" data-qty-delta="-1">−</button>
-              <input id="quantity" type="number" min="1" value="1">
-              <button type="button" class="btn" data-qty-delta="1">+</button>
-            </div>
-          </div>
-
-          <!-- Hidden form (mirrors the payload we send to /cart/add.js) -->
-          <form id="wtf-kratom-form" class="hidden">
-            <input type="hidden" name="id" value="{{ tea_variant_id }}">
-            <input type="number" name="quantity" value="1" min="1">
-            <input type="hidden" name="properties[Size]" value="">
-            <input type="hidden" name="properties[Strain]" value="">
-            <input type="hidden" name="properties[Flavors]" value="">
-            <input type="hidden" name="properties[Extra Pumps]" value="0">
-            <input type="hidden" name="properties[Pump Distribution]" value="">
-            <input type="hidden" name="properties[Comments]" value="">
-          </form>
-
-          <button id="add-btn" class="btn-primary">Add to Cart</button>
-          <div id="success" class="success"></div>
-        </div>
-      </div>
+        </article>
+      {% endfor %}
+    </section>
+  {% else %}
+    <div class="wtf-empty">
+      <p>No products found in <strong>kratom-teas</strong>.</p>
     </div>
+  {% endif %}
+</div>
 
-    <script>
-      (function () {
-        // ----- Config coming from Liquid -----
-        const VARIANT_ID = Number('{{ tea_variant_id }}') || 0;
-        const EXTRA_PUMP_PRICE = Number('{{ extra_pump_price }}') || 0.5;
+<style>
+  #wtf-kratom-teas .wtf-hero{padding:16px 16px 8px}
+  #wtf-kratom-teas .wtf-title{margin:0;font-size:28px;line-height:1.15;color:#333}
+  #wtf-kratom-teas .wtf-sub{margin:6px 0 0;color:#666;font-size:14px}
+  #wtf-kratom-teas .wtf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+  @media(min-width:640px){#wtf-kratom-teas .wtf-grid{grid-template-columns:repeat(3,1fr);gap:16px;padding:20px}}
+  #wtf-kratom-teas .wtf-card{background:#fff;border:1px solid #eee;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;overflow:hidden}
+  #wtf-kratom-teas .wtf-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08);border-color:#ddd}
+  #wtf-kratom-teas .wtf-card-media{display:flex;align-items:center;justify-content:center;height:160px;background:#fafafa}
+  #wtf-kratom-teas .wtf-card-media img{width:140px;height:140px;object-fit:contain}
+  #wtf-kratom-teas .wtf-card-body{padding:14px}
+  #wtf-kratom-teas .wtf-card-title{margin:0 0 6px;font-size:16px;font-weight:800}
+  #wtf-kratom-teas .wtf-title-link{text-decoration:none;color:inherit}
+  #wtf-kratom-teas .wtf-price{margin:2px 0 10px}
+  #wtf-kratom-teas .wtf-size-row{display:flex;gap:8px;margin:8px 0 10px}
+  #wtf-kratom-teas .wtf-size-chip{appearance:none;border:1px solid #ddd;border-radius:999px;background:#fff;padding:8px 12px;font-weight:700;cursor:pointer}
+  #wtf-kratom-teas .wtf-size-chip.is-selected{border-color:#ff6600;box-shadow:0 0 0 2px color-mix(in srgb, #ff6600 25%, transparent)}
+  #wtf-kratom-teas .wtf-qty{width:64px;border:1px solid #ddd;border-radius:10px;padding:8px;font-size:14px;margin-right:8px}
+  #wtf-kratom-teas .wtf-add{width:100%;margin-top:10px;background:#ff6600;color:#fff;border:none;border-radius:12px;padding:12px 14px;font-weight:900;letter-spacing:.2px;cursor:pointer}
+  #wtf-kratom-teas .visually-hidden{position:absolute !important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
+</style>
 
-        const SIZE_PRICE = {
-          Medium: Number('{{ price_medium }}') || 9,
-          Large: Number('{{ price_large }}') || 15,
-          Gallon: Number('{{ price_gallon }}') || 100,
-        };
+<script>
+  (function () {
+    const root = document.getElementById('wtf-kratom-teas');
+    if (!root) return;
 
-        // Included pumps by size (your rule)
-        const INCLUDED_BY_SIZE = { Medium: 4, Large: 6, Gallon: 0 };
+    root.addEventListener('click', function (e) {
+      const chip = e.target.closest('.wtf-size-chip');
+      if (!chip) return;
+      if (chip.hasAttribute('disabled')) return;
+      const body = chip.closest('.wtf-card-body');
+      body.querySelectorAll('.wtf-size-chip').forEach((c) => c.classList.remove('is-selected'));
+      chip.classList.add('is-selected');
 
-        // ----- State -----
-        let selectedSize = 'Medium';
-        let selectedStrain = null;
-        let selectedFlavors = new Set();
-        let extraPumps = 0;
-        let qty = 1;
+      const form = body.querySelector('form[data-wtf-ajax]');
+      const idInput = form.querySelector('input[name="id"]');
+      const vid = chip.getAttribute('data-variant-id');
+      idInput.value = vid || '';
+    });
 
-        // ----- Elements -----
-        const $livePrice = document.getElementById('live-price');
-        const $extraInput = document.getElementById('extra-pumps');
-        const $extraCost = document.getElementById('extra-pumps-cost');
-        const $qty = document.getElementById('quantity');
-        const $success = document.getElementById('success');
-        const $pumpDist = document.getElementById('pump-distribution');
-        const $sizeNote = document.getElementById('size-note');
-        const $gallonWarn = document.getElementById('gallon-warning');
+    // Initialize default selected size -> sync hidden id
+    root.querySelectorAll('.wtf-card-body').forEach((body) => {
+      const chip = body.querySelector('.wtf-size-chip.is-selected');
+      const form = body.querySelector('form[data-wtf-ajax]');
+      if (chip && form) {
+        const idInput = form.querySelector('input[name="id"]');
+        idInput.value = chip.getAttribute('data-variant-id') || idInput.value;
+      }
+    });
+  })();
+</script>
 
-        // ----- Helpers -----
-        const money = (n) => '$' + (Math.round(n * 100) / 100).toFixed(2);
-        const includedFor = (size) => INCLUDED_BY_SIZE[size] ?? 0;
-
-        function calcUnitPrice() {
-          const base = SIZE_PRICE[selectedSize] || 0;
-          return base + extraPumps * EXTRA_PUMP_PRICE;
-        }
-
-        function renderSizeNote() {
-          const inc = includedFor(selectedSize);
-          if (selectedSize === 'Gallon') {
-            $sizeNote.innerHTML =
-              'Gallon is custom. Included pumps: <strong>0</strong>. Add pumps as needed or discuss with staff.';
-            $gallonWarn.classList.remove('hidden');
-          } else {
-            $sizeNote.innerHTML = `Included pumps: <strong>${inc}</strong> (${selectedSize}).`;
-            $gallonWarn.classList.add('hidden');
-          }
-        }
-
-        function renderPumpDistribution() {
-          const flavors = Array.from(selectedFlavors);
-          if (!flavors.length) {
-            $pumpDist.style.display = 'none';
-            return;
-          }
-
-          const totalIncluded = includedFor(selectedSize);
-          const totalPumps = totalIncluded + extraPumps;
-
-          let html = '<strong>🎯 Pump Distribution</strong><br>';
-          if (selectedSize === 'Gallon' && totalPumps === 0) {
-            html += '• Custom distribution — please discuss with staff.';
-          } else {
-            const per = Math.floor(totalPumps / flavors.length);
-            const remainder = totalPumps % flavors.length;
-            flavors.forEach((f, i) => {
-              const pumps = per + (i < remainder ? 1 : 0);
-              html += `• ${f}: ${pumps} pump${pumps !== 1 ? 's' : ''}<br>`;
-            });
-          }
-
-          $pumpDist.innerHTML = html;
-          $pumpDist.style.display = 'block';
-        }
-
-        function renderPrice() {
-          const unit = calcUnitPrice();
-          const total = unit * qty;
-          $livePrice.textContent = money(total);
-          $extraCost.textContent = extraPumps > 0 ? `(+${money(extraPumps * EXTRA_PUMP_PRICE)})` : '';
-          document.getElementById('add-btn').textContent = `Add to Cart — ${money(total)}`;
-          renderPumpDistribution();
-        }
-
-        function validate() {
-          if (!VARIANT_ID) {
-            alert('This item is not available yet. Please set a Variant ID in theme settings.');
-            return false;
-          }
-          if (!selectedSize) {
-            alert('Please choose a size.');
-            return false;
-          }
-          if (!selectedStrain) {
-            alert('Please choose a strain.');
-            return false;
-          }
-          if (!selectedFlavors.size) {
-            alert('Please choose at least one flavor.');
-            return false;
-          }
-          return true;
-        }
-
-        function toastSuccess(msg) {
-          $success.innerHTML = `<strong>✅ ${msg}</strong>`;
-          $success.classList.add('show');
-          setTimeout(() => $success.classList.remove('show'), 3500);
-        }
-
-        // ----- Wire up controls -----
-
-        // Sizes
-        document.getElementById('size-grid').addEventListener('click', (e) => {
-          const btn = e.target.closest('[data-size]');
-          if (!btn) return;
-          document.querySelectorAll('#size-grid .pill').forEach((b) => b.classList.remove('selected'));
-          btn.classList.add('selected');
-          selectedSize = btn.dataset.size;
-          renderSizeNote();
-          renderPrice();
-        });
-        // Default to Medium
-        (document.querySelector('#size-grid [data-size="Medium"]') || {}).click?.();
-
-        // Strains
-        document.getElementById('strain-grid').addEventListener('click', (e) => {
-          const btn = e.target.closest('[data-strain]');
-          if (!btn) return;
-          document.querySelectorAll('#strain-grid .pill').forEach((b) => b.classList.remove('selected'));
-          btn.classList.add('selected');
-          selectedStrain = btn.dataset.strain;
-        });
-
-        // Flavors
-        document.getElementById('flavor-grid').addEventListener('click', (e) => {
-          const btn = e.target.closest('[data-flavor]');
-          if (!btn) return;
-          const val = btn.dataset.flavor;
-          if (btn.classList.contains('selected')) {
-            btn.classList.remove('selected');
-            selectedFlavors.delete(val);
-          } else {
-            btn.classList.add('selected');
-            selectedFlavors.add(val);
-          }
-          renderPrice();
-        });
-
-        // Quantity
-        document.querySelectorAll('[data-qty-delta]').forEach((b) => {
-          b.addEventListener('click', () => {
-            const d = Number(b.dataset.qtyDelta);
-            qty = Math.max(1, (Number($qty.value) || 1) + d);
-            $qty.value = qty;
-            renderPrice();
-          });
-        });
-        $qty.addEventListener('input', () => {
-          qty = Math.max(1, Number($qty.value) || 1);
-          $qty.value = qty;
-          renderPrice();
-        });
-
-        // Extra pumps
-        document.querySelectorAll('[data-extra-delta]').forEach((b) => {
-          b.addEventListener('click', () => {
-            const d = Number(b.dataset.extraDelta);
-            extraPumps = Math.max(0, (Number($extraInput.value) || 0) + d);
-            $extraInput.value = extraPumps;
-            renderPrice();
-          });
-        });
-        $extraInput.addEventListener('input', () => {
-          extraPumps = Math.max(0, Number($extraInput.value) || 0);
-          $extraInput.value = extraPumps;
-          renderPrice();
-        });
-
-        // Main Add to Cart
-        document.getElementById('add-btn').addEventListener('click', async () => {
-          if (!validate()) return;
-
-          const props = {
-            Size: selectedSize,
-            Strain: selectedStrain || '',
-            Flavors: Array.from(selectedFlavors).join(', '),
-            'Extra Pumps': String(extraPumps),
-            'Pump Distribution': $pumpDist.innerText || '',
-            Comments: document.getElementById('comments').value.trim(),
-          };
-
-          const payload = { id: VARIANT_ID, quantity: qty, properties: props };
-
-          const btn = document.getElementById('add-btn');
-          const old = btn.textContent;
-          btn.disabled = true;
-          btn.textContent = 'Adding…';
-
-          try {
-            await WTF.addToCart(payload);
-            toastSuccess('Custom Kratom Tea added to cart!');
-          } catch (err) {
-            console.error(err);
-            alert('❌ Error adding to cart.');
-          } finally {
-            btn.disabled = false;
-            btn.textContent = old;
-            // refresh price/button text in case qty changed meanwhile
-            renderPrice();
-          }
-        });
-
-        // Sync cart badge
-        document.addEventListener('cart:refreshed', (e) => {
-          const el = document.getElementById('cart-count');
-          if (el && e.detail) el.textContent = e.detail.item_count || 0;
-        });
-        if (window.WTF && WTF.updateCartCount) WTF.updateCartCount();
-
-        // Initial render
-        renderSizeNote();
-        renderPrice();
-      })();
-    </script>
-  </body>
-</html>
+{% render 'wtf-ajax-cart' %}
