@@ -1,6 +1,5 @@
 {% comment %}
-  Kratom Teas page — matched UX with Kava Drinks.
-  Uses the shared renderer and the Kratom flavor list. Identical cart/price logic.
+  Kratom Teas — matched UX with Kava Drinks.
 {% endcomment %}
 
 {% section 'header' %}
@@ -8,7 +7,7 @@
 <main id="MainContent" class="page-width">
   <header class="wtf-page-hero" style="text-align:center; margin: 16px 0 20px;">
     <h1>Kratom Teas</h1>
-    <p style="color:#555; margin-top: 6px;">Choose your flavor, then add to cart.</p>
+    <p style="color:#555; margin-top:6px;">Choose your flavor, then add to cart.</p>
   </header>
 
   {% render 'wtf-flavor-data' %}
@@ -16,11 +15,12 @@
 
   <form method="post" action="/cart/add" data-wtf-ajax style="margin-top:16px;">
     <input type="hidden" name="id" value="">
-    <div style="display:flex; gap: 8px; align-items:center; margin-top: 10px;">
+    <div style="display:flex; gap:8px; align-items:center; margin-top:10px;">
       <label for="wtf-qty-kratom" style="min-width:56px;">Qty</label>
       <input id="wtf-qty-kratom" name="quantity" type="number" min="1" value="1" style="width:80px;">
       <button type="submit" class="wtf-primary-cta" style="margin-left:auto;">Add to cart</button>
     </div>
+    <div id="wtf-price" data-price style="margin-top:8px; font-weight:600;"></div>
   </form>
 </main>
 
