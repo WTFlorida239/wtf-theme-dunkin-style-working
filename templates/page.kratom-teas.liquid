@@ -1,7 +1,4 @@
-{% comment %}
-  Kratom Teas — Size variants only, everything else as Line Item Properties
-{% endcomment %}
-
+{% comment %} Kratom Teas — Size variants only; Strain/Flavor as line item properties {% endcomment %}
 {% assign product = all_products['custom-kratom-tea'] %}
 
 {% if product == nil %}
@@ -12,29 +9,23 @@
 {% else %}
 
 <script>
-  // Variant mapping for size selection
+  // Variant id + pricing + pump rules (used by the customizer snippet)
   const variantIdBySize = {
     "Medium": {{ product.variants | where: "option1","Medium" | first | default: nil | map: "id" | first | default: "null" }},
     "Large":  {{ product.variants | where: "option1","Large"  | first | default: nil | map: "id" | first | default: "null" }},
     "Gallon": {{ product.variants | where: "option1","Gallon" | first | default: nil | map: "id" | first | default: "null" }}
   };
-  
-  const priceBySize = {
-    "Medium": 900,  // $9.00 in cents
-    "Large": 1500,  // $15.00 in cents  
-    "Gallon": 10000 // $100.00 in cents
-  };
-  
-  const pumpLimitBySize = {
-    "Medium": 4,
-    "Large": 6,
-    "Gallon": 12
-  };
+  const priceBySize = {"Medium":900,"Large":1500,"Gallon":10000}; // cents
+  const pumpLimitBySize = {"Medium":4,"Large":6,"Gallon":12};
 </script>
 
-<main id="MainContent" class="page-width">
+<main id="MainContent" class="page-width" style="max-width:1100px;margin:0 auto;padding:16px;">
+  <header style="display:flex;align-items:center;gap:16px;justify-content:center;margin:8px 0 20px;">
+    <img src="{{ 'kratom_teas_150x150.png' | asset_url }}" alt="Kratom Teas" width="150" height="150" loading="eager" style="border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);">
+    <div style="text-align:center"><h1 style="margin:0;">Kratom Teas</h1><p style="color:#555;margin:6px 0 0;">Choose Size, Strain (or Mix), then Flavors.</p></div>
+  </header>
+
   {% render 'wtf-flavor-data' %}
   {% render 'wtf-kratom-customizer', product: product, flavors: wtfKratomFlavors %}
 </main>
-
 {% endif %}
