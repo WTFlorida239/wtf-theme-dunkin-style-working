@@ -43,7 +43,7 @@
       <a href="{{ routes.cart_url }}" class="header-cart-link" aria-label="Cart">
         <span class="header-cart-link__icon" aria-hidden="true">🛒</span>
         <span class="header-cart-link__label">Cart</span>
-        <span class="header-cart-link__count-badge" id="cart-count" data-cart-count>0</span>
+        <span class="header-cart-link__count-badge" id="cart-count" data-cart-count data-cart-count-target>{{ cart.item_count }}</span>
       </a>
     </div>
   </div>

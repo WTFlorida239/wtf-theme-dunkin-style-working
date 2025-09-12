@@ -307,7 +307,7 @@
   <div class="wtf-nav-container">
     <div class="wtf-logo-section">
       <div class="wtf-logo-circle">
-        <img src="{{ 'wtf-logo.png' | asset_url }}" alt="WTF Logo">
+        <img src="{{ 'wtf-logo.png' | asset_url }}" alt="WTF Logo" width="60" height="60" loading="eager">
       </div>
       <div class="wtf-logo-text">
         <h1>{{ shop.name | default: 'WTF' }}</h1>
@@ -328,9 +328,9 @@
 <section class="wtf-hero">
   <div class="wtf-hero-content">
     <div class="wtf-storefront-image">
-      <img src="{{ 'wtf_storefront_hero_800x400.png' | asset_url }}" alt="WTF Storefront">
+      <img src="{{ 'wtf_storefront_hero_800x400.png' | asset_url }}" alt="WTF Storefront" width="800" height="400" loading="eager">
       <div class="wtf-logo-overlay">
-        <img src="{{ 'wtf-logo.png' | asset_url }}" alt="WTF Logo">
+        <img src="{{ 'wtf-logo.png' | asset_url }}" alt="WTF Logo" width="100" height="100" loading="eager">
       </div>
     </div>
     <h2>Welcome to WTF</h2>
@@ -361,7 +361,7 @@
       <div class="wtf-category-card wtf-card-kratom" onclick="window.location.href='/pages/kratom-teas'">
         <div class="wtf-card-header">
           <div class="wtf-card-icon">
-            <img src="{{ 'kratom_teas_150x150.png' | asset_url }}" alt="Kratom Teas" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
+            <img src="{{ 'kratom_teas_150x150.png' | asset_url }}" alt="Kratom Teas" width="50" height="50" loading="lazy" style="object-fit: cover; border-radius: 50%;">
           </div>
         </div>
         <div class="wtf-card-content">
@@ -375,7 +375,7 @@
       <div class="wtf-category-card wtf-card-kava" onclick="window.location.href='/pages/kava-drinks'">
         <div class="wtf-card-header">
           <div class="wtf-card-icon">
-            <img src="{{ 'kava_drinks_150x150.png' | asset_url }}" alt="Kava Drinks" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
+            <img src="{{ 'kava_drinks_150x150.png' | asset_url }}" alt="Kava Drinks" width="50" height="50" loading="lazy" style="object-fit: cover; border-radius: 50%;">
           </div>
         </div>
         <div class="wtf-card-content">
@@ -389,7 +389,7 @@
       <div class="wtf-category-card wtf-card-thc" onclick="window.location.href='/pages/thc-drinks'">
         <div class="wtf-card-header">
           <div class="wtf-card-icon">
-            <img src="{{ 'delta9_drinks_150x150.png' | asset_url }}" alt="THC Drinks" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
+            <img src="{{ 'delta9_drinks_150x150.png' | asset_url }}" alt="THC Drinks" width="50" height="50" loading="lazy" style="object-fit: cover; border-radius: 50%;">
           </div>
         </div>
         <div class="wtf-card-content">
@@ -403,7 +403,7 @@
       <div class="wtf-category-card wtf-card-draft" onclick="window.location.href='/pages/draft-pours'">
         <div class="wtf-card-header">
           <div class="wtf-card-icon">
-            <img src="{{ 'wtf_drafts_150x150.png' | asset_url }}" alt="Draft Pours" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
+            <img src="{{ 'wtf_drafts_150x150.png' | asset_url }}" alt="Draft Pours" width="50" height="50" loading="lazy" style="object-fit: cover; border-radius: 50%;">
           </div>
         </div>
         <div class="wtf-card-content">
@@ -417,7 +417,7 @@
       <div class="wtf-category-card wtf-card-shots" onclick="window.location.href='/pages/thc-shots'">
         <div class="wtf-card-header">
           <div class="wtf-card-icon">
-            <img src="{{ 'thc-shots-pic-lightspeedBackgroundRemoved2.png' | asset_url }}" alt="THC Shots" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
+            <img src="{{ 'thc-shots-pic-lightspeedBackgroundRemoved2.png' | asset_url }}" alt="THC Shots" width="50" height="50" loading="lazy" style="object-fit: cover; border-radius: 50%;">
           </div>
         </div>
         <div class="wtf-card-content">
@@ -431,7 +431,7 @@
       <div class="wtf-category-card wtf-card-canned" onclick="window.location.href='/pages/canned-drinks'">
         <div class="wtf-card-header">
           <div class="wtf-card-icon">
-            <img src="{{ 'edibles_150x150.png' | asset_url }}" alt="Canned Drinks" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
+            <img src="{{ 'edibles_150x150.png' | asset_url }}" alt="Canned Drinks" width="50" height="50" loading="lazy" style="object-fit: cover; border-radius: 50%;">
           </div>
         </div>
         <div class="wtf-card-content">
@@ -445,7 +445,7 @@
       <div class="wtf-category-card wtf-card-fun" onclick="window.location.href='/pages/fun-stuff'">
         <div class="wtf-card-header">
           <div class="wtf-card-icon">
-            <img src="{{ 'other_merch_150x150.png' | asset_url }}" alt="Fun Stuff" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
+            <img src="{{ 'other_merch_150x150.png' | asset_url }}" alt="Fun Stuff" width="50" height="50" loading="lazy" style="object-fit: cover; border-radius: 50%;">
           </div>
         </div>
         <div class="wtf-card-content">
@@ -459,7 +459,7 @@
       <div class="wtf-category-card wtf-card-takehome" onclick="window.location.href='/pages/take-home-items'">
         <div class="wtf-card-header">
           <div class="wtf-card-icon">
-            <img src="{{ 'other_merch_150x150.png' | asset_url }}" alt="Take Home Items" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
+            <img src="{{ 'other_merch_150x150.png' | asset_url }}" alt="Take Home Items" width="50" height="50" loading="lazy" style="object-fit: cover; border-radius: 50%;">
           </div>
         </div>
         <div class="wtf-card-content">

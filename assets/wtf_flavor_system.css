@@ -1,5 +1,12 @@
 /* WTF Flavor System Styles - Production Ready */
 
+/* WTF Flavor System CSS */
+
+/* Global focus reset for accessibility */
+*:focus {
+  outline: none;
+}
+
 /* Page Layout */
 .page-width {
   max-width: 1200px;

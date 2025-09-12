@@ -332,8 +332,10 @@
     {%- comment -%} Our AJAX cart core (place after any other custom scripts) {%- endcomment -%}
     {{ 'wtf_ajax_cart.js' | asset_url | script_tag }}
     
+    {%- comment -%} AJAX cart functionality {%- endcomment -%}
+    {%- render 'wtf-ajax-cart' -%}
+    
     {%- comment -%} Cart count element (place in header too if you want real-time updates visible) {%- endcomment -%}
     {%- render 'wtf-cart-count' -%}
-    {{ 'wtf-flavor-system.js' | asset_url | script_tag }}
   </body>
 </html>

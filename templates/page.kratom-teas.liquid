@@ -55,7 +55,7 @@ WTF • Kratom Teas (production)
   {%- endif -%}
 
   {%- comment -%} Product form with proper structure {%- endcomment -%}
-  <form action="/cart/add" method="post" enctype="multipart/form-data" id="kratom-product-form">
+  <form action="/cart/add" method="post" enctype="multipart/form-data" id="kratom-product-form" data-wtf-ajax>
     {%- comment -%} Hidden inputs for cart submission {%- endcomment -%}
     <input type="hidden" name="id" value="{%- if kratom_product -%}{{ kratom_product.selected_or_first_available_variant.id }}{%- else -%}{{ kratom_variant_id }}{%- endif -%}">
     <input type="number" name="quantity" min="1" value="1" style="display:none;">
@@ -82,14 +82,15 @@ WTF • Kratom Teas (production)
     <!-- Sizes -->
     <section class="size-selection" aria-labelledby="size-title">
       <h3 id="size-title">Choose a size</h3>
-      <div class="size-options" role="group" aria-label="Select size">
+      <div class="size-options" role="radiogroup" aria-label="Select size">
         {%- for s in 'Medium,Large,Gallon' | split: ',' -%}
           <button type="button"
                   class="size-selector{% if s == 'Medium' %} active{% endif %}"
                   data-option="Size"
                   data-value="{{ s }}"
                   data-size="{{ s }}"
-                  aria-pressed="{% if s == 'Medium' %}true{% else %}false{% endif %}">
+                  role="radio"
+                  aria-checked="{% if s == 'Medium' %}true{% else %}false{% endif %}">
             <span class="size-letter">{{ s | slice: 0,1 }}</span>
             <span class="size-name">{{ s }}</span>
           </button>
@@ -100,19 +101,21 @@ WTF • Kratom Teas (production)
     <!-- Strain Selection -->
     <section class="strain-selection" aria-labelledby="strain-title">
       <h3 id="strain-title">Choose your strain</h3>
-      <div class="strain-options" role="group" aria-label="Select strain">
+      <div class="strain-options" role="radiogroup" aria-label="Select strain">
         {%- for strain in 'Green,Red,White,Yellow' | split: ',' -%}
           <button type="button"
                   class="strain-selector"
                   data-strain="{{ strain }}"
-                  aria-pressed="false">
+                  role="radio"
+                  aria-checked="false">
             {{ strain }}
           </button>
         {%- endfor -%}
         <button type="button"
                 class="strain-selector mix-selector"
                 data-strain="Mix"
-                aria-pressed="false">
+                role="radio"
+                aria-checked="false">
           Mix (½+½)
         </button>
       </div>

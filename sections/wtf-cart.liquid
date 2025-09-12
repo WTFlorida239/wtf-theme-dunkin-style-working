@@ -74,6 +74,17 @@
                   </div>
                 {% endif %}
 
+                {% comment %} Line Item Properties (strain, flavors, etc.) {% endcomment %}
+                {% if item.properties.size > 0 %}
+                  <div class="wtf-line__properties">
+                    {% for p in item.properties %}
+                      {% unless p.last == blank %}
+                        <div class="wtf-property"><strong>{{ p.first }}:</strong> {{ p.last }}</div>
+                      {% endunless %}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
                 {% if section.settings.show_vendor and item.product.vendor != blank %}
                   <div class="wtf-meta">by {{ item.product.vendor }}</div>
                 {% endif %}
@@ -206,6 +217,8 @@
   .wtf-line__title{display:block;font-weight:600;color:#111;margin-bottom:6px;text-decoration:none}
   .wtf-line__options{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 8px}
   .wtf-badge{font-size:12px;padding:4px 8px;border-radius:999px;background:#f1f1f1}
+  .wtf-line__properties{margin:4px 0 8px}
+  .wtf-property{font-size:12px;padding:2px 6px;border-radius:6px;background:#e8f4fd;color:#0066cc;margin-right:4px;margin-bottom:2px;display:inline-block}
   .wtf-meta{font-size:12px;color:#666}
   .wtf-line__controls{display:flex;align-items:center;gap:12px;margin-top:10px}
   .wtf-qty{display:inline-flex;align-items:center;border:1px solid #e1e1e1;border-radius:10px;overflow:hidden}
