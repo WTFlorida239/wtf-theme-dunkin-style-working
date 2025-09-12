@@ -314,5 +314,19 @@
       });
     </script>
     {% render 'wtf-cart-drawer' %}
+    {%- comment -%} Core Shopify/theme scripts would already be here {%- endcomment -%}
+
+    {%- comment -%} OPTIONAL: expose product JSON on product templates to avoid extra fetch {%- endcomment -%}
+    {%- if template == 'product' and product -%}
+      <script>
+        window.__PRODUCT_JSON__ = {{ product | json }};
+      </script>
+    {%- endif -%}
+
+    {%- comment -%} Our AJAX cart core (place after any other custom scripts) {%- endcomment -%}
+    {{ 'wtf_ajax_cart.js' | asset_url | script_tag }}
+
+    {%- comment -%} Cart count element (place in header too if you want real-time updates visible) {%- endcomment -%}
+    {%- render 'wtf-cart-count' -%}
   </body>
 </html>
