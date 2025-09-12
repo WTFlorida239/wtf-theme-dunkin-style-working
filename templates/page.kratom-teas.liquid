@@ -1,33 +1,33 @@
 {% comment %}
-  Kratom Teas — Custom ordering page with proper variant handling
+  Kratom Teas — Size variants only, everything else as Line Item Properties
 {% endcomment %}
 
 {% assign product = all_products['custom-kratom-tea'] %}
 
 <script>
-  // Set product data for AJAX cart functionality
-  window.WTF_PRODUCT_HANDLE = 'custom-kratom-tea';
-  window.WTF_PRODUCT_JSON = {{ product | json }};
+  // Variant mapping for size selection
+  const variantIdBySize = {
+    "Medium": {{ product.variants | where: "option1","Medium" | first | default: nil | map: "id" | first | default: "null" }},
+    "Large":  {{ product.variants | where: "option1","Large"  | first | default: nil | map: "id" | first | default: "null" }},
+    "Gallon": {{ product.variants | where: "option1","Gallon" | first | default: nil | map: "id" | first | default: "null" }}
+  };
+  
+  const priceBySize = {
+    "Medium": 900,  // $9.00 in cents
+    "Large": 1500,  // $15.00 in cents  
+    "Gallon": 10000 // $100.00 in cents
+  };
+  
+  const pumpLimitBySize = {
+    "Medium": 4,
+    "Large": 6,
+    "Gallon": 12
+  };
 </script>
 
 <main id="MainContent" class="page-width">
-  <header class="wtf-page-hero" style="text-align:center; margin: 16px 0 20px;">
-    <h1>Kratom Teas</h1>
-    <p style="color:#555; margin-top:6px;">Choose your size, strain, and flavors.</p>
-  </header>
-
   {% render 'wtf-flavor-data' %}
-  {% render 'wtf-flavor-options', title: 'Custom Kratom Tea', flavors: wtfKratomFlavors, option_name: 'Flavor', product: product %}
-
-  <form method="post" action="/cart/add" data-wtf-ajax style="margin-top:16px;">
-    <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
-    <div style="display:flex; gap:8px; align-items:center; margin-top:10px;">
-      <label for="wtf-qty-kratom" style="min-width:56px;">Qty</label>
-      <input id="wtf-qty-kratom" name="quantity" type="number" min="1" value="1" style="width:80px;">
-      <button type="submit" class="wtf-primary-cta" style="margin-left:auto;">Add to cart</button>
-    </div>
-    <div id="wtf-price" data-price style="margin-top:8px; font-weight:600;"></div>
-  </form>
+  {% render 'wtf-kratom-customizer', product: product, flavors: wtfKratomFlavors %}
 </main>
 
 <style>
