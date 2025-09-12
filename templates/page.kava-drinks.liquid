@@ -1,15 +1,12 @@
 {% comment %}
-  WTF Dunkin Style — Kava Drinks Landing (Full Page)
-  Drop this file into templates/page.kava-drinks.liquid
-  Assign this template to your “Kava Drinks” page in the Shopify editor.
+  WTF Dunkin Style — Kava Drinks Landing (Category Cards)
+  Assign to page: /pages/kava-drinks
+  Purpose: clean grid of major categories; each card image linked (fix broken links).
 
-  Goals:
-  - Clean, mobile-first category grid with bold CTAs
-  - Each card image properly linked (fixes “broken after update”)
-  - Uses /assets/kava_drinks_150x150.png as the image for all cards for now
-  - Performance: minified CSS, lazy images (except first), small JS for full-card click
+  Images: using /assets/kava_drinks_150x150.png for now for all cards
+  Update href slugs if your page handles differ.
 
-  If you later add unique images, replace the image filename per-card below.
+  Includes AJAX cart snippet for consistency (no forms here, safe to include once)
 {% endcomment %}
 
 {% assign brand_orange = '#ff6600' %}
@@ -17,37 +14,29 @@
 
 <div id="wtf-kava-drinks" class="wtf-wrap">
   <header class="wtf-hero" role="banner" aria-label="Kava Drinks">
-    <h1 class="wtf-title">Kava Drinks</h1>
-    <p class="wtf-sub">Tap a category to start your order.</p>
+    <h1 class="wtf-title">Kava & More</h1>
+    <p class="wtf-sub">Pick a category to start your order.</p>
   </header>
 
   <section class="wtf-grid" aria-label="Drink categories">
-    {%- comment -%}
-      NOTE: All cards below purposely point to their real pages.
-      Update URLs here if your slugs differ.
-      Replace the image per card later if/when you add unique art.
-    {%- endcomment -%}
-
-    <!-- Card: Kava Drinks -->
     <article class="wtf-card">
-      <a class="wtf-card-link" href="/pages/kava-drinks" aria-label="Shop Kava Drinks">
+      <a class="wtf-card-link" href="/pages/the-drinks" aria-label="The Drinks">
         <div class="wtf-card-media">
           <img
             src="{{ 'kava_drinks_150x150.png' | asset_url }}"
-            alt="Kava Drinks"
+            alt="The Drinks"
             loading="eager"
             width="150"
             height="150"
           >
         </div>
-        <h2 class="wtf-card-title">Kava Drinks</h2>
+        <h2 class="wtf-card-title">The Drinks</h2>
         <span class="wtf-cta" aria-hidden="true">Order now</span>
       </a>
     </article>
 
-    <!-- Card: Kratom Teas -->
     <article class="wtf-card">
-      <a class="wtf-card-link" href="/pages/kratom-teas" aria-label="Shop Kratom Teas">
+      <a class="wtf-card-link" href="/pages/kratom-teas" aria-label="Kratom Teas">
         <div class="wtf-card-media">
           <img
             src="{{ 'kava_drinks_150x150.png' | asset_url }}"
@@ -62,26 +51,8 @@
       </a>
     </article>
 
-    <!-- Card: The Drinks (house specials / mixers) -->
     <article class="wtf-card">
-      <a class="wtf-card-link" href="/pages/the-drinks" aria-label="Shop The Drinks">
-        <div class="wtf-card-media">
-          <img
-            src="{{ 'kava_drinks_150x150.png' | asset_url }}"
-            alt="The Drinks"
-            loading="lazy"
-            width="150"
-            height="150"
-          >
-        </div>
-        <h2 class="wtf-card-title">The Drinks</h2>
-        <span class="wtf-cta" aria-hidden="true">Order now</span>
-      </a>
-    </article>
-
-    <!-- Card: Canned Drinks -->
-    <article class="wtf-card">
-      <a class="wtf-card-link" href="/pages/canned-drinks" aria-label="Shop Canned Drinks">
+      <a class="wtf-card-link" href="/pages/canned-drinks" aria-label="Canned Drinks">
         <div class="wtf-card-media">
           <img
             src="{{ 'kava_drinks_150x150.png' | asset_url }}"
@@ -96,98 +67,35 @@
       </a>
     </article>
 
-    <!-- Card: Merch (adjust if your merch URL differs) -->
     <article class="wtf-card">
-      <a class="wtf-card-link" href="/collections/merch" aria-label="Shop Merch">
+      <a class="wtf-card-link" href="/collections/merch" aria-label="Merch">
         <div class="wtf-card-media">
-          <img
-            src="{{ 'kava_drinks_150x150.png' | asset_url }}"
-            alt="Merch"
-            loading="lazy"
-            width="150"
-            height="150"
-          >
+          <img src="{{ 'kava_drinks_150x150.png' | asset_url }}" alt="Merch" loading="lazy" width="150" height="150">
         </div>
         <h2 class="wtf-card-title">Merch</h2>
         <span class="wtf-cta" aria-hidden="true">Shop now</span>
-      </a>
-    </article>
-
-    <!-- Card: Snacks (adjust slug if needed) -->
-    <article class="wtf-card">
-      <a class="wtf-card-link" href="/pages/snacks" aria-label="Shop Snacks">
-        <div class="wtf-card-media">
-          <img
-            src="{{ 'kava_drinks_150x150.png' | asset_url }}"
-            alt="Snacks"
-            loading="lazy"
-            width="150"
-            height="150"
-          >
-        </div>
-        <h2 class="wtf-card-title">Snacks</h2>
-        <span class="wtf-cta" aria-hidden="true">Order now</span>
       </a>
     </article>
   </section>
 </div>
 
 <style>
-  /* ===== WTF Dunkin Style: Kava Drinks Page (scoped) ===== */
   #wtf-kava-drinks{--wtf-orange:{{ brand_orange }};--wtf-text:{{ brand_text }};--wtf-bg:#ffffff}
   #wtf-kava-drinks .wtf-hero{padding:16px 16px 8px}
   #wtf-kava-drinks .wtf-title{margin:0;font-size:28px;line-height:1.15;color:var(--wtf-text)}
   #wtf-kava-drinks .wtf-sub{margin:6px 0 0;color:#666;font-size:14px}
-  #wtf-kava-drinks .wtf-grid{
-    display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px
-  }
+  #wtf-kava-drinks .wtf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
   @media(min-width:640px){
     #wtf-kava-drinks .wtf-grid{grid-template-columns:repeat(3,1fr);gap:16px;padding:20px}
     #wtf-kava-drinks .wtf-title{font-size:32px}
   }
-  #wtf-kava-drinks .wtf-card{
-    background:var(--wtf-bg);border:1px solid #eee;border-radius:16px;
-    box-shadow:0 1px 2px rgba(0,0,0,.04);transition:transform .12s ease,box-shadow .12s ease, border-color .12s ease;
-    overflow:hidden
-  }
-  #wtf-kava-drinks .wtf-card:has(a:focus-visible){
-    outline:2px solid var(--wtf-orange);outline-offset:2px
-  }
-  #wtf-kava-drinks .wtf-card:hover{
-    transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08);border-color:#ddd
-  }
+  #wtf-kava-drinks .wtf-card{background:var(--wtf-bg);border:1px solid #eee;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;overflow:hidden}
+  #wtf-kava-drinks .wtf-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08);border-color:#ddd}
   #wtf-kava-drinks .wtf-card-link{display:block;padding:14px;text-decoration:none}
-  #wtf-kava-drinks .wtf-card-media{
-    display:flex;align-items:center;justify-content:center;height:120px;margin-bottom:10px
-  }
-  #wtf-kava-drinks .wtf-card-media img{
-    width:120px;height:120px;object-fit:contain;image-rendering:-webkit-optimize-contrast
-  }
-  #wtf-kava-drinks .wtf-card-title{
-    margin:0 0 6px;font-size:16px;line-height:1.25;color:var(--wtf-text);font-weight:700
-  }
-  #wtf-kava-drinks .wtf-cta{
-    display:inline-block;font-size:13px;font-weight:700;
-    background:var(--wtf-orange);color:#fff;border-radius:999px;padding:8px 12px
-  }
-  /* Reduce motion for users who prefer it */
-  @media (prefers-reduced-motion: reduce){
-    #wtf-kava-drinks .wtf-card{transition:none}
-  }
+  #wtf-kava-drinks .wtf-card-media{display:flex;align-items:center;justify-content:center;height:120px;margin-bottom:10px}
+  #wtf-kava-drinks .wtf-card-media img{width:120px;height:120px;object-fit:contain}
+  #wtf-kava-drinks .wtf-card-title{margin:0 0 6px;font-size:16px;line-height:1.25;color:var(--wtf-text);font-weight:700}
+  #wtf-kava-drinks .wtf-cta{display:inline-block;font-size:13px;font-weight:700;background:var(--wtf-orange);color:#fff;border-radius:999px;padding:8px 12px}
 </style>
 
-<script>
-  // Make the entire card area tappable (already wrapped in <a>, this is a small safety for nested focus)
-  (function () {
-    const cards = document.querySelectorAll('#wtf-kava-drinks .wtf-card');
-    cards.forEach((card) => {
-      const link = card.querySelector('a.wtf-card-link');
-      if (!link) return;
-      card.addEventListener('click', (e) => {
-        // Avoid hijacking when users click a nested interactive element (none here by default)
-        if (e.target.closest('a')) return;
-        link.click();
-      });
-    });
-  })();
-</script>
+{% render 'wtf-ajax-cart' %}
