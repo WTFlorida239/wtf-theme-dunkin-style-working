@@ -21,8 +21,7 @@
 (function () {
   const $ = (s, c) => (c || document).querySelector(s);
   const $$ = (s, c) => Array.from((c || document).querySelectorAll(s));
-
-  function money(n) { return `$${Number(n || 0).toFixed(2)}`; }
+  const money = (n) => `$${Number(n || 0).toFixed(2)}`;
 
   // ---- Core class ----------------------------------------------------------
   class WTFFlavorSystem {

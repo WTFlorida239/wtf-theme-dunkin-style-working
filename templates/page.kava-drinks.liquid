@@ -1,22 +1,22 @@
 {%- comment -%}
-  WTF • Kava Drinks (production)
-  - Reads Variant ID + Flavors from Theme Settings.
-  - Loads assets/wtf_flavor_system.css and assets/wtf-flavor-system.js (guarded).
-  - Hydrates size/flavor chips and AJAX add-to-cart via /cart/add.js.
+WTF • Kava Drinks (production)
+- Reads Variant ID + Flavors from Theme Settings.
+- Loads assets/wtf_flavor_system.css and assets/wtf-flavor-system.js (guarded).
+- Hydrates size/flavor chips and AJAX add-to-cart via /cart/add.js.
 {%- endcomment -%}
 
 {%- assign kava_variant_id = settings.kava_drink_variant_id | default: 0 -%}
-{%- assign price_medium = settings.kava_price_medium | default: 0 -%}
-{%- assign price_large = settings.kava_price_large | default: 0 -%}
-{%- assign price_gallon = settings.kava_price_gallon | default: 0 -%}
+{%- assign price_medium   = settings.kava_price_medium | default: 0 -%}
+{%- assign price_large    = settings.kava_price_large  | default: 0 -%}
+{%- assign price_gallon   = settings.kava_price_gallon | default: 0 -%}
 {%- assign extra_pump_price = settings.kava_extra_pump_price
   | default: settings.extra_pump_price_default
   | default: 0.50
 -%}
 
 {%- assign kava_flavor_string = settings.kava_flavors | default: '' -%}
-{%- assign kava_flavors_raw = kava_flavor_string | split: ',' -%}
-{%- assign kava_flavors = '' | split: ',' -%}
+{%- assign kava_flavors_raw   = kava_flavor_string | split: ',' -%}
+{%- assign kava_flavors       = '' | split: ',' -%}
 {%- for f in kava_flavors_raw -%}
   {%- assign _t = f | strip -%}
   {%- if _t != '' -%}{%- assign kava_flavors = kava_flavors | push: _t -%}{%- endif -%}
@@ -133,15 +133,12 @@
 </main>
 
 {%- comment -%}
-  Ensure the JS is available (safe even if already included in theme.liquid).
+Ensure the JS is available (safe even if already included in theme.liquid).
 {%- endcomment -%}
 <script>
   (function () {
     function loadOnce(src, onload) {
-      if ([...document.scripts].some((s) => s.src.includes(src))) {
-        onload && onload();
-        return;
-      }
+      if ([...document.scripts].some((s) => s.src.includes(src))) { onload && onload(); return; }
       var el = document.createElement('script');
       el.src = src;
       el.defer = true;
