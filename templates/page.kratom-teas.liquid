@@ -1,31 +1,50 @@
-{% comment %} Kratom Teas — Size variants only; Strain/Flavor as line item properties {% endcomment %}
+{% comment %}Kratom Teas — size-only variants; strains/flavors via properties{% endcomment %}
 {% assign product = all_products['custom-kratom-tea'] %}
 
-{% if product == nil %}
-<main id="MainContent" class="page-width" style="max-width:1100px;margin:0 auto;padding:16px;">
-  <h1>Kratom Teas</h1>
-  <p>Product "custom-kratom-tea" not found. Create it in Shopify, then reload.</p>
-</main>
+{% if product == null %}
+  <main id="MainContent" class="page-width" style="max-width:1100px;margin:0 auto;padding:16px;">
+    <h1>Kratom Teas</h1>
+    <p>Product "custom-kratom-tea" not found. Create it in Shopify, then reload.</p>
+  </main>
 {% else %}
+  {%- assign v_medium = product.variants | where: 'option1', 'Medium' | first -%}
+  {%- assign v_large = product.variants | where: 'option1', 'Large' | first -%}
+  {%- assign v_gallon = product.variants | where: 'option1', 'Gallon' | first -%}
 
-<script>
-  // Variant id + pricing + pump rules (used by the customizer snippet)
-  const variantIdBySize = {
-    "Medium": {{ product.variants | where: "option1","Medium" | first | default: nil | map: "id" | first | default: "null" }},
-    "Large":  {{ product.variants | where: "option1","Large"  | first | default: nil | map: "id" | first | default: "null" }},
-    "Gallon": {{ product.variants | where: "option1","Gallon" | first | default: nil | map: "id" | first | default: "null" }}
-  };
-  const priceBySize = {"Medium":900,"Large":1500,"Gallon":10000}; // cents
-  const pumpLimitBySize = {"Medium":4,"Large":6,"Gallon":12};
-</script>
+  <main id="MainContent" class="page-width" style="max-width:1100px;margin:0 auto;padding:16px;">
+    <header style="display:flex;align-items:center;gap:16px;justify-content:center;margin:8px 0 20px;">
+      <img
+        src="{{ 'kratom_teas_150x150.png' | asset_url }}"
+        alt="Kratom Teas"
+        width="150"
+        height="150"
+        loading="eager"
+        style="border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);"
+      >
+      <div style="text-align:center">
+        <h1 style="margin:0;">Kratom Teas</h1>
+        <p style="color:#555;margin:6px 0 0;">Select Size, Strain (or Mix), then Flavors.</p>
+      </div>
+    </header>
 
-<main id="MainContent" class="page-width" style="max-width:1100px;margin:0 auto;padding:16px;">
-  <header style="display:flex;align-items:center;gap:16px;justify-content:center;margin:8px 0 20px;">
-    <img src="{{ 'kratom_teas_150x150.png' | asset_url }}" alt="Kratom Teas" width="150" height="150" loading="eager" style="border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);">
-    <div style="text-align:center"><h1 style="margin:0;">Kratom Teas</h1><p style="color:#555;margin:6px 0 0;">Choose Size, Strain (or Mix), then Flavors.</p></div>
-  </header>
+    {% render 'wtf-flavor-data' %}
 
-  {% render 'wtf-flavor-data' %}
-  {% render 'wtf-kratom-customizer', product: product, flavors: wtfKratomFlavors %}
-</main>
+    <script>
+      // Put maps on window to avoid scoping issues
+      window.VARIANT_ID_BY_SIZE = {
+        "Medium": {{ v_medium.id | default: 'null' }},
+        "Large":  {{ v_large.id  | default: 'null' }},
+        "Gallon": {{ v_gallon.id | default: 'null' }}
+      };
+      // Shopify prices are cents
+      window.PRICE_BY_SIZE = {
+        "Medium": {{ v_medium.price | default: 0 }},
+        "Large":  {{ v_large.price  | default: 0 }},
+        "Gallon": {{ v_gallon.price | default: 0 }}
+      };
+      window.PUMP_LIMIT_BY_SIZE = { "Medium":4, "Large":6, "Gallon":12 };
+    </script>
+
+    {% render 'wtf-kratom-customizer', product: product, flavors: wtfKratomFlavors %}
+  </main>
 {% endif %}
