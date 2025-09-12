@@ -1,39 +1,211 @@
 {% comment %}
-  Kratom Teas — Custom ordering page with proper variant handling
+  Kratom Teas — Custom ordering page with proper variant handling (Size, Strain, Flavor)
+  - Mobile-first, AJAX-ready, exact-match variant mapping
+  - Relies on snippets:
+    - 'wtf-flavor-data' (defines wtfKratomFlavors)
+    - 'wtf-flavor-options' (renders Flavor buttons with data-option="Flavor")
 {% endcomment %}
 
 {% assign product = all_products['custom-kratom-tea'] %}
 
-<script>
-  // Set product data for AJAX cart functionality
-  window.WTF_PRODUCT_HANDLE = 'custom-kratom-tea';
-  window.WTF_PRODUCT_JSON = {{ product | json }};
-</script>
-
-<main id="MainContent" class="page-width">
-  <header class="wtf-page-hero" style="text-align:center; margin: 16px 0 20px;">
+{% if product == null %}
+  <main id="MainContent" class="page-width" style="max-width:900px;margin:0 auto;padding:12px;">
     <h1>Kratom Teas</h1>
-    <p style="color:#555; margin-top:6px;">Choose your size, strain, and flavors.</p>
-  </header>
+    <p>Product “custom-kratom-tea” not found. Create it in Shopify, then reload.</p>
+  </main>
+{% else %}
+  <script>
+    // Expose product to custom scripts (and fallbacks)
+    window.WTF_PRODUCT_HANDLE = 'custom-kratom-tea';
+    window.WTF_PRODUCT_JSON = {{ product | json }};
+  </script>
 
-  {% render 'wtf-flavor-data' %}
-  {% render 'wtf-flavor-options', title: 'Custom Kratom Tea', flavors: wtfKratomFlavors, option_name: 'Flavor', product: product %}
+  <main id="MainContent" class="page-width" style="max-width:900px;margin:0 auto;padding:12px;">
+    <header class="wtf-page-hero" style="text-align:center;margin:16px 0 20px;">
+      <h1 style="font-size:28px;line-height:1.2;">Kratom Teas</h1>
+      <p style="color:#555;margin-top:6px;">Choose your Size, Strain, and Flavor.</p>
+    </header>
 
-  <form method="post" action="/cart/add" data-wtf-ajax style="margin-top:16px;">
-    <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
-    <div style="display:flex; gap:8px; align-items:center; margin-top:10px;">
-      <label for="wtf-qty-kratom" style="min-width:56px;">Qty</label>
-      <input id="wtf-qty-kratom" name="quantity" type="number" min="1" value="1" style="width:80px;">
-      <button type="submit" class="wtf-primary-cta" style="margin-left:auto;">Add to cart</button>
-    </div>
-    <div id="wtf-price" data-price style="margin-top:8px; font-weight:600;"></div>
-  </form>
-</main>
+    <!-- SIZE + STRAIN chips -->
+    <section id="wtf-options" aria-label="Kratom Options" style="display:grid;gap:16px;">
+      {% for opt in product.options_with_values %}
+        {% assign name = opt.name %}
+        {% if name == 'Size' or name == 'Strain' %}
+          <div class="wtf-option-group" data-option-group="{{ name }}" role="group" aria-label="{{ name }}">
+            <div class="wtf-option-label" style="font-weight:700;margin-bottom:6px;">{{ name }}</div>
+            <div class="wtf-chip-row" style="display:flex;flex-wrap:wrap;gap:8px;">
+              {% for val in opt.values %}
+                <button
+                  type="button"
+                  class="wtf-chip"
+                  data-option="{{ name }}"
+                  data-value="{{ val | escape }}"
+                  aria-pressed="false"
+                >
+                  {{ val }}
+                </button>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </section>
 
-<style>
-  .wtf-primary-cta {
-    background:#ff6600; color:#fff; border:none; border-radius:8px;
-    padding:12px 16px; min-height:44px; font-weight:700; cursor:pointer;
-  }
-  .wtf-primary-cta:disabled { opacity:.6; cursor:not-allowed; }
-</style>
+    <!-- FLAVOR system (uses your existing snippets) -->
+    {% render 'wtf-flavor-data' %}
+    {% render 'wtf-flavor-options',
+      title: 'Choose Your Flavor',
+      flavors: wtfKratomFlavors,
+      option_name: 'Flavor',
+      product: product
+    %}
+
+    <!-- Add to Cart Form -->
+    <form id="wtf-form" method="post" action="/cart/add" data-wtf-ajax style="margin-top:16px;display:grid;gap:12px;">
+      <input id="wtf-variant-id" type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <label for="wtf-qty" style="min-width:42px;">Qty</label>
+        <input
+          id="wtf-qty"
+          name="quantity"
+          type="number"
+          min="1"
+          value="1"
+          style="width:88px;height:44px;padding:6px 10px;border:1px solid #ddd;border-radius:8px;"
+        >
+        <button id="wtf-add" type="submit" class="wtf-primary-cta" style="margin-left:auto;">Add to cart</button>
+      </div>
+      <div id="wtf-price" data-price style="font-weight:700;"></div>
+      <div id="wtf-status" aria-live="polite" style="font-size:14px;color:#555;"></div>
+    </form>
+  </main>
+
+  <style>
+    .wtf-chip {
+      background:#fff;border:1px solid #ddd;border-radius:999px;
+      padding:10px 14px;min-height:40px;cursor:pointer;font-weight:600;
+    }
+    .wtf-chip[aria-pressed="true"] { border-color:#ff6600; box-shadow:0 0 0 2px rgba(255,102,0,.15); }
+    .wtf-primary-cta {
+      background:#ff6600;color:#fff;border:none;border-radius:8px;
+      padding:12px 16px;min-height:44px;font-weight:700;cursor:pointer;
+    }
+    .wtf-primary-cta:disabled { opacity:.6;cursor:not-allowed; }
+    @media (min-width: 720px){ .wtf-chip { padding:12px 16px; } }
+  </style>
+
+  <script>
+    (function(){
+      const product = window.WTF_PRODUCT_JSON;
+      if(!product){ return; }
+
+      // Build variant index: key = "Size / Strain / Flavor"
+      const variantByKey = {};
+      (product.variants || []).forEach(v => {
+        if(!v) return;
+        const key = [v.option1, v.option2, v.option3].filter(Boolean).join(' / ');
+        variantByKey[key] = v;
+      });
+
+      // Detect canonical option order from product.options (e.g., ["Size","Strain","Flavor"])
+      const optionOrder = (product.options || []).slice(0,3);
+
+      // Local state seeded from first available variant
+      const first = product.selected_or_first_available_variant || (product.variants || [])[0];
+      const state = {
+        [optionOrder[0] || 'Size']: first ? first.option1 : '',
+        [optionOrder[1] || 'Strain']: first ? first.option2 : '',
+        [optionOrder[2] || 'Flavor']: first ? first.option3 : ''
+      };
+
+      // Helpers
+      const $ = (s,c)=> (c||document).querySelector(s);
+      const $$= (s,c)=> Array.from((c||document).querySelectorAll(s));
+      const idInput = $('#wtf-variant-id');
+      const priceEl = $('#wtf-price');
+      const addBtn  = $('#wtf-add');
+      const form    = $('#wtf-form');
+      const status  = $('#wtf-status');
+
+      function money(cents){
+        try {
+          return new Intl.NumberFormat({{ shop.locale | json }}, { style:'currency', currency: {{ shop.currency | json }} }).format(cents/100);
+        } catch(e){ return '$' + (cents/100).toFixed(2); }
+      }
+
+      function keyFromState() {
+        return optionOrder.map(n => state[n] || '').filter(Boolean).join(' / ');
+      }
+
+      function syncChips(){
+        $$('[data-option][data-value]').forEach(el=>{
+          const opt = el.getAttribute('data-option');
+          const val = el.getAttribute('data-value');
+          el.setAttribute('aria-pressed', state[opt] === val ? 'true' : 'false');
+        });
+      }
+
+      function setVariantUI(v){
+        if(v){
+          idInput.value = v.id;
+          priceEl.textContent = 'Price: ' + money(v.price);
+          addBtn.disabled = !v.available;
+          status.textContent = v.available ? '' : 'Selected combination is unavailable.';
+        } else {
+          idInput.value = '';
+          priceEl.textContent = '';
+          addBtn.disabled = true;
+          status.textContent = 'Please complete your selections.';
+        }
+      }
+
+      function recompute(){
+        const k = keyFromState();
+        setVariantUI(variantByKey[k]);
+      }
+
+      // Initialize default pressed chips for Size/Strain from state
+      syncChips();
+      recompute();
+
+      // Delegate clicks for all option chips (including Flavor buttons rendered by snippet)
+      document.addEventListener('click', (e)=>{
+        const btn = e.target.closest('[data-option][data-value]');
+        if(!btn) return;
+        const opt = btn.getAttribute('data-option');
+        const val = btn.getAttribute('data-value');
+        if(!optionOrder.includes(opt)) return; // ignore if not a real option
+        state[opt] = val;
+        syncChips();
+        recompute();
+      });
+
+      // AJAX add-to-cart
+      if(form && form.hasAttribute('data-wtf-ajax')){
+        form.addEventListener('submit', async (e)=>{
+          if(!idInput.value){ e.preventDefault(); status.textContent='Select Size, Strain, and Flavor.'; return; }
+          e.preventDefault();
+          addBtn.disabled = true;
+          status.textContent = 'Adding…';
+          try{
+            const fd = new FormData(form);
+            const res = await fetch('/cart/add.js', { method:'POST', body: fd, headers:{'Accept':'application/json'} });
+            if(!res.ok){ throw new Error('Add to cart failed'); }
+            // Update header count
+            const cart = await fetch('/cart.js', { headers:{'Accept':'application/json'} }).then(r=>r.json());
+            const countNode = document.querySelector('[data-cart-count], .cart-count-bubble, #cart-icon-bubble');
+            if(countNode){ countNode.textContent = cart.item_count; }
+            // Open drawer if available
+            if(typeof window.openCartDrawer === 'function'){ window.openCartDrawer(); }
+            status.textContent = 'Added to cart.';
+          }catch(err){
+            status.textContent = 'Could not add to cart. Please try again.';
+            console.error(err);
+          }finally{
+            addBtn.disabled = false;
+          }
+        });
+      }
+    })();
+  </script>
+{% endif %}
