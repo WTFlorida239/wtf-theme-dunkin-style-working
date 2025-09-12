@@ -1,12 +1,16 @@
 {% comment %}
-  Renders Size chips (from product), Strain chips (+Mix 1/2+1/2), Flavor chips, and an AJAX form.
-  Requires globals from the page:
-    - variantIdBySize, priceBySize, pumpLimitBySize
-  Also requires 'flavors' array (from wtf-flavor-data).
+  Builder UI: Size → Strain (+ Mix ½+½) → Flavors → Notes → AJAX ATC
+  Requires:
+    - window.VARIANT_ID_BY_SIZE, window.PRICE_BY_SIZE, window.PUMP_LIMIT_BY_SIZE
+    - 'flavors' (from wtf-flavor-data)
 {% endcomment %}
 
-{% assign size_values = product.options_with_values | first | default: null %}
-{% assign sizes = size_values.values | default: 'Medium,Large,Gallon' | split: ',' %}
+{%- assign size_opt = product.options_by_name.Size -%}
+{%- if size_opt and size_opt.values -%}
+  {%- assign sizes = size_opt.values -%}
+{%- else -%}
+  {%- assign sizes = 'Medium,Large,Gallon' | split: ',' -%}
+{%- endif -%}
 
 <section id="wtf-customizer" style="display:grid;gap:16px">
   <!-- SIZE -->
@@ -14,8 +18,8 @@
     <div class="wtf-label">Size</div>
     <div class="wtf-row">
       {% for s in sizes %}
-        <button type="button" class="wtf-chip" data-option="Size" data-value="{{ s | strip }}" aria-pressed="false">
-          {{ s | strip }}
+        <button type="button" class="wtf-chip" data-option="Size" data-value="{{ s | escape }}" aria-pressed="false">
+          {{ s }}
         </button>
       {% endfor %}
     </div>
@@ -102,96 +106,51 @@
 
 <script>
   (function () {
-    // ----- guards -----
-    if (typeof variantIdBySize !== 'object' || typeof priceBySize !== 'object' || typeof pumpLimitBySize !== 'object') {
-      return;
-    }
+    // Expect globals set by the page template
+    const ids = window.VARIANT_ID_BY_SIZE || {};
+    const price = window.PRICE_BY_SIZE || {};
+    const pumps = window.PUMP_LIMIT_BY_SIZE || {};
 
     const $ = (s, c) => (c || document).querySelector(s);
     const $$ = (s, c) => Array.from((c || document).querySelectorAll(s));
 
     const form = $('#wtf-form');
     const idInp = $('#wtf-variant-id');
-    const price = $('#wtf-price');
+    const priceEl = $('#wtf-price');
     const status = $('#wtf-status');
     const pumpHint = $('#wtf-pump-hint');
 
-    // UI state
     const state = { Size: '', Strain: '', Mix: 'No', 'Strain A': '', 'Strain B': '' };
 
-    // Initial size = first available
-    state.Size =
-      Object.keys(variantIdBySize).find((k) => variantIdBySize[k] && variantIdBySize[k] !== 'null') || 'Medium';
-    selectChip('Size', state.Size);
+    // Auto-pick first size that has an id
+    state.Size = Object.keys(ids).find((k) => ids[k]) || 'Medium';
+    setSingle('Size', state.Size);
     syncSize();
 
-    // Pump hint
-    function syncPumpHint() {
-      pumpHint.textContent = 'Pump limit: ' + (pumpLimitBySize[state.Size] || 0) + ' total.';
-    }
-    syncPumpHint();
-
-    // Chip interactions
-    document.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-option][data-value]');
-      if (!btn) return;
-      const opt = btn.getAttribute('data-option');
-      const val = btn.getAttribute('data-value');
-
-      if (opt === 'Mix') {
-        state.Mix = btn.getAttribute('aria-pressed') === 'true' ? 'No' : 'Yes';
-        // toggle UI
-        $('#wtf-mix-picker').style.display = state.Mix === 'Yes' ? 'block' : 'none';
-        if (state.Mix === 'Yes') {
-          state.Strain = '';
-        } else {
-          state['Strain A'] = '';
-          state['Strain B'] = '';
-        }
-        toggleChip(btn, state.Mix === 'Yes');
-        syncProps();
-        return;
+    function money(cents) {
+      try {
+        return new Intl.NumberFormat('{{ shop.locale }}', {
+          style: 'currency',
+          currency: '{{ shop.currency }}',
+        }).format((cents || 0) / 100);
+      } catch (_) {
+        return '$' + ((cents || 0) / 100).toFixed(2);
       }
-
-      // single-select groups
-      if (['Size', 'Strain', 'Strain A', 'Strain B'].includes(opt)) {
-        state[opt] = btn.getAttribute('aria-pressed') === 'true' ? '' : val;
-        setSingleSelect(opt, state[opt]);
-        if (opt === 'Size') {
-          syncSize();
-          syncPumpHint();
-        }
-        syncProps();
-      }
-    });
-
-    function setSingleSelect(opt, val) {
-      $$(`[data-option="${css(opt)}"]`).forEach((el) => toggleChip(el, el.getAttribute('data-value') === val));
     }
-    function selectChip(opt, val) {
-      setSingleSelect(opt, val);
-    }
-    function toggleChip(el, on) {
-      el.setAttribute('aria-pressed', on ? 'true' : 'false');
+    function setSingle(opt, val) {
+      $$(`[data-option="${css(opt)}"]`).forEach((el) => {
+        const on = el.getAttribute('data-value') === val;
+        el.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
     }
     function css(s) {
       return s.replace(/"/g, '\\"');
     }
-
     function syncSize() {
-      const id = variantIdBySize[state.Size];
-      idInp.value = id || '';
-      const cents = priceBySize[state.Size] || 0;
-      try {
-        price.textContent = new Intl.NumberFormat('{{ shop.locale }}', {
-          style: 'currency',
-          currency: '{{ shop.currency }}',
-        }).format(cents / 100);
-      } catch (_) {
-        price.textContent = '$' + (cents / 100).toFixed(2);
-      }
+      idInp.value = ids[state.Size] || '';
+      priceEl.textContent = money(price[state.Size] || 0);
+      pumpHint.textContent = 'Pump limit: ' + (pumps[state.Size] || 0) + ' total.';
     }
-
     function syncProps() {
       form.querySelector('[name="properties[Mix]"]').value = state.Mix;
       form.querySelector('[name="properties[Strain]"]').value = state.Mix === 'Yes' ? '' : state.Strain || '';
@@ -199,13 +158,40 @@
       form.querySelector('[name="properties[Strain B]"]').value = state.Mix === 'Yes' ? state['Strain B'] || '' : '';
     }
 
-    // You already render flavor UI; capture its pump string if your flavor JS populates it.
-    // Expect a global builder to expose pumps string into window.WTF_FLAVORS_STRING; otherwise keep empty.
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-option][data-value]');
+      if (!btn) return;
+      const opt = btn.getAttribute('data-option');
+      const val = btn.getAttribute('data-value');
+
+      if (opt === 'Mix') {
+        const on = btn.getAttribute('aria-pressed') !== 'true';
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        state.Mix = on ? 'Yes' : 'No';
+        $('#wtf-mix-picker').style.display = on ? 'block' : 'none';
+        if (on) {
+          state.Strain = '';
+        } else {
+          state['Strain A'] = '';
+          state['Strain B'] = '';
+        }
+        syncProps();
+        return;
+      }
+
+      if (['Size', 'Strain', 'Strain A', 'Strain B'].includes(opt)) {
+        const already = btn.getAttribute('aria-pressed') === 'true';
+        setSingle(opt, already ? '' : val);
+        state[opt] = already ? '' : val;
+        if (opt === 'Size') syncSize();
+        syncProps();
+      }
+    });
+
     function getFlavorString() {
       return window.WTF_FLAVORS_STRING || '';
     }
 
-    // Submit (AJAX)
     form.addEventListener('submit', async (e) => {
       if (!idInp.value) {
         e.preventDefault();
