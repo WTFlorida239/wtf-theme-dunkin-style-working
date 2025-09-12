@@ -1,82 +1,158 @@
-{% comment %}
-  Renders accessible flavor "chips" from a provided array.
-  Params:
-    - flavors (Array<string>)  - required
-    - title (string)           - optional
-    - option_name (string)     - defaults to 'Flavor'
-{% endcomment %}
+{%- comment -%}
+  Renders flavor chips + pump counters and maintains:
+    - window.WTF_FLAVORS_STRING (e.g., "Mango:2 | Peach:1 | Lime:1")
+  Requires:
+    - 'flavors' param (Liquid array) or falls back to window.WTF_FLAVORS
+    - window.PUMP_LIMIT_BY_SIZE and current Size state (from the page/snippet)
+{%- endcomment -%}
 
-{%- assign option_name = option_name | default: 'Flavor' -%}
-{%- assign group_id = 'flavors-' | append: option_name | handleize -%}
+{%- assign _title = title | default: 'Choose Your Flavor(s)' -%}
+{%- assign _option_name = option_name | default: 'Flavor' -%}
+{%- assign _flavors = flavors | default: wtfKratomFlavors -%}
 
-<div class="wtf-flavor-group" role="radiogroup" aria-label="{{ title | default: option_name }}" id="{{ group_id }}">
-  {% if title %}
-    <h3 class="wtf-flavor-title">{{ title }}</h3>
-  {% endif %}
+<div class="wtf-flavors">
+  <div class="wtf-label" style="font-weight:800;margin-bottom:8px">{{ _title }}</div>
 
-  <div class="wtf-flavor-grid">
-    {% for value in flavors %}
-      {% assign btn_id = group_id | append: '-' | append: forloop.index %}
-      <button
-        id="{{ btn_id }}"
-        class="wtf-flavor-chip"
-        type="button"
-        role="radio"
-        aria-checked="false"
-        data-option="{{ option_name }}"
-        data-value="{{ value | strip }}"
+  <div class="wtf-row" style="display:flex;flex-wrap:wrap;gap:8px;">
+    {%- for f in _flavors -%}
+      <div
+        class="wtf-flavor-pill"
+        data-flavor="{{ f | escape }}"
+        style="display:flex;align-items:center;gap:6px;border:1px solid #ddd;border-radius:999px;padding:8px 10px;"
       >
-        <span class="wtf-flavor-label">{{ value }}</span>
-      </button>
-    {% endfor %}
+        <button
+          type="button"
+          class="wtf-chip"
+          data-option="{{ _option_name }}"
+          data-value="{{ f | escape }}"
+          aria-pressed="false"
+          style="background:#fff;border:0;padding:0 2px;cursor:pointer;font-weight:600;"
+        >
+          {{ f }}
+        </button>
+        <div class="wtf-pumps" style="display:flex;align-items:center;gap:6px;">
+          <button
+            type="button"
+            class="wtf-minus"
+            aria-label="minus"
+            style="width:28px;height:28px;border:1px solid #ddd;border-radius:8px;cursor:pointer;"
+          >
+            –
+          </button>
+          <input
+            type="text"
+            inputmode="numeric"
+            class="wtf-count"
+            value="0"
+            aria-label="{{ f }} pumps"
+            style="width:36px;height:28px;text-align:center;border:1px solid #ddd;border-radius:8px;"
+          >
+          <button
+            type="button"
+            class="wtf-plus"
+            aria-label="plus"
+            style="width:28px;height:28px;border:1px solid #ddd;border-radius:8px;cursor:pointer;"
+          >
+            +
+          </button>
+        </div>
+      </div>
+    {%- endfor -%}
   </div>
 </div>
 
-<style>
-  .wtf-flavor-title { margin: 0 0 8px; font-weight: 600; font-size: 1.125rem; }
-  .wtf-flavor-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
-  @media (min-width: 480px){ .wtf-flavor-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
-  @media (min-width: 768px){ .wtf-flavor-grid { grid-template-columns: repeat(4, minmax(0,1fr)); } }
-
-  .wtf-flavor-chip {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-height: 44px; padding: 10px 12px; width: 100%;
-    border: 1.5px solid #ddd; border-radius: 999px; background: #fff; color: #333;
-    font: inherit; cursor: pointer; transition: transform .06s ease, border-color .15s ease, box-shadow .15s ease;
-  }
-  .wtf-flavor-chip:hover { border-color: #bbb; transform: translateY(-1px); }
-  .wtf-flavor-chip:focus-visible { outline: 2px solid #ff6600; outline-offset: 2px; }
-  .wtf-flavor-chip.is-selected { border-color: #ff6600; box-shadow: 0 0 0 3px rgba(255,102,0,.15); }
-  .wtf-flavor-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-</style>
-
 <script>
   (function () {
-    document.addEventListener('click', function (e) {
-      var chip = e.target.closest('.wtf-flavor-chip');
-      if (!chip) return;
+    // guard: only run once
+    if (window.__WTF_FLAVOR_WIRED__) return;
+    window.__WTF_FLAVOR_WIRED__ = true;
 
-      var group = chip.closest('.wtf-flavor-group');
-      if (!group) return;
+    const PUMPS = {};
+    const $ = (s, c) => (c || document).querySelector(s);
+    const $$ = (s, c) => Array.from((c || document).querySelectorAll(s));
 
-      group.querySelectorAll('.wtf-flavor-chip').forEach(function (b) {
-        b.classList.remove('is-selected');
-        b.setAttribute('aria-checked', 'false');
-      });
+    // Pump limit helper (expects window.PUMP_LIMIT_BY_SIZE + a selected Size chip)
+    function currentSize() {
+      const pressed = document.querySelector('[data-option="Size"][aria-pressed="true"]');
+      return pressed ? pressed.getAttribute('data-value') : 'Medium';
+    }
+    function pumpLimit() {
+      const size = currentSize();
+      const limits = window.PUMP_LIMIT_BY_SIZE || {};
+      return limits[size] || 0;
+    }
+    function totalPumps() {
+      return Object.values(PUMPS).reduce((a, b) => a + (parseInt(b, 10) || 0), 0);
+    }
 
-      chip.classList.add('is-selected');
-      chip.setAttribute('aria-checked', 'true');
+    function setCount(flavor, n) {
+      PUMPS[flavor] = Math.max(0, n | 0);
+      syncString();
+    }
 
-      var detail = { option: chip.dataset.option, value: chip.dataset.value, groupId: group.id };
-      group.dispatchEvent(new CustomEvent('wtf:optionSelected', { bubbles: true, detail: detail }));
-      document.dispatchEvent(new CustomEvent('wtf:optionSelectedGlobal', { bubbles: true, detail: detail }));
-    });
-
-    document.addEventListener('keydown', function (e) {
-      if ((e.key === ' ' || e.key === 'Enter') && e.target.closest('.wtf-flavor-chip')) {
-        e.preventDefault();
-        e.target.click();
+    function syncString() {
+      const parts = Object.keys(PUMPS)
+        .filter((k) => (PUMPS[k] | 0) > 0)
+        .map((k) => `${k}:${PUMPS[k] | 0}`);
+      window.WTF_FLAVORS_STRING = parts.join(' | ');
+      const hint = document.getElementById('wtf-pump-hint');
+      if (hint) {
+        hint.textContent = `Pump limit: ${pumpLimit()} total. Used: ${totalPumps()}`;
       }
+    }
+
+    // Wire +/- and prevent exceeding the limit
+    document.addEventListener('click', (e) => {
+      const minus = e.target.closest('.wtf-minus');
+      const plus = e.target.closest('.wtf-plus');
+      const chip = e.target.closest('[data-option="Flavor"]');
+
+      // Toggle chip pressed state (visual)
+      if (chip) {
+        const on = chip.getAttribute('aria-pressed') !== 'true';
+        chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+        // no-op for pumps; pumps control counts
+      }
+
+      const pill = e.target.closest('.wtf-flavor-pill');
+      if (!pill) return;
+      const flavor = pill.getAttribute('data-flavor');
+      const input = pill.querySelector('.wtf-count');
+      let n = parseInt(input.value || '0', 10) || 0;
+
+      if (minus) {
+        n = Math.max(0, n - 1);
+      }
+      if (plus) {
+        const lim = pumpLimit();
+        if (totalPumps() >= lim) {
+          return;
+        }
+        n = n + 1;
+      }
+      input.value = n;
+      setCount(flavor, n);
     });
+
+    // Recalculate when Size changes (limit changes)
+    document.addEventListener('click', (e) => {
+      const sizeBtn = e.target.closest('[data-option="Size"]');
+      if (!sizeBtn) return;
+      // If over new limit, gently trim from the end of list
+      const lim = pumpLimit();
+      while (totalPumps() > lim) {
+        const k = Object.keys(PUMPS)
+          .reverse()
+          .find((f) => (PUMPS[f] | 0) > 0);
+        if (!k) break;
+        PUMPS[k] = (PUMPS[k] | 0) - 1;
+        const pill = document.querySelector(`.wtf-flavor-pill[data-flavor="${CSS.escape(k)}"] .wtf-count`);
+        if (pill) pill.value = PUMPS[k] | 0;
+      }
+      syncString();
+    });
+
+    // Initialize empty
+    syncString();
   })();
 </script>

@@ -334,5 +334,6 @@
     
     {%- comment -%} Cart count element (place in header too if you want real-time updates visible) {%- endcomment -%}
     {%- render 'wtf-cart-count' -%}
+    {{ 'wtf-flavor-system.js' | asset_url | script_tag }}
   </body>
 </html>
