@@ -1,0 +1,109 @@
+{% comment %}
+  Renders accessible flavor "chips" from a provided array.
+  Required params:
+    - flavors: Array of strings (e.g., wtfKratomFlavors or wtfKavaFlavors)
+  Optional params:
+    - title: string to display above
+    - option_name: Shopify option name (defaults to 'Flavor')
+
+  Cart/Variant Integration:
+  - Each chip carries:
+      data-option="{{ option_name }}"   (MUST match actual Shopify option name)
+      data-value="{{ value }}"           (MUST match variant option value)
+  - Your existing JS (wtf_flavor_system.js / variant persistence) should:
+      * Toggle `.is-selected` on click
+      * Update <input name="id"> with the correct variant id
+      * Trigger price update
+
+  A11Y:
+  - role="radiogroup" container + role="radio" buttons
+  - aria-checked state on selected
+  - Keyboard: Enter/Space triggers click
+{% endcomment %}
+
+{%- assign option_name = option_name | default: 'Flavor' -%}
+{%- assign group_id = 'flavors-' | append: option_name | handleize -%}
+
+<div class="wtf-flavor-group" role="radiogroup" aria-label="{{ title | default: option_name }}" id="{{ group_id }}">
+  {% if title %}
+    <h3 class="wtf-flavor-title">{{ title }}</h3>
+  {% endif %}
+
+  <div class="wtf-flavor-grid">
+    {% for value in flavors %}
+      {% assign btn_id = group_id | append: '-' | append: forloop.index %}
+      <button
+        id="{{ btn_id }}"
+        class="wtf-flavor-chip"
+        type="button"
+        role="radio"
+        aria-checked="false"
+        data-option="{{ option_name }}"
+        data-value="{{ value | strip }}"
+      >
+        <span class="wtf-flavor-label">{{ value }}</span>
+      </button>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+  /* Scoped to this snippet */
+  .wtf-flavor-title { margin: 0 0 8px; font-weight: 600; font-size: 1.125rem; }
+  .wtf-flavor-grid {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 8px;
+  }
+  @media (min-width: 480px){ .wtf-flavor-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+  @media (min-width: 768px){ .wtf-flavor-grid { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+
+  .wtf-flavor-chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 44px; padding: 10px 12px; width: 100%;
+    border: 1.5px solid #ddd; border-radius: 999px; background: #fff; color: #333;
+    font: inherit; cursor: pointer; transition: transform .06s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .wtf-flavor-chip:hover { border-color: #bbb; transform: translateY(-1px); }
+  .wtf-flavor-chip:focus-visible { outline: 2px solid #ff6600; outline-offset: 2px; }
+  .wtf-flavor-chip.is-selected {
+    border-color: #ff6600;
+    box-shadow: 0 0 0 3px rgba(255,102,0,.15);
+  }
+  .wtf-flavor-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+
+<script>
+  (function () {
+    // Lightweight enhancer: toggle selection and ARIA for role="radio" buttons.
+    // Real variant mapping is handled by your existing global cart/variant script.
+    document.addEventListener('click', function (e) {
+      var chip = e.target.closest('.wtf-flavor-chip');
+      if (!chip) return;
+
+      var group = chip.closest('.wtf-flavor-group');
+      if (!group) return;
+
+      group.querySelectorAll('.wtf-flavor-chip').forEach(function (b) {
+        b.classList.remove('is-selected');
+        b.setAttribute('aria-checked', 'false');
+      });
+
+      chip.classList.add('is-selected');
+      chip.setAttribute('aria-checked', 'true');
+
+      // Fire a custom event so your variant logic can listen and update price/variant id.
+      var detail = { option: chip.dataset.option, value: chip.dataset.value, groupId: group.id };
+      group.dispatchEvent(new CustomEvent('wtf:optionSelected', { bubbles: true, detail: detail }));
+      document.dispatchEvent(new CustomEvent('wtf:optionSelectedGlobal', { bubbles: true, detail: detail }));
+    });
+
+    // Keyboard support: Space/Enter = activate
+    document.addEventListener('keydown', function (e) {
+      if ((e.key === ' ' || e.key === 'Enter') && e.target.closest('.wtf-flavor-chip')) {
+        e.preventDefault();
+        e.target.click();
+      }
+    });
+  })();
+</script>
