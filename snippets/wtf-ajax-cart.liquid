@@ -1,0 +1,150 @@
+{%- comment -%}
+  WTF Dunkin Style — AJAX Cart Snippet
+  Drop-in JS that powers AJAX add-to-cart for any form with [data-wtf-ajax].
+
+  How to use:
+  - Include once per page (at bottom): {% render 'wtf-ajax-cart' %}
+  - Ensure your forms have: method="post" action="/cart/add" and a hidden input name="id"
+  - Optional: an input name="quantity" (defaults to 1)
+  - Cart count target: any element with [data-cart-count-target]
+  - Cart drawer (optional): listens to custom event 'wtf:cart:open'
+
+  Accessibility:
+  - Announces success/failure via a live region
+  - Returns focus to Add button after request unless drawer takes focus
+{%- endcomment -%}
+<script>
+  (function () {
+    if (window.__WTF_AJAX_CART_INIT__) return; // prevent duplicate init
+    window.__WTF_AJAX_CART_INIT__ = true;
+
+    const LIVE_REGION_ID = 'wtf-ajax-live';
+    let live = document.getElementById(LIVE_REGION_ID);
+    if (!live) {
+      live = document.createElement('div');
+      live.id = LIVE_REGION_ID;
+      live.setAttribute('role', 'status');
+      live.setAttribute('aria-live', 'polite');
+      live.style.position = 'absolute';
+      live.style.width = '1px';
+      live.style.height = '1px';
+      live.style.overflow = 'hidden';
+      live.style.clip = 'rect(1px,1px,1px,1px)';
+      live.style.whiteSpace = 'nowrap';
+      document.body.appendChild(live);
+    }
+
+    async function fetchJSON(url, options) {
+      const res = await fetch(
+        url,
+        Object.assign(
+          {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+          },
+          options
+        )
+      );
+      const text = await res.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (e) {}
+      if (!res.ok) {
+        const err = new Error(data.description || res.statusText);
+        err.data = data;
+        throw err;
+      }
+      return data;
+    }
+
+    function setButtonState(btn, state) {
+      if (!btn) return;
+      if (state === 'loading') {
+        btn.dataset.originalText = btn.dataset.originalText || btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Adding…';
+      } else {
+        btn.disabled = false;
+        btn.textContent = btn.dataset.originalText || 'Add to cart';
+      }
+    }
+
+    function updateCartCount(count) {
+      document.querySelectorAll('[data-cart-count-target]').forEach((el) => {
+        el.textContent = String(count);
+        el.setAttribute('aria-label', `Cart count: ${count}`);
+      });
+    }
+
+    async function getCart() {
+      const res = await fetchJSON('/cart.js', { method: 'GET' });
+      return res;
+    }
+
+    async function addToCartFD(fd) {
+      // Shopify /cart/add.js accepts application/json as well; FormData works with fetch to /cart/add.js via POST
+      const body = new URLSearchParams();
+      for (const [k, v] of fd.entries()) {
+        body.append(k, v);
+      }
+      return await fetchJSON('/cart/add.js', { method: 'POST', body });
+    }
+
+    function announce(msg) {
+      live.textContent = '';
+      setTimeout(() => {
+        live.textContent = msg;
+      }, 30);
+    }
+
+    function openDrawer() {
+      document.dispatchEvent(new CustomEvent('wtf:cart:open'));
+    }
+
+    function onSubmit(e) {
+      const form = e.target.closest('form[data-wtf-ajax]');
+      if (!form) return;
+      e.preventDefault();
+
+      const addBtn = form.querySelector('[type="submit"]');
+      const idInput = form.querySelector('input[name="id"]');
+      const qtyInput = form.querySelector('input[name="quantity"]');
+      const qty = qtyInput && qtyInput.value ? qtyInput.value : '1';
+
+      if (!idInput || !idInput.value) {
+        announce('Please choose an available option.');
+        return;
+      }
+
+      const fd = new FormData();
+      fd.set('id', idInput.value);
+      fd.set('quantity', qty);
+
+      setButtonState(addBtn, 'loading');
+
+      addToCartFD(fd)
+        .then(async (line) => {
+          announce('Added to cart');
+          const cart = await getCart();
+          updateCartCount(cart.item_count);
+
+          document.dispatchEvent(new CustomEvent('wtf:cart:updated', { detail: { cart, line } }));
+          // Open drawer if present
+          openDrawer();
+        })
+        .catch((err) => {
+          console.error('Add to cart error', err);
+          announce(err?.data?.description || err.message || 'Unable to add to cart');
+        })
+        .finally(() => {
+          setButtonState(addBtn, 'idle');
+          if (addBtn) addBtn.focus();
+        });
+    }
+
+    document.addEventListener('submit', function (e) {
+      if (e.target && e.target.matches('form[data-wtf-ajax]')) onSubmit(e);
+    });
+  })();
+</script>
