@@ -1,124 +1,198 @@
-{%- comment -%}
-  THC Drinks – page template
-  - Same visual system as Kava, just different flavor list if you want
-  - This was rendering unstyled because CSS/JS weren’t loaded – fixed here
-{%- endcomment -%}
+{% comment %}
+  WTF Dunkin Style — The Drinks (Two Sizes + AJAX)
+  Assign to page: /pages/the-drinks
+  Renders products from 'the-drinks' collection with ONLY "Large 16 oz" and "Gallon".
+  AJAX add-to-cart via {% render 'wtf-ajax-cart' %}.
+{% endcomment %}
 
-{%- assign css = 'wtf_flavor_system.css' | asset_url -%}
-{%- assign js = 'wtf_flavor_system.js' | asset_url -%}
+{% assign brand_orange = '#ff6600' %}
+{% assign brand_text = '#333333' %}
+{% assign brand_bg = '#ffffff' %}
 
-<link rel="preload" as="style" href="{{ css }}"><link rel="stylesheet" href="{{ css }}">
-<script src="{{ js }}" defer></script>
+<div id="wtf-the-drinks" class="wtf-wrap">
+  <header class="wtf-hero" role="banner" aria-label="The Drinks">
+    <h1 class="wtf-title">The Drinks</h1>
+    <p class="wtf-sub">Exactly two sizes: Large (16 oz) or Gallon.</p>
+  </header>
 
-<div class="wtf-page wtf-page--drinks">
-  <div class="wtf-container wtf-grid drink-grid">
-    <div class="drink-media">
-      {%- render 'wtf-product-card', product: all_products['thc-drink-placeholder'] -%}
-    </div>
-
-    <div class="drink-builder" data-drink="thc">
-      <h1 class="drink-title">THC Drinks</h1>
-
-      <div class="pill-group" role="group" aria-label="Sizes">
-        <button class="pill is-active" data-size="medium" data-price="9">Medium — $9.00</button>
-        <button class="pill" data-size="large" data-price="15">Large — $15.00</button>
-        <button class="pill" data-size="gallon" data-price="100">Gallon — $100.00</button>
-      </div>
-
-      <div class="helper">Pick flavors; we’ll split pumps evenly across your selection.</div>
-
-      <div class="chip-grid" role="group" aria-label="Flavors">
-        {% assign thc_flavors = 'Lemon,Lime,Orange,Strawberry,Raspberry,Blueberry,Sour Apple,Dragon Fruit,Blackberry,Cranberry,Grenadine,Chocolate,Caramel,Maple,Agave,Passion Fruit,Hibiscus'
-          | split: ','
-        %}
-        {% for fl in thc_flavors %}
-          <button class="chip" data-flavor="{{ fl | strip }}">{{ fl | strip }}</button>
+  {% assign col = collections['the-drinks'] %}
+  {% if col and col.products_count > 0 %}
+    <section class="wtf-grid" aria-label="Drinks">
+      {% for product in col.products %}
+        {% assign size_idx = null %}
+        {% for o in product.options_with_values %}
+          {% if o.name | downcase == 'size' %}{% assign size_idx = forloop.index0 %}{% endif %}
         {% endfor %}
-      </div>
 
-      <label class="wtf-label" for="drink-note">Any special requests?</label>
-      <textarea id="drink-note" class="wtf-input" rows="3" placeholder="Add a note"></textarea>
+        {% assign v_large = null %}
+        {% assign v_gallon = null %}
+        {% if size_idx != null %}
+          {% for v in product.variants %}
+            {% assign sz = v.options[size_idx] | strip %}
+            {% if sz == 'Large 16 oz' %}{% assign v_large = v %}{% endif %}
+            {% if sz == 'Gallon' %}{% assign v_gallon = v %}{% endif %}
+          {% endfor %}
+        {% endif %}
 
-      <div class="qty-row">
-        <button type="button" class="qty-btn" data-dec>−</button>
-        <input class="qty-input" type="number" min="1" value="1" aria-label="Quantity">
-        <button type="button" class="qty-btn" data-inc>+</button>
-      </div>
+        <article class="wtf-card">
+          <a class="wtf-media-link" href="{{ product.url }}" aria-label="View {{ product.title }}">
+            <div class="wtf-card-media">
+              {% if product.featured_media %}
+                <img
+                  src="{{ product.featured_media | image_url: width: 520 }}"
+                  srcset="{{ product.featured_media | image_url: width: 320 }} 320w, {{ product.featured_media | image_url: width: 520 }} 520w, {{ product.featured_media | image_url: width: 680 }} 680w"
+                  sizes="(max-width:640px) 45vw, 220px"
+                  alt="{{ product.featured_media.alt | escape | default: product.title | escape }}"
+                  loading="lazy"
+                  width="{{ product.featured_media.width }}"
+                  height="{{ product.featured_media.height }}"
+                >
+              {% else %}
+                <img
+                  src="{{ 'kava_drinks_150x150.png' | asset_url }}"
+                  alt="{{ product.title | escape }}"
+                  loading="lazy"
+                  width="150"
+                  height="150"
+                >
+              {% endif %}
+            </div>
+          </a>
 
-      <button class="btn btn--primary add-to-cart" data-sellable="thc-base">
-        Add to Cart — <span class="price">$9.00</span>
-      </button>
+          <div class="wtf-card-body">
+            <h2 class="wtf-card-title">
+              <a href="{{ product.url }}" class="wtf-title-link">{{ product.title }}</a>
+            </h2>
+
+            <div class="wtf-price">
+              {% assign price_to_show = product.price %}
+              <span class="wtf-price-now">{{ price_to_show | money }}</span>
+            </div>
+
+            <div class="wtf-size-row" role="group" aria-label="Choose size">
+              <button
+                type="button"
+                class="wtf-size-chip {% if v_large %}is-selected{% endif %}"
+                data-value="Large 16 oz"
+                {% unless v_large %}
+                  disabled aria-disabled="true"
+                {% endunless %}
+              >
+                Large 16 oz
+              </button>
+              <button
+                type="button"
+                class="wtf-size-chip {% if v_large == nil and v_gallon %}is-selected{% endif %}"
+                data-value="Gallon"
+                {% unless v_gallon %}
+                  disabled aria-disabled="true"
+                {% endunless %}
+              >
+                Gallon
+              </button>
+            </div>
+
+            <form
+              method="post"
+              action="/cart/add"
+              class="wtf-form"
+              data-wtf-ajax
+              data-product-id="{{ product.id }}"
+              data-large-id="{{ v_large.id }}"
+              data-gallon-id="{{ v_gallon.id }}"
+            >
+              <input
+                type="hidden"
+                name="id"
+                value="{% if v_large %}{{ v_large.id }}{% elsif v_gallon %}{{ v_gallon.id }}{% endif %}"
+              >
+              <label for="qty-{{ product.id }}" class="visually-hidden">Quantity</label>
+              <input
+                id="qty-{{ product.id }}"
+                class="wtf-qty"
+                name="quantity"
+                type="number"
+                min="1"
+                value="1"
+                inputmode="numeric"
+              >
+              <button type="submit" class="wtf-add">Add to cart</button>
+            </form>
+          </div>
+        </article>
+      {% endfor %}
+    </section>
+  {% else %}
+    <div class="wtf-empty">
+      <p>No drinks found. Add products to the <strong>the-drinks</strong> collection.</p>
     </div>
-  </div>
+  {% endif %}
 </div>
 
 <style>
-  /* Same ghost-marker + focus cleanup as Kava */
-  .wtf-page .drink-builder *::marker { content: ''; }
-  .wtf-page .drink-builder :focus { outline: none; box-shadow: 0 0 0 3px rgba(255,102,0,.35); border-radius: 10px; }
-  .wtf-container{max-width:1100px;margin:0 auto;padding:clamp(16px,2vw,28px)}
-  .drink-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:24px}
-  .drink-media{background:#fff;border-radius:16px;box-shadow:0 1px 0 rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center;padding:20px}
-  .drink-builder{background:#fff;border-radius:16px;box-shadow:0 1px 0 rgba(0,0,0,.06);padding:18px}
-  .drink-title{margin:0 0 12px;font-weight:800}
-  .pill-group{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
-  .pill{height:36px;padding:0 12px;border-radius:999px;border:1px solid #eee;background:#f8f8f8;cursor:pointer}
-  .pill.is-active{background:#ff6600;color:#fff;border-color:#ff6600}
-  .helper{background:#eef6ff;border:1px solid #e2efff;color:#2d3a4a;font-size:13px;padding:8px 10px;border-radius:10px;margin:10px 0}
-  .chip-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 14px}
-  .chip{height:36px;border-radius:10px;border:1px solid #e8e8e8;background:#fff;cursor:pointer}
-  .chip.is-selected{background:#111;color:#fff;border-color:#111}
-  .wtf-label{font-weight:600;margin:8px 0 6px;display:block}
-  .wtf-input{width:100%;border:1px solid #e1e1e1;border-radius:12px;padding:10px}
-  .qty-row{display:inline-flex;gap:8px;align-items:center;margin:12px 0}
-  .qty-btn{width:36px;height:36px;border:1px solid #e1e1e1;border-radius:10px;background:#fafafa}
-  .qty-input{width:56px;height:36px;text-align:center;border:1px solid #e1e1e1;border-radius:10px}
-  .btn{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 16px;border-radius:12px;border:0;cursor:pointer;font-weight:800}
-  .btn--primary{background:#ff6600;color:#fff}
-  @media (max-width: 900px){ .drink-grid{grid-template-columns:1fr} }
+  #wtf-the-drinks{--wtf-orange:{{ brand_orange }};--wtf-text:{{ brand_text }};--wtf-bg:{{ brand_bg }}}
+  #wtf-the-drinks .wtf-hero{padding:16px 16px 8px}
+  #wtf-the-drinks .wtf-title{margin:0;font-size:28px;line-height:1.15;color:var(--wtf-text)}
+  #wtf-the-drinks .wtf-sub{margin:6px 0 0;color:#666;font-size:14px}
+  #wtf-the-drinks .wtf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+  @media(min-width:640px){#wtf-the-drinks .wtf-grid{grid-template-columns:repeat(3,1fr);gap:16px;padding:20px}#wtf-the-drinks .wtf-title{font-size:32px}}
+  #wtf-the-drinks .wtf-card{background:#fff;border:1px solid #eee;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;overflow:hidden}
+  #wtf-the-drinks .wtf-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08);border-color:#ddd}
+  #wtf-the-drinks .wtf-media-link{display:block}
+  #wtf-the-drinks .wtf-card-media{display:flex;align-items:center;justify-content:center;height:160px;background:#fafafa}
+  #wtf-the-drinks .wtf-card-media img{width:140px;height:140px;object-fit:contain}
+  #wtf-the-drinks .wtf-card-body{padding:14px}
+  #wtf-the-drinks .wtf-card-title{margin:0 0 6px;font-size:16px;line-height:1.25;color:var(--wtf-text);font-weight:800}
+  #wtf-the-drinks .wtf-title-link{text-decoration:none;color:inherit}
+  #wtf-the-drinks .wtf-price{margin:2px 0 10px;display:flex;gap:8px;align-items:baseline}
+  #wtf-the-drinks .wtf-price-now{font-weight:800}
+  #wtf-the-drinks .wtf-size-row{display:flex;gap:8px;margin:8px 0 10px}
+  #wtf-the-drinks .wtf-size-chip{appearance:none;border:1px solid #ddd;border-radius:999px;background:#fff;padding:8px 12px;font-weight:700;cursor:pointer}
+  #wtf-the-drinks .wtf-size-chip.is-selected{border-color:var(--wtf-orange);box-shadow:0 0 0 2px color-mix(in srgb, var(--wtf-orange) 25%, transparent)}
+  #wtf-the-drinks .wtf-size-chip[disabled]{opacity:.45;cursor:not-allowed}
+  #wtf-the-drinks .wtf-qty{width:64px;border:1px solid #ddd;border-radius:10px;padding:8px;font-size:14px;margin-right:8px}
+  #wtf-the-drinks .wtf-add{width:100%;margin-top:10px;background:var(--wtf-orange);color:#fff;border:none;border-radius:12px;padding:12px 14px;font-weight:900;letter-spacing:.2px;cursor:pointer}
+  #wtf-the-drinks .visually-hidden{position:absolute !important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
 </style>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function(){
-    const root = document.querySelector('.drink-builder[data-drink="thc"]');
-    if(!root) return;
+  (function () {
+    const root = document.getElementById('wtf-the-drinks');
+    if (!root) return;
 
-    const qtyInput = root.querySelector('.qty-input');
-    const priceEl = root.querySelector('.price');
-    const sizeButtons = root.querySelectorAll('.pill');
-    const chipButtons = root.querySelectorAll('.chip');
-
-    function updatePrice(){
-      const active = root.querySelector('.pill.is-active');
-      const base = Number(active?.dataset.price || 9);
-      priceEl.textContent = (base).toLocaleString(undefined,{style:'currency',currency:'USD'});
+    function updateForm(form) {
+      const selected = form.closest('.wtf-card-body').querySelector('.wtf-size-chip.is-selected');
+      const idInput = form.querySelector('input[name="id"]');
+      const largeId = form.dataset.largeId || '';
+      const gallonId = form.dataset.gallonId || '';
+      if (!selected) {
+        idInput.value = '';
+        return;
+      }
+      const val = selected.getAttribute('data-value');
+      if (val === 'Large 16 oz' && largeId) {
+        idInput.value = largeId;
+      } else if (val === 'Gallon' && gallonId) {
+        idInput.value = gallonId;
+      } else {
+        idInput.value = '';
+      }
     }
-    sizeButtons.forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        sizeButtons.forEach(b=>b.classList.remove('is-active'));
-        btn.classList.add('is-active'); updatePrice();
-      });
-    });
-    chipButtons.forEach(btn=>{
-      btn.addEventListener('click', ()=> btn.classList.toggle('is-selected'));
-    });
-    root.querySelector('[data-dec]').addEventListener('click', ()=>{ qtyInput.value = Math.max(1, (Number(qtyInput.value)||1)-1); });
-    root.querySelector('[data-inc]').addEventListener('click', ()=>{ qtyInput.value = (Number(qtyInput.value)||1)+1; });
 
-    root.querySelector('.add-to-cart').addEventListener('click', async function(){
-      const active = root.querySelector('.pill.is-active');
-      const size = active?.dataset.size || 'medium';
-      const flavors = Array.from(root.querySelectorAll('.chip.is-selected')).map(x=>x.dataset.flavor);
-      const props = { Size: size, Flavors: flavors.join(', '), Note: (root.querySelector('#drink-note').value||'') };
+    root.addEventListener('click', function (e) {
+      const chip = e.target.closest('.wtf-size-chip');
+      if (!chip) return;
+      if (chip.hasAttribute('disabled')) return;
+      const body = chip.closest('.wtf-card-body');
+      body.querySelectorAll('.wtf-size-chip').forEach((c) => c.classList.remove('is-selected'));
+      chip.classList.add('is-selected');
 
-      await fetch((window.Shopify?.routes?.root||'/')+'cart/add.js', {
-        method:'POST', credentials:'same-origin',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ items: [{ id: {{ all_products['thc-drink-base'] | default: all_products['thc-drink-placeholder'] | first_available_variant.id | default: 0 }}, quantity: Number(qtyInput.value)||1, properties: props }] })
-      });
-      document.dispatchEvent(new CustomEvent('cart:added'));
+      const form = body.querySelector('form[data-wtf-ajax]');
+      updateForm(form);
     });
 
-    updatePrice();
-  });
+    root.querySelectorAll('form[data-wtf-ajax]').forEach(updateForm);
+  })();
 </script>
+
+{% render 'wtf-ajax-cart' %}
