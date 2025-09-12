@@ -1,143 +1,193 @@
-{%- comment -%}
-  Kava Drinks – page template
-  - Loads shared drink-builder CSS & JS
-  - Adds safe focus style to prevent stray orange outline
-{%- endcomment -%}
+{% comment %}
+  WTF Dunkin Style — Kava Drinks Landing (Full Page)
+  Drop this file into templates/page.kava-drinks.liquid
+  Assign this template to your “Kava Drinks” page in the Shopify editor.
 
-{%- assign css = 'wtf_flavor_system.css' | asset_url -%}
-{%- assign js = 'wtf_flavor_system.js' | asset_url -%}
+  Goals:
+  - Clean, mobile-first category grid with bold CTAs
+  - Each card image properly linked (fixes “broken after update”)
+  - Uses /assets/kava_drinks_150x150.png as the image for all cards for now
+  - Performance: minified CSS, lazy images (except first), small JS for full-card click
 
-<link rel="preload" as="style" href="{{ css }}">
-<link rel="stylesheet" href="{{ css }}">
-<script src="{{ js }}" defer></script>
+  If you later add unique images, replace the image filename per-card below.
+{% endcomment %}
 
-<div class="wtf-page wtf-page--drinks">
-  <div class="wtf-container wtf-grid drink-grid">
-    <div class="drink-media">
-      {%- render 'wtf-product-card', product: all_products['kava-drink-placeholder'] -%}
-      {%- comment -%} If you don't have a product card snippet or placeholder product, keep an <img> here {%- endcomment -%}
-    </div>
+{% assign brand_orange = '#ff6600' %}
+{% assign brand_text = '#333333' %}
 
-    <div class="drink-builder" data-drink="kava">
-      <h1 class="drink-title">Kava Drinks</h1>
+<div id="wtf-kava-drinks" class="wtf-wrap">
+  <header class="wtf-hero" role="banner" aria-label="Kava Drinks">
+    <h1 class="wtf-title">Kava Drinks</h1>
+    <p class="wtf-sub">Tap a category to start your order.</p>
+  </header>
 
-      <!-- Sizes -->
-      <div class="pill-group" role="group" aria-label="Sizes">
-        <button class="pill is-active" data-size="medium" data-price="9">Medium — $9.00</button>
-        <button class="pill" data-size="large" data-price="15">Large — $15.00</button>
-        <button class="pill" data-size="gallon" data-price="100">Gallon — $100.00</button>
-      </div>
+  <section class="wtf-grid" aria-label="Drink categories">
+    {%- comment -%}
+      NOTE: All cards below purposely point to their real pages.
+      Update URLs here if your slugs differ.
+      Replace the image per card later if/when you add unique art.
+    {%- endcomment -%}
 
-      <div class="helper">We’ll split the included pumps evenly across selected flavors.</div>
+    <!-- Card: Kava Drinks -->
+    <article class="wtf-card">
+      <a class="wtf-card-link" href="/pages/kava-drinks" aria-label="Shop Kava Drinks">
+        <div class="wtf-card-media">
+          <img
+            src="{{ 'kava_drinks_150x150.png' | asset_url }}"
+            alt="Kava Drinks"
+            loading="eager"
+            width="150"
+            height="150"
+          >
+        </div>
+        <h2 class="wtf-card-title">Kava Drinks</h2>
+        <span class="wtf-cta" aria-hidden="true">Order now</span>
+      </a>
+    </article>
 
-      <!-- Flavors -->
-      <div class="chip-grid" role="group" aria-label="Flavors">
-        <button class="chip" data-flavor="Lemon">Lemon</button>
-        <button class="chip" data-flavor="Lime">Lime</button>
-        <button class="chip" data-flavor="Orange">Orange</button>
-        <button class="chip" data-flavor="Strawberry">Strawberry</button>
-        <button class="chip" data-flavor="Blueberry">Blueberry</button>
-        <button class="chip" data-flavor="Simple Syrup">Simple Syrup</button>
-        <button class="chip" data-flavor="Coconut">Coconut</button>
-        <button class="chip" data-flavor="Passion Fruit">Passion Fruit</button>
-        <button class="chip" data-flavor="Hibiscus">Hibiscus</button>
-      </div>
+    <!-- Card: Kratom Teas -->
+    <article class="wtf-card">
+      <a class="wtf-card-link" href="/pages/kratom-teas" aria-label="Shop Kratom Teas">
+        <div class="wtf-card-media">
+          <img
+            src="{{ 'kava_drinks_150x150.png' | asset_url }}"
+            alt="Kratom Teas"
+            loading="lazy"
+            width="150"
+            height="150"
+          >
+        </div>
+        <h2 class="wtf-card-title">Kratom Teas</h2>
+        <span class="wtf-cta" aria-hidden="true">Order now</span>
+      </a>
+    </article>
 
-      <!-- Note -->
-      <label class="wtf-label" for="drink-note">Any special requests?</label>
-      <textarea id="drink-note" class="wtf-input" rows="3" placeholder="Add a note"></textarea>
+    <!-- Card: The Drinks (house specials / mixers) -->
+    <article class="wtf-card">
+      <a class="wtf-card-link" href="/pages/the-drinks" aria-label="Shop The Drinks">
+        <div class="wtf-card-media">
+          <img
+            src="{{ 'kava_drinks_150x150.png' | asset_url }}"
+            alt="The Drinks"
+            loading="lazy"
+            width="150"
+            height="150"
+          >
+        </div>
+        <h2 class="wtf-card-title">The Drinks</h2>
+        <span class="wtf-cta" aria-hidden="true">Order now</span>
+      </a>
+    </article>
 
-      <!-- Quantity -->
-      <div class="qty-row">
-        <button type="button" class="qty-btn" data-dec>−</button>
-        <input class="qty-input" type="number" min="1" value="1" aria-label="Quantity">
-        <button type="button" class="qty-btn" data-inc>+</button>
-      </div>
+    <!-- Card: Canned Drinks -->
+    <article class="wtf-card">
+      <a class="wtf-card-link" href="/pages/canned-drinks" aria-label="Shop Canned Drinks">
+        <div class="wtf-card-media">
+          <img
+            src="{{ 'kava_drinks_150x150.png' | asset_url }}"
+            alt="Canned Drinks"
+            loading="lazy"
+            width="150"
+            height="150"
+          >
+        </div>
+        <h2 class="wtf-card-title">Canned Drinks</h2>
+        <span class="wtf-cta" aria-hidden="true">Order now</span>
+      </a>
+    </article>
 
-      <!-- Add to cart -->
-      <button class="btn btn--primary add-to-cart" data-sellable="kava-base">
-        Add to Cart — <span class="price">$9.00</span>
-      </button>
-    </div>
-  </div>
+    <!-- Card: Merch (adjust if your merch URL differs) -->
+    <article class="wtf-card">
+      <a class="wtf-card-link" href="/collections/merch" aria-label="Shop Merch">
+        <div class="wtf-card-media">
+          <img
+            src="{{ 'kava_drinks_150x150.png' | asset_url }}"
+            alt="Merch"
+            loading="lazy"
+            width="150"
+            height="150"
+          >
+        </div>
+        <h2 class="wtf-card-title">Merch</h2>
+        <span class="wtf-cta" aria-hidden="true">Shop now</span>
+      </a>
+    </article>
+
+    <!-- Card: Snacks (adjust slug if needed) -->
+    <article class="wtf-card">
+      <a class="wtf-card-link" href="/pages/snacks" aria-label="Shop Snacks">
+        <div class="wtf-card-media">
+          <img
+            src="{{ 'kava_drinks_150x150.png' | asset_url }}"
+            alt="Snacks"
+            loading="lazy"
+            width="150"
+            height="150"
+          >
+        </div>
+        <h2 class="wtf-card-title">Snacks</h2>
+        <span class="wtf-cta" aria-hidden="true">Order now</span>
+      </a>
+    </article>
+  </section>
 </div>
 
 <style>
-  /* Kill stray bullets/markers & the orange square while keeping visible focus */
-  .wtf-page .drink-builder *::marker { content: ''; }
-  .wtf-page .drink-builder :focus { outline: none; box-shadow: 0 0 0 3px rgba(255,102,0,.35); border-radius: 10px; }
-  /* If some hidden checkbox/radio causes a tiny orange square, hide any visually-hidden toggles */
-  .wtf-page .drink-builder input[type="checkbox"].visually-hidden,
-  .wtf-page .drink-builder input[type="radio"].visually-hidden { position:absolute; width:1px; height:1px; margin:-1px; clip:rect(0 0 0 0); overflow:hidden; }
-
-  /* Layout helpers (use same vibe as cart) */
-  .wtf-container{max-width:1100px;margin:0 auto;padding:clamp(16px,2vw,28px)}
-  .drink-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:24px}
-  .drink-media{background:#fff;border-radius:16px;box-shadow:0 1px 0 rgba(0,0,0,.06);display:flex;align-items:center;justify-content:center;padding:20px}
-  .drink-builder{background:#fff;border-radius:16px;box-shadow:0 1px 0 rgba(0,0,0,.06);padding:18px}
-  .drink-title{margin:0 0 12px;font-weight:800}
-  .pill-group{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
-  .pill{height:36px;padding:0 12px;border-radius:999px;border:1px solid #eee;background:#f8f8f8;cursor:pointer}
-  .pill.is-active{background:#ff6600;color:#fff;border-color:#ff6600}
-  .helper{background:#eef6ff;border:1px solid #e2efff;color:#2d3a4a;font-size:13px;padding:8px 10px;border-radius:10px;margin:10px 0}
-  .chip-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 14px}
-  .chip{height:36px;border-radius:10px;border:1px solid #e8e8e8;background:#fff;cursor:pointer}
-  .chip.is-selected{background:#111;color:#fff;border-color:#111}
-  .wtf-label{font-weight:600;margin:8px 0 6px;display:block}
-  .wtf-input{width:100%;border:1px solid #e1e1e1;border-radius:12px;padding:10px}
-  .qty-row{display:inline-flex;gap:8px;align-items:center;margin:12px 0}
-  .qty-btn{width:36px;height:36px;border:1px solid #e1e1e1;border-radius:10px;background:#fafafa}
-  .qty-input{width:56px;height:36px;text-align:center;border:1px solid #e1e1e1;border-radius:10px}
-  .btn{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 16px;border-radius:12px;border:0;cursor:pointer;font-weight:800}
-  .btn--primary{background:#ff6600;color:#fff}
-  @media (max-width: 900px){ .drink-grid{grid-template-columns:1fr} }
+  /* ===== WTF Dunkin Style: Kava Drinks Page (scoped) ===== */
+  #wtf-kava-drinks{--wtf-orange:{{ brand_orange }};--wtf-text:{{ brand_text }};--wtf-bg:#ffffff}
+  #wtf-kava-drinks .wtf-hero{padding:16px 16px 8px}
+  #wtf-kava-drinks .wtf-title{margin:0;font-size:28px;line-height:1.15;color:var(--wtf-text)}
+  #wtf-kava-drinks .wtf-sub{margin:6px 0 0;color:#666;font-size:14px}
+  #wtf-kava-drinks .wtf-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px
+  }
+  @media(min-width:640px){
+    #wtf-kava-drinks .wtf-grid{grid-template-columns:repeat(3,1fr);gap:16px;padding:20px}
+    #wtf-kava-drinks .wtf-title{font-size:32px}
+  }
+  #wtf-kava-drinks .wtf-card{
+    background:var(--wtf-bg);border:1px solid #eee;border-radius:16px;
+    box-shadow:0 1px 2px rgba(0,0,0,.04);transition:transform .12s ease,box-shadow .12s ease, border-color .12s ease;
+    overflow:hidden
+  }
+  #wtf-kava-drinks .wtf-card:has(a:focus-visible){
+    outline:2px solid var(--wtf-orange);outline-offset:2px
+  }
+  #wtf-kava-drinks .wtf-card:hover{
+    transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08);border-color:#ddd
+  }
+  #wtf-kava-drinks .wtf-card-link{display:block;padding:14px;text-decoration:none}
+  #wtf-kava-drinks .wtf-card-media{
+    display:flex;align-items:center;justify-content:center;height:120px;margin-bottom:10px
+  }
+  #wtf-kava-drinks .wtf-card-media img{
+    width:120px;height:120px;object-fit:contain;image-rendering:-webkit-optimize-contrast
+  }
+  #wtf-kava-drinks .wtf-card-title{
+    margin:0 0 6px;font-size:16px;line-height:1.25;color:var(--wtf-text);font-weight:700
+  }
+  #wtf-kava-drinks .wtf-cta{
+    display:inline-block;font-size:13px;font-weight:700;
+    background:var(--wtf-orange);color:#fff;border-radius:999px;padding:8px 12px
+  }
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce){
+    #wtf-kava-drinks .wtf-card{transition:none}
+  }
 </style>
 
 <script>
-  // Minimal glue so the drawer opens after add
-  document.addEventListener('DOMContentLoaded', function(){
-    const root = document.querySelector('.drink-builder[data-drink="kava"]');
-    if(!root) return;
-
-    const qtyInput = root.querySelector('.qty-input');
-    const priceEl = root.querySelector('.price');
-    const sizeButtons = root.querySelectorAll('.pill');
-    const chipButtons = root.querySelectorAll('.chip');
-
-    function updatePrice(){
-      const active = root.querySelector('.pill.is-active');
-      const base = Number(active?.dataset.price || 9);
-      priceEl.textContent = (base).toLocaleString(undefined,{style:'currency',currency:'USD'});
-    }
-    sizeButtons.forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        sizeButtons.forEach(b=>b.classList.remove('is-active'));
-        btn.classList.add('is-active'); updatePrice();
+  // Make the entire card area tappable (already wrapped in <a>, this is a small safety for nested focus)
+  (function () {
+    const cards = document.querySelectorAll('#wtf-kava-drinks .wtf-card');
+    cards.forEach((card) => {
+      const link = card.querySelector('a.wtf-card-link');
+      if (!link) return;
+      card.addEventListener('click', (e) => {
+        // Avoid hijacking when users click a nested interactive element (none here by default)
+        if (e.target.closest('a')) return;
+        link.click();
       });
     });
-    chipButtons.forEach(btn=>{
-      btn.addEventListener('click', ()=> btn.classList.toggle('is-selected'));
-    });
-    root.querySelector('[data-dec]').addEventListener('click', ()=>{ qtyInput.value = Math.max(1, (Number(qtyInput.value)||1)-1); });
-    root.querySelector('[data-inc]').addEventListener('click', ()=>{ qtyInput.value = (Number(qtyInput.value)||1)+1; });
-
-    root.querySelector('.add-to-cart').addEventListener('click', async function(){
-      const active = root.querySelector('.pill.is-active');
-      const size = active?.dataset.size || 'medium';
-      const flavors = Array.from(root.querySelectorAll('.chip.is-selected')).map(x=>x.dataset.flavor);
-
-      // Build properties payload
-      const props = { Size: size, Flavors: flavors.join(', '), Note: (root.querySelector('#drink-note').value||'') };
-
-      // You should map "kava-base" to a real variant id server-side; placeholder here uses cart/add by handle.
-      await fetch((window.Shopify?.routes?.root||'/')+'cart/add.js', {
-        method:'POST', credentials:'same-origin',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ items: [{ id: {{ all_products['kava-drink-base'] | default: all_products['kava-drink-placeholder'] | first_available_variant.id | default: 0 }}, quantity: Number(qtyInput.value)||1, properties: props }] })
-      });
-      document.dispatchEvent(new CustomEvent('cart:added'));
-    });
-
-    updatePrice();
-  });
+  })();
 </script>
