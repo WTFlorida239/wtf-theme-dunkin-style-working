@@ -1,185 +1,35 @@
 {% comment %}
-  WTF Dunkin Style — Kratom Teas (AJAX)
-  Assign to page: /pages/kratom-teas
-  Renders products from 'kratom-teas' collection.
-  If a Size option exists, renders chips for all Size values; otherwise adds first available variant.
+  Kratom Teas page — matched UX with Kava Drinks.
+  Uses the shared renderer and the Kratom flavor list. Identical cart/price logic.
 {% endcomment %}
 
-{% assign brand_orange = '#ff6600' %}
-{% assign brand_text = '#333333' %}
+{% section 'header' %}
 
-<div id="wtf-kratom-teas" class="wtf-wrap">
-  <header class="wtf-hero" role="banner" aria-label="Kratom Teas">
-    <h1 class="wtf-title">Kratom Teas</h1>
-    <p class="wtf-sub">Tap, choose size (if any), add to cart.</p>
+<main id="MainContent" class="page-width">
+  <header class="wtf-page-hero" style="text-align:center; margin: 16px 0 20px;">
+    <h1>Kratom Teas</h1>
+    <p style="color:#555; margin-top: 6px;">Choose your flavor, then add to cart.</p>
   </header>
 
-  {% assign col = collections['kratom-teas'] %}
-  {% if col and col.products_count > 0 %}
-    <section class="wtf-grid" aria-label="Kratom Teas">
-      {% for product in col.products %}
-        {% assign size_idx = null %}
-        {% for o in product.options_with_values %}
-          {% if o.name | downcase == 'size' %}{% assign size_idx = forloop.index0 %}{% endif %}
-        {% endfor %}
+  {% render 'wtf-flavor-data' %}
+  {% render 'wtf-flavor-options', title: 'Choose your flavor', flavors: wtfKratomFlavors, option_name: 'Flavor' %}
 
-        {% assign all_sizes = '' | split: ',' %}
-        {% if size_idx != null %}
-          {% for v in product.variants %}
-            {% assign sz = v.options[size_idx] | strip %}
-            {% unless all_sizes contains sz %}{% assign all_sizes = all_sizes | push: sz %}{% endunless %}
-          {% endfor %}
-        {% endif %}
-
-        {% assign first_available = product.variants | where: 'available', true | first %}
-
-        <article class="wtf-card">
-          <a class="wtf-media-link" href="{{ product.url }}" aria-label="View {{ product.title }}">
-            <div class="wtf-card-media">
-              {% if product.featured_media %}
-                <img
-                  src="{{ product.featured_media | image_url: width: 520 }}"
-                  srcset="{{ product.featured_media | image_url: width: 320 }} 320w, {{ product.featured_media | image_url: width: 520 }} 520w"
-                  sizes="(max-width:640px) 45vw, 220px"
-                  alt="{{ product.featured_media.alt | escape | default: product.title | escape }}"
-                  loading="lazy"
-                  width="{{ product.featured_media.width }}"
-                  height="{{ product.featured_media.height }}"
-                >
-              {% else %}
-                <img
-                  src="{{ 'kava_drinks_150x150.png' | asset_url }}"
-                  alt="{{ product.title | escape }}"
-                  loading="lazy"
-                  width="150"
-                  height="150"
-                >
-              {% endif %}
-            </div>
-          </a>
-
-          <div class="wtf-card-body">
-            <h2 class="wtf-card-title">
-              <a href="{{ product.url }}" class="wtf-title-link">{{ product.title }}</a>
-            </h2>
-            <div class="wtf-price">
-              <span class="wtf-price-now">{{ product.price | money }}</span>
-            </div>
-
-            {% if size_idx != null and all_sizes.size > 0 %}
-              <div class="wtf-size-row" role="group" aria-label="Choose size">
-                {% for size in all_sizes %}
-                  {% assign v_id = null %}
-                  {% for v in product.variants %}
-                    {% if v.options[size_idx] == size -%}
-                      {%- assign v_id = v.id -%}
-                      {%- break -%}
-                    {%- endif %}
-                  {% endfor %}
-                  <button
-                    type="button"
-                    class="wtf-size-chip {% if forloop.first %}is-selected{% endif %}"
-                    data-variant-id="{{ v_id }}"
-                    {% unless v_id %}
-                      disabled aria-disabled="true"
-                    {% endunless %}
-                  >
-                    {{ size }}
-                  </button>
-                {% endfor %}
-              </div>
-              <form method="post" action="/cart/add" class="wtf-form" data-wtf-ajax>
-                <input type="hidden" name="id" value="{% if first_available %}{{ first_available.id }}{% endif %}">
-                <label for="qty-{{ product.id }}" class="visually-hidden">Quantity</label>
-                <input
-                  id="qty-{{ product.id }}"
-                  class="wtf-qty"
-                  name="quantity"
-                  type="number"
-                  min="1"
-                  value="1"
-                  inputmode="numeric"
-                >
-                <button type="submit" class="wtf-add">Add to cart</button>
-              </form>
-            {% else %}
-              <form method="post" action="/cart/add" class="wtf-form" data-wtf-ajax>
-                <input type="hidden" name="id" value="{% if first_available %}{{ first_available.id }}{% endif %}">
-                <label for="qty-{{ product.id }}" class="visually-hidden">Quantity</label>
-                <input
-                  id="qty-{{ product.id }}"
-                  class="wtf-qty"
-                  name="quantity"
-                  type="number"
-                  min="1"
-                  value="1"
-                  inputmode="numeric"
-                >
-                <button type="submit" class="wtf-add">Add to cart</button>
-              </form>
-            {% endif %}
-          </div>
-        </article>
-      {% endfor %}
-    </section>
-  {% else %}
-    <div class="wtf-empty">
-      <p>No products found in <strong>kratom-teas</strong>.</p>
+  <form method="post" action="/cart/add" data-wtf-ajax style="margin-top:16px;">
+    <input type="hidden" name="id" value="">
+    <div style="display:flex; gap: 8px; align-items:center; margin-top: 10px;">
+      <label for="wtf-qty-kratom" style="min-width:56px;">Qty</label>
+      <input id="wtf-qty-kratom" name="quantity" type="number" min="1" value="1" style="width:80px;">
+      <button type="submit" class="wtf-primary-cta" style="margin-left:auto;">Add to cart</button>
     </div>
-  {% endif %}
-</div>
+  </form>
+</main>
 
 <style>
-  #wtf-kratom-teas .wtf-hero{padding:16px 16px 8px}
-  #wtf-kratom-teas .wtf-title{margin:0;font-size:28px;line-height:1.15;color:#333}
-  #wtf-kratom-teas .wtf-sub{margin:6px 0 0;color:#666;font-size:14px}
-  #wtf-kratom-teas .wtf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
-  @media(min-width:640px){#wtf-kratom-teas .wtf-grid{grid-template-columns:repeat(3,1fr);gap:16px;padding:20px}}
-  #wtf-kratom-teas .wtf-card{background:#fff;border:1px solid #eee;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;overflow:hidden}
-  #wtf-kratom-teas .wtf-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.08);border-color:#ddd}
-  #wtf-kratom-teas .wtf-card-media{display:flex;align-items:center;justify-content:center;height:160px;background:#fafafa}
-  #wtf-kratom-teas .wtf-card-media img{width:140px;height:140px;object-fit:contain}
-  #wtf-kratom-teas .wtf-card-body{padding:14px}
-  #wtf-kratom-teas .wtf-card-title{margin:0 0 6px;font-size:16px;font-weight:800}
-  #wtf-kratom-teas .wtf-title-link{text-decoration:none;color:inherit}
-  #wtf-kratom-teas .wtf-price{margin:2px 0 10px}
-  #wtf-kratom-teas .wtf-size-row{display:flex;gap:8px;margin:8px 0 10px}
-  #wtf-kratom-teas .wtf-size-chip{appearance:none;border:1px solid #ddd;border-radius:999px;background:#fff;padding:8px 12px;font-weight:700;cursor:pointer}
-  #wtf-kratom-teas .wtf-size-chip.is-selected{border-color:#ff6600;box-shadow:0 0 0 2px color-mix(in srgb, #ff6600 25%, transparent)}
-  #wtf-kratom-teas .wtf-qty{width:64px;border:1px solid #ddd;border-radius:10px;padding:8px;font-size:14px;margin-right:8px}
-  #wtf-kratom-teas .wtf-add{width:100%;margin-top:10px;background:#ff6600;color:#fff;border:none;border-radius:12px;padding:12px 14px;font-weight:900;letter-spacing:.2px;cursor:pointer}
-  #wtf-kratom-teas .visually-hidden{position:absolute !important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
+  .wtf-primary-cta {
+    background:#ff6600; color:#fff; border:none; border-radius:8px;
+    padding:12px 16px; min-height:44px; font-weight:700; cursor:pointer;
+  }
+  .wtf-primary-cta:disabled { opacity:.6; cursor:not-allowed; }
 </style>
 
-<script>
-  (function () {
-    const root = document.getElementById('wtf-kratom-teas');
-    if (!root) return;
-
-    root.addEventListener('click', function (e) {
-      const chip = e.target.closest('.wtf-size-chip');
-      if (!chip) return;
-      if (chip.hasAttribute('disabled')) return;
-      const body = chip.closest('.wtf-card-body');
-      body.querySelectorAll('.wtf-size-chip').forEach((c) => c.classList.remove('is-selected'));
-      chip.classList.add('is-selected');
-
-      const form = body.querySelector('form[data-wtf-ajax]');
-      const idInput = form.querySelector('input[name="id"]');
-      const vid = chip.getAttribute('data-variant-id');
-      idInput.value = vid || '';
-    });
-
-    // Initialize default selected size -> sync hidden id
-    root.querySelectorAll('.wtf-card-body').forEach((body) => {
-      const chip = body.querySelector('.wtf-size-chip.is-selected');
-      const form = body.querySelector('form[data-wtf-ajax]');
-      if (chip && form) {
-        const idInput = form.querySelector('input[name="id"]');
-        idInput.value = chip.getAttribute('data-variant-id') || idInput.value;
-      }
-    });
-  })();
-</script>
-
-{% render 'wtf-ajax-cart' %}
+{% section 'footer' %}
