@@ -110,16 +110,13 @@
       const addBtn = form.querySelector('[type="submit"]');
       const idInput = form.querySelector('input[name="id"]');
       const qtyInput = form.querySelector('input[name="quantity"]');
-      const qty = qtyInput && qtyInput.value ? qtyInput.value : '1';
 
       if (!idInput || !idInput.value) {
         announce('Please choose an available option.');
         return;
       }
 
-      const fd = new FormData();
-      fd.set('id', idInput.value);
-      fd.set('quantity', qty);
+      const fd = new FormData(form);
 
       setButtonState(addBtn, 'loading');
 
