@@ -1,0 +1,372 @@
+/* Mobile-First Optimization for WTF Theme */
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  .wtf-flavor-chip,
+  .wtf-size-chip,
+  .btn,
+  button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 16px;
+  }
+  
+  .wtf-qty__btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Mobile viewport optimizations */
+@media screen and (max-width: 768px) {
+  /* Header adjustments */
+  .wtf-header {
+    padding: 10px 0;
+  }
+  
+  .wtf-nav-container {
+    padding: 0 16px;
+    flex-wrap: wrap;
+  }
+  
+  .wtf-logo-circle {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .wtf-logo-text h1 {
+    font-size: 20px;
+  }
+  
+  .wtf-logo-text p {
+    font-size: 12px;
+  }
+  
+  /* Navigation improvements */
+  .wtf-main-nav {
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+  
+  .wtf-nav-link {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+  
+  /* Hero section mobile */
+  .wtf-hero {
+    padding: 20px 16px;
+    text-align: center;
+  }
+  
+  .wtf-storefront-image img {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  .wtf-hero h2 {
+    font-size: 1.8rem;
+    margin: 16px 0 8px;
+  }
+  
+  .wtf-hero p {
+    font-size: 1rem;
+    margin: 8px 0;
+  }
+  
+  /* Product builder mobile */
+  .page-width {
+    padding: 0 16px;
+  }
+  
+  .wtf-page-hero {
+    margin: 16px 0 24px;
+    padding: 16px;
+  }
+  
+  .wtf-page-hero h1 {
+    font-size: 1.8rem;
+  }
+  
+  .wtf-page-hero img {
+    width: 120px;
+    height: 120px;
+  }
+  
+  /* Size selection mobile */
+  .size-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .size-selector {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    justify-content: space-between;
+  }
+  
+  .size-letter {
+    font-size: 24px;
+  }
+  
+  /* Strain selection mobile */
+  .strain-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  
+  .strain-selector {
+    padding: 14px 12px;
+    font-size: 14px;
+  }
+  
+  /* Flavor grid mobile */
+  .wtf-flavor-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .wtf-flavor-chip {
+    padding: 12px 8px;
+    font-size: 13px;
+    min-height: 44px;
+  }
+  
+  /* Form elements mobile */
+  .wtf-form-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .wtf-form-label {
+    min-width: auto;
+    margin-bottom: 4px;
+    font-size: 14px;
+  }
+  
+  .wtf-textarea {
+    min-height: 80px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  .wtf-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 12px;
+  }
+  
+  /* Cart drawer mobile */
+  .wtf-cart-drawer__panel {
+    width: 100%;
+    max-width: none;
+    height: 100vh;
+    border-radius: 0;
+  }
+  
+  .wtf-cart-drawer__header {
+    padding: 16px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .wtf-cart-drawer__body {
+    padding: 16px;
+    max-height: calc(100vh - 200px);
+  }
+  
+  .wtf-cart-drawer__footer {
+    padding: 16px;
+    border-top: 1px solid #eee;
+  }
+  
+  /* Line items mobile */
+  .wtf-line {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 0;
+  }
+  
+  .wtf-line__media {
+    width: 100%;
+    max-width: 120px;
+  }
+  
+  .wtf-line__main {
+    width: 100%;
+  }
+  
+  .wtf-line__controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .wtf-line__price {
+    align-self: flex-end;
+  }
+  
+  /* Buttons mobile */
+  .wtf-primary-cta,
+  .btn--primary {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    min-height: 48px;
+  }
+  
+  .btn--secondary {
+    padding: 12px 16px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+  
+  /* Actions row mobile */
+  .wtf-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .wtf-actions .btn {
+    width: 100%;
+  }
+  
+  /* Category grid mobile */
+  .wtf-categories {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 16px;
+  }
+  
+  .wtf-category-card {
+    padding: 16px;
+  }
+  
+  .wtf-category-card img {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .wtf-category-card h3 {
+    font-size: 14px;
+    margin: 8px 0 4px;
+  }
+  
+  .wtf-category-card p {
+    font-size: 12px;
+  }
+}
+
+/* Small mobile devices */
+@media screen and (max-width: 480px) {
+  .wtf-flavor-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .strain-options {
+    grid-template-columns: 1fr;
+  }
+  
+  .wtf-categories {
+    grid-template-columns: 1fr;
+  }
+  
+  .wtf-logo-section {
+    gap: 10px;
+  }
+  
+  .wtf-main-nav {
+    width: 100%;
+    justify-content: center;
+    margin-top: 10px;
+  }
+}
+
+/* Landscape mobile optimization */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .wtf-cart-drawer__panel {
+    height: 100vh;
+  }
+  
+  .wtf-cart-drawer__body {
+    max-height: calc(100vh - 120px);
+  }
+  
+  .wtf-page-hero {
+    margin: 8px 0 16px;
+    padding: 12px;
+  }
+  
+  .wtf-page-hero img {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .wtf-logo-circle img,
+  .wtf-category-card img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .wtf-flavor-chip,
+  .wtf-size-chip,
+  .strain-selector,
+  .btn {
+    transition: none;
+  }
+  
+  .wtf-cart-drawer {
+    transition: none;
+  }
+  
+  .wtf-cart-drawer__panel {
+    transition: none;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .wtf-cart-drawer__panel {
+    background: #1a1a1a;
+    color: #ffffff;
+  }
+  
+  .wtf-cart-drawer__header {
+    border-bottom-color: #333;
+  }
+  
+  .wtf-cart-drawer__footer {
+    border-top-color: #333;
+  }
+  
+  .wtf-line {
+    border-bottom-color: #333;
+  }
+}
+
+/* Print styles */
+@media print {
+  .wtf-cart-drawer,
+  .wtf-header,
+  .wtf-actions,
+  .wtf-primary-cta {
+    display: none !important;
+  }
+  
+  .page-width {
+    max-width: none;
+    padding: 0;
+  }
+  
+  .wtf-flavor-grid,
+  .strain-options {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+

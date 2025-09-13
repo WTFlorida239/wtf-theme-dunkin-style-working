@@ -1,0 +1,135 @@
+{% comment %}
+  Renders structured data (JSON-LD) for SEO and rich snippets.
+{% endcomment %}
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "{{ shop.name }}",
+  "url": "{{ shop.url }}",
+  {% if shop.description %}
+  "description": "{{ shop.description | escape }}",
+  {% endif %}
+  {% if settings.logo %}
+  "logo": "{{ settings.logo | img_url: '300x300' }}",
+  {% endif %}
+  "sameAs": [
+    {% if settings.social_facebook_link != blank %}"{{ settings.social_facebook_link }}"{% unless settings.social_instagram_link == blank or settings.social_twitter_link == blank %},{% endunless %}{% endif %}
+    {% if settings.social_instagram_link != blank %}"{{ settings.social_instagram_link }}"{% unless settings.social_twitter_link == blank %},{% endunless %}{% endif %}
+    {% if settings.social_twitter_link != blank %}"{{ settings.social_twitter_link }}"{% endif %}
+  ]
+}
+</script>
+
+{% if template contains 'product' %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "{{ product.title | escape }}",
+  "description": "{{ product.description | strip_html | escape }}",
+  "url": "{{ shop.url }}{{ product.url }}",
+  "sku": "{{ product.selected_or_first_available_variant.sku }}",
+  "brand": {
+    "@type": "Brand",
+    "name": "{{ shop.name }}"
+  },
+  {% if product.featured_image %}
+  "image": [
+    "{{ product.featured_image | img_url: '800x800' }}"
+    {% for image in product.images limit: 5 %}
+      {% unless forloop.first %},{% endunless %}
+      "{{ image | img_url: '800x800' }}"
+    {% endfor %}
+  ],
+  {% endif %}
+  "offers": {
+    "@type": "Offer",
+    "price": "{{ product.selected_or_first_available_variant.price | divided_by: 100.0 }}",
+    "priceCurrency": "{{ cart.currency.iso_code }}",
+    "availability": "{% if product.selected_or_first_available_variant.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "url": "{{ shop.url }}{{ product.url }}"
+  }
+}
+</script>
+{% endif %}
+
+{% if template contains 'collection' %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "{{ collection.title | escape }}",
+  "description": "{{ collection.description | strip_html | escape }}",
+  "url": "{{ shop.url }}{{ collection.url }}",
+  "mainEntity": {
+    "@type": "ItemList",
+    "numberOfItems": "{{ collection.products_count }}",
+    "itemListElement": [
+      {% for product in collection.products limit: 20 %}
+      {
+        "@type": "Product",
+        "position": "{{ forloop.index }}",
+        "name": "{{ product.title | escape }}",
+        "url": "{{ shop.url }}{{ product.url }}",
+        {% if product.featured_image %}
+        "image": "{{ product.featured_image | img_url: '400x400' }}",
+        {% endif %}
+        "offers": {
+          "@type": "Offer",
+          "price": "{{ product.price_min | divided_by: 100.0 }}",
+          "priceCurrency": "{{ cart.currency.iso_code }}"
+        }
+      }{% unless forloop.last %},{% endunless %}
+      {% endfor %}
+    ]
+  }
+}
+</script>
+{% endif %}
+
+{% if template == 'index' %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "{{ shop.name }}",
+  "url": "{{ shop.url }}",
+  {% if shop.description %}
+  "description": "{{ shop.description | escape }}",
+  {% endif %}
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "{{ routes.search_url }}?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "{{ shop.name }}",
+  "url": "{{ shop.url }}",
+  {% if shop.description %}
+  "description": "{{ shop.description | escape }}",
+  {% endif %}
+  {% if settings.logo %}
+  "logo": "{{ settings.logo | img_url: '300x300' }}",
+  {% endif %}
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Cape Coral",
+    "addressLocality": "Cape Coral",
+    "addressRegion": "FL",
+    "addressCountry": "US"
+  },
+  "openingHours": "Mo-Su 08:00-22:00",
+  "servesCuisine": ["Kava", "Kratom", "Cannabis Products", "Beverages"],
+  "priceRange": "$"
+}
+</script>
+{% endif %}
+

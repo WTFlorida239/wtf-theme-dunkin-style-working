@@ -28,6 +28,7 @@
     {% endif %}
 
     {% render 'meta-tags' %}
+    {% render 'structured-data' %}
 
     <!-- Core global JS -->
     <script src="{{ 'global.js' | asset_url }}" defer="defer"></script>
@@ -201,7 +202,13 @@
       @media screen and (min-width: 750px) { body { font-size: 1.6rem; } }
     {% endstyle %}
 
-    {%- comment -%} Critical CSS for above-the-fold content {%- endcomment -%}
+    {%- comment -%} Mobile-first optimization CSS {%- endcomment -%}
+    <link rel="stylesheet" href="{{ 'mobile-optimization.css' | asset_url }}" media="all">
+
+    {%- comment -%} Final polish CSS for production-ready styling {%- endcomment -%}
+    <link rel="stylesheet" href="{{ 'final-polish.css' | asset_url }}" media="all">
+
+    {%- comment -%} Critical CSS inlined for above-the-fold content {%- endcomment -%}
     <style>
       /* Critical CSS for immediate rendering */
       body { 
@@ -396,6 +403,18 @@
 
     {%- comment -%} Comprehensive Analytics & Pixel Tracking {%- endcomment -%}
     {%- render 'wtf-analytics' -%}
+
+    {%- comment -%} Performance enhancements (load early) {%- endcomment -%}
+    <script src="{{ 'performance-enhancements.js' | asset_url }}" defer></script>
+
+    {%- comment -%} SEO enhancements for better search visibility {%- endcomment -%}
+    <script src="{{ 'seo-enhancements.js' | asset_url }}" defer></script>
+
+    {%- comment -%} Advanced analytics for enhanced tracking {%- endcomment -%}
+    <script src="{{ 'advanced-analytics.js' | asset_url }}" defer></script>
+
+    {%- comment -%} Deployment readiness checks and optimizations {%- endcomment -%}
+    <script src="{{ 'deployment-ready.js' | asset_url }}" defer></script>
 
     {%- comment -%} Defer non-critical JavaScript for better performance {%- endcomment -%}
     <script src="{{ 'wtf-flavor-system.js' | asset_url }}" defer></script>
