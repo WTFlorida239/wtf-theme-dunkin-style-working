@@ -81,9 +81,16 @@
           const strain = btn.dataset.strain;
           if (strain === 'Mix') {
             this.isMix = !this.isMix;
-            this.strain = '';
+            // If activating mix mode, preserve the last selected strain for convenience
             if (this.isMix) {
+              const lastStrain = this.strain;
+              this.strain = ''; // Clear single strain selection
               $('#mix-strains').style.display = 'block';
+              if (lastStrain) {
+                this.strainA = lastStrain;
+                const strainASelect = $('#strain-a');
+                if (strainASelect) strainASelect.value = lastStrain;
+              }
             } else {
               $('#mix-strains').style.display = 'none';
               this.strainA = '';
